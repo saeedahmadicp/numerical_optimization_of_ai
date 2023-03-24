@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 
-from methods import bisectionMethod, newtonMethod, regularFalsiMethod, secantMethod, plotRootFindingMethods
+from methods import bisectionMethod, newtonMethod, regularFalsiMethod, secantMethod, plot_root_finding_methods
 
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -78,12 +78,8 @@ def main():
         print(f"Root of function {index} using Newton Raphson Method: {newton_x}")
         print(f"Root of function {index} using Regular Falsi Method: {regular_falsi_x}")
         print(f"Root of function {index} using Secant Method: {secant_x}")
-        
-        plotRootFindingMethods(index,
-                                bisection_E, "blue",
-                                newton_E, "red",
-                                regular_falsi_E, "green",
-                                secant_E, "orange")
+
+        plot_root_finding_methods(index, bisection_E, "blue", newton_E, "red", regular_falsi_E, "green", secant_E, "orange")
         
     plt.show()
 
