@@ -1,27 +1,29 @@
 import torch
 
-
 __all__ = ['newtonMethod']
 
 
-def newtonMethod(f, x0, tol, max_iter):
+def newtonMethod(f: callable, x0: float, tol: float, max_iter: int) -> tuple:
     """
-    param: f: function to be evaluated
-    param: x0: initial guess
-    param: tol: tolerance
-    param: max_iter: maximum number of iterations
-    
-    return x: root of the function, E: list of errors, N: number of iterations
-    
-    Description: This function finds the root of a function f using the newton method
+    Find the root of the function f using the Newton-Raphson method.
+    :param: f: function to be evaluated
+    x0: The initial guess.
+    tol: The tolerance.
+    max_iter: The maximum number of iterations.
+    :return: guess: root of the function, E: list of errors, N: number of iterations
     """
-    x = torch.tensor(x0, requires_grad=True)
+    guess = torch.tensor(x0, requires_grad=True)
     E = []
     N = 0
+
     while N < max_iter:
-        x = x - f(x)/ torch.autograd.grad(f(x), x)[0]
-        E.append(abs(f(x).detach().numpy()))
-        if abs(f(x)) <= tol:
-            return x, E, N
+        derivative = torch.autograd.grad(f(guess), guess)[0]
+        guess = guess - f(guess) / derivative
+        E.append(abs(f(guess).detach().numpy()))
+        
+        if abs(f(guess)) <= tol:
+            return guess, E, N
+        
         N += 1
-    return x.detach().numpy() , E, N
+
+    return guess.detach().numpy(), E, N
