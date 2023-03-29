@@ -7,6 +7,9 @@ This repository contains numerical optimization algorithms for AI. The algorithm
 2. [Newton's Method](#newtons-method)
 3. [Secant Method](#secant-method)
 4. [Regula Falsi Method](#regula-falsi-method)
+5. [Elimination Method](#elimination-method)
+6. [Fibonacci Search](#fibonacci-search)
+7. [Golden Section Search](#golden-section-search)
 
 ### Bisection Method
 ----------------
@@ -27,6 +30,9 @@ The secant method is a root-finding algorithm that uses a succession of secant l
 ### Regula Falsi Method
 -------------------
 Regula Falsi, also known as the false position method, is a root-finding algorithm used to find the roots of a given equation. It is a numerical method that iteratively narrows down the possible location of the root within a given interval. The Regula Falsi method is based on the Intermediate Value Theorem, which states that if a continuous function $f(x)$ has opposite signs at two points $a$ and $b$, then there exists at least one root of the equation $f(x) = 0$ between $a$ and $b$.
+
+
+
 
 #### Usage
 ```python
