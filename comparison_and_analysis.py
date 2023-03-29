@@ -1,13 +1,19 @@
+
 import numpy as np
 
 from methods import fibonacciSearchMethod, goldenSearchMethod, eliminationSearchMethod
 from utils import findInitialInterval, plotRootFindingMethods
 from functions import func1, func2, func3, func4, func5
 
-6
+
 def main():
+    """
+    Main function to calculate roots of given functions 
+    using different methods and plot the error values
+    """
     functions_list = [func1, func2, func3, func4, func5]
     
+
     ## initial guess and initial step size
     x0 = np.random.rand(1)[0] 
     d0 = 0.1
@@ -23,6 +29,7 @@ def main():
         FM_root, FM_E, _ = fibonacciSearchMethod(func, a, b, N, tol)
         GSM_root, GSM_E, _ = goldenSearchMethod(func, a, b, N, tol)
         
+
         ## print the guessing roots
         print(f"Elimination method: function index: {index},  root = {EM_root}, solution: {func(EM_root)}")
         print(f"Fibonacci method: function index: {index},  root = {FM_root}, solution: {func(FM_root)}")
@@ -43,5 +50,3 @@ if __name__ == "__main__":
         
         
            
-
-   
