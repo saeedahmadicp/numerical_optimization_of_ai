@@ -27,6 +27,8 @@ def bisectionMethod(f: callable, a: float, b: float, tol: float, max_iter: int) 
         # check if tolerance is met
         if E[-1] <= tol: 
             return x, E, N
+        
+        ## apply elimination step
         elif f(a) * f(x) < 0: 
             b = x
         else:

@@ -9,7 +9,8 @@ from functions import func1, func2, func3, func4, func5
 def main():
     """
     Main function to calculate roots of given functions 
-    using different methods and plot the error values
+    using different methods and plot the error values vs
+    number of iterations
     """
     functions_list = [func1, func2, func3, func4, func5]
     
