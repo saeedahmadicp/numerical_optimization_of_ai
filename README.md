@@ -29,9 +29,19 @@ The secant method is a root-finding algorithm that uses a succession of secant l
 
 ### Regula Falsi Method
 -------------------
-Regula Falsi, also known as the false position method, is a root-finding algorithm used to find the roots of a given equation. It is a numerical method that iteratively narrows down the possible location of the root within a given interval. The Regula Falsi method is based on the Intermediate Value Theorem, which states that if a continuous function $f(x)$ has opposite signs at two points $a$ and $b$, then there exists at least one root of the equation $f(x) = 0$ between $a$ and $b$.
+Regula Falsi, also known as the false position method, is a root-finding algorithm used to find the roots of a given equation. It is similar to the Bisection Method but uses a linear interpolation to select the subinterval in which the root lies. It is a numerical method that iteratively narrows down the possible location of the root within a given interval. The Regula Falsi method is based on the Intermediate Value Theorem, which states that if a continuous function $f(x)$ has opposite signs at two points $a$ and $b$, then there exists at least one root of the equation $f(x) = 0$ between $a$ and $b$. The algorithm starts with two initial guesses, and at each iteration, a linear function is used to interpolate the root, which is then used to update the interval. This process is repeated until the desired level of accuracy is reached.
 
+### Elimination Method
+----------------
+The elimination method is a root-finding algorithm that uses a series of elimination steps to find the roots of a function. It begins with an interval containing the root, and then applies a series of elimination steps to narrow down the interval containing the root. The process is repeated until the desired level of accuracy is achieved, or until a maximum number of iterations is reached. 
 
+### Fibonacci Search
+----------------
+The Fibonacci Search is a golden section search algorithm that divides an interval into Fibonacci subintervals and eliminates one of the subintervals based on the function values at the endpoints. The algorithm starts with an initial interval, and at each iteration, the interval is divided into Fibonacci subintervals, and the subinterval containing the lower function value is eliminated. This process is repeated until the desired level of accuracy is reached.
+
+### Golden Section Search
+--------------------
+The golden section search is a root-finding algorithm that uses the golden ratio to efficiently narrow down the search interval to find the minimum or maximum of a function. The algorithm works by dividing the search interval into two parts in such a way that the ratio of the longer part to the shorter part is equal to the golden ratio. The function is then evaluated at the two new points created by this division, and the interval is updated to exclude the point that gives the higher function value. This process is repeated until the interval becomes small enough to yield a satisfactory approximation to the minimum or maximum of the function.
 
 
 #### Usage
