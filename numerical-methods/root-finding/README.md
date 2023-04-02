@@ -12,13 +12,13 @@ This directory contains implementations of various numerical methods for finding
 
 #### Usage
 ```python
-from methods import regula_falsi_method
+from root-finding import regula_falsi_method
 root, error, iterations = regula_falsi_method(function, lower_bound, upper_bound, tolerance, max_iter)
 ```
 
 #### Example
 ```python
-from methods import regula_falsi_method
+from root-finding import regula_falsi_method
 root, error, iterations = regula_falsi_method(lambda x: x**3 - 2*x - 5, 1, 2, 0.0001, 100)
 print(root, error, iterations)
 ```

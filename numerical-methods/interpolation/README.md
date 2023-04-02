@@ -1,49 +1,50 @@
 # Interpolation Algorithms
-This directory contains implementations of various interpolation algorithms.
+This repository contains numerical interpolation algorithms implemented in Python.
 
 ## Algorithms
 1. [Lagrange Interpolation](#lagrange-interpolation)
-2. [Cubic Spline Interpolation](#cubic-spline-interpolation)
+2. [Spline Interpolation](#spline-interpolation)
 
+## Lagrange Interpolation 
+Lagrange interpolation is a method used to approximate a function by a polynomial that passes through all of the given data points. The method uses Lagrange polynomials, which are a set of basis polynomials that are used to construct the interpolating polynomial. The interpolating polynomial is then used to estimate the function at points between the given data points.
 
-## Lagrange Interpolation
-The Lagrange interpolation method constructs a polynomial that passes through all the data points provided. The polynomial is constructed by multiplying a series of Lagrange basis polynomials, which are defined as:
+A linear Lagrange polynomial is given by:
+$P(x) = y_1*L_1(x) + y_2*L_2(x)$
 
-![Lagrange Basis Polynomial](https://latex.codecogs.com/gif.latex?L_%7Bi%7D%28x%29%20%3D%20%5Cprod_%7Bj%20%5Cneq%20i%7D%5E%7Bn%7D%20%5Cfrac%7Bx%20-%20x_%7Bj%7D%7D%7Bx_%7Bi%7D%20-%20x_%7Bj%7D%7D)
+where $L_1(x)$ and $L_2(x)$ are the Lagrange basis polynomials defined by:
 
-where ![n](https://latex.codecogs.com/gif.latex?n) is the number of data points, ![x_i](https://latex.codecogs.com/gif.latex?x_i) is the ![i](https://latex.codecogs.com/gif.latex?i)th data point, and ![x_j](https://latex.codecogs.com/gif.latex?x_j) is the ![j](https://latex.codecogs.com/gif.latex?j)th data point.
+$L_1(x) = \frac{(x-x_2)}{(x_1-x_2)}$
 
-The Lagrange interpolation polynomial is then defined as:
+$L_2(x) = \frac{(x-x_1)}{(x_2-x_1)}$
 
-![Lagrange Interpolation Polynomial](https://latex.codecogs.com/gif.latex?P_%7Bn%7D%28x%29%20%3D%20%5Csum_%7Bi%3D0%7D%5E%7Bn%7D%20y_%7Bi%7DL_%7Bi%7D%28x%29)
+where $x_1$ and $x_2$ are the two data points used to construct the polynomial. The basis polynomials are multiplied by the corresponding data point to construct the interpolating polynomial. The interpolating polynomial is then used to estimate the function at points between the given data points.
 
-where ![y_i](https://latex.codecogs.com/gif.latex?y_i) is the ![i](https://latex.codecogs.com/gif.latex?i)th data point.
+A Lagrange polynomial of degree $n$ is given by:
+$P_n(x) = \sum_{i=1}^{n+1}y_i*L_i(x)$
 
-The Lagrange interpolation method is very simple to implement, but it is not very efficient. The time complexity of the algorithm is ![O(n^2)](https://latex.codecogs.com/gif.latex?O%28n%5E2%29), which means that the algorithm becomes very slow as the number of data points increases.
+where $L_i(x)$ is the Lagrange basis polynomial defined by:
 
-## Cubic Spline Interpolation
-The cubic spline interpolation method constructs a piecewise function that consists of multiple cubic polynomials to approximate the data. The cubic polynomials are defined as:
+$L_i(x) = \prod_{j=1, j \neq i}^{n+1}\frac{(x-x_j)}{(x_i-x_j)}$
 
-![Cubic Polynomial](https://latex.codecogs.com/gif.latex?P_%7Bi%7D%28x%29%20%3D%20a_%7Bi%7D%20&plus;%20b_%7Bi%7D%28x%20-%20x_%7Bi%7D%29%20&plus;%20c_%7Bi%7D%28x%20-%20x_%7Bi%7D%29%5E2%20&plus;%20d_%7Bi%7D%28x%20-%20x_%7Bi%7D%29%5E3)
+where $x_1, x_2, \dots, x_{n+1}$ are the data points used to construct the polynomial. The basis polynomials are multiplied by the corresponding data point to construct the interpolating polynomial. The interpolating polynomial is then used to estimate the function at points between the given data points.
 
-where ![a_i](https://latex.codecogs.com/gif.latex?a_i), ![b_i](https://latex.codecogs.com/gif.latex?b_i), ![c_i](https://latex.codecogs.com/gif.latex?c_i), and ![d_i](https://latex.codecogs.com/gif.latex?d_i) are constants that are determined by the data points.
+## Spline Interpolation
+Spline interpolation is a technique used to construct a smooth curve that passes through a given set of points. Unlike Lagrange interpolation, spline interpolation uses piecewise-defined polynomial functions to approximate the data, resulting in a smoother and more accurate curve. The technique involves dividing the data into smaller sections and fitting a polynomial function to each section. The polynomial functions are then matched at the points where the sections meet, ensuring a continuous and smooth curve. Spline interpolation is particularly useful when dealing with noisy data or data that contains gaps, as it allows for a more flexible and accurate representation of the underlying function. It is commonly used in fields such as engineering, physics, and computer graphics.
 
-The cubic polynomials are connected together at the data points to form a piecewise function. The first and last cubic polynomials are defined as:
+In practice, the cubic spline is widely used and is given by:
 
-![First Cubic Polynomial](https://latex.codecogs.com/gif.latex?P_%7B0%7D%28x%29%20%3D%20a_%7B0%7D%20&plus;%20b_%7B0%7D%28x%20-%20x_%7B0%7D%29%20&plus;%20c_%7B0%7D%28x%20-%20x_%7B0%7D%29%5E2%20&plus;%20d_%7B0%7D%28x%20-%20x_%7B0%7D%29%5E3)
+$s(x) \frac{(x_j-x)^3*M_{j-1} + (x-x_{j-1})^3*M_j}{6*(x_j-x_{j-1})} + \frac{(x_j-x)*y_{j-1} + (x-x_{j-1})*y_j}{x_j-x_{j-1}} - \frac{(x_j-x)[(x_j-x)*M_{j-1}] + (x-x_{j-1})*M_j}{6}$
 
-![Last Cubic Polynomial](https://latex.codecogs.com/gif.latex?P_%7Bn-1%7D%28x%29%20%3D%20a_%7Bn-1%7D%20&plus;%20b_%7Bn-1%7D%28x%20-%20x_%7Bn-1%7D%29%20&plus;%20c_%7Bn-1%7D%28x%20-%20x_%7Bn-1%7D%29%5E2%20&plus;%20d_%7Bn-1%7D%28x%20-%20x_%7Bn-1%7D%29%5E3)
+for $x_{j-1} \leq x \leq x_j$ and $j = 1, 2, \dots, n$
 
-where ![n](https://latex.codecogs.com/gif.latex?n) is the number of data points.
+where $x_1, x_2, \dots, x_n$ are the data points and $y_1, y_2, \dots, y_n$ are the corresponding function values. The $M_i$ are the second derivatives of the function at the data points, for $i = 0, 1, 2, \dots, n$.
 
-The remaining cubic polynomials are defined as:
+To compute the second derivatives, the tridiagonal matrix algorithm is used. The algorithm is given by:
 
-![Remaining Cubic Polynomial](https://latex.codecogs.com/gif.latex?P_%7Bi%7D%28x%29%20%3D%20a_%7Bi%7D%20&plus;%20b_%7Bi%7D%28x%20-%20x_%7Bi%7D%29%20&plus;%20c_%7Bi%7D%28x%20-%20x_%7Bi%7D%29%5E2%20&plus;%20d_%7Bi%7D%28x%20-%20x_%7Bi%7D%29%5E3)
+$M_0 = 0$
 
-where ![i](https://latex.codecogs.com/gif.latex?i) is the index of the data point that the cubic polynomial passes through.
+$M_n = 0$
 
-The cubic spline interpolation method is more efficient than the Lagrange interpolation method. The time complexity of the algorithm is ![O(n)](https://latex.codecogs.com/gif.latex?O%28n%29), which means that the algorithm is much faster as the number of data points increases.
+$M_i = \frac{(x_j-x_{j-1})*M_{j-1}}{6} + \frac{(x_{j+1} - x_{j-1})*M_j}{3} + \frac{(x_{j+1}-x_j)*M_{j+1}}{6} = \frac{y_{j+1}-y_j}{x_{j+1}-x_j} - \frac{y_j-y_{j-1}}{x_j-x_{j-1}}$
 
-## References
-1. [Lagrange Interpolation](https://en.wikipedia.org/wiki/Lagrange_polynomial)
-2. [Cubic Spline Interpolation](https://en.wikipedia.org/wiki/Spline_interpolation)
+for $j = 1, 2, \dots, n-1$
