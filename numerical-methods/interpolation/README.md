@@ -22,7 +22,7 @@ where $x_1$ and $x_2$ are the two data points used to construct the polynomial. 
 
 A Lagrange polynomial of degree $n$ is given by:
 
-$P_n(x) = \sum_{i=1}^{n+1}y_i*L_i(x)$
+$P_n(x) = y_1*L_1(x) + y_2*L_2(x) + \dots + y_n*L_n(x)$
 
 where $L_i(x)$ is the Lagrange basis polynomial defined by:
 
@@ -36,7 +36,7 @@ Spline interpolation is a technique used to construct a smooth curve that passes
 
 In practice, the cubic spline is widely used and is given by:
 
-$s(x) = \frac{(x_j-x)^3*M_{j-1} + (x-x_{j-1})^3*M_j}{6*(x_j-x_{j-1})} + \frac{(x_j-x)*y_{j-1} + (x-x_{j-1})*y_j}{x_j-x_{j-1}} - \frac{(x_j-x)[(x_j-x)*M_{j-1}] + (x-x_{j-1})*M_j}{6}$
+$s(x) = \frac{(x_j-x)^3M_{j-1} + (x-x_{j-1})^3M_j}{6(x_j-x_{j-1})} + \frac{(x_j-x)y_{j-1} + (x-x_{j-1})y_j}{x_j-x_{j-1}} - \frac{(x_j-x)[(x_j-x)M_{j-1}] + (x-x_{j-1})M_j}{6}$
 
 for $x_{j-1} \leq x \leq x_j$ and $j = 1, 2, \dots, n$
 
