@@ -32,9 +32,9 @@ where $x_1, x_2, \dots, x_{n+1}$ are the data points used to construct the polyn
 ## Spline Interpolation
 Spline interpolation is a technique used to construct a smooth curve that passes through a given set of points. Unlike Lagrange interpolation, spline interpolation uses piecewise-defined polynomial functions to approximate the data, resulting in a smoother and more accurate curve. The technique involves dividing the data into smaller sections and fitting a polynomial function to each section. The polynomial functions are then matched at the points where the sections meet, ensuring a continuous and smooth curve. Spline interpolation is particularly useful when dealing with noisy data or data that contains gaps, as it allows for a more flexible and accurate representation of the underlying function. It is commonly used in fields such as engineering, physics, and computer graphics.
 
-In practice, the cubic spline is widely used and is given by:
+In practice, the cubice spline interpolation is used to construct the curve. A computationally efficient algorithm for computing the spline function is given by:
 
-$s(x) = \frac{(x_j-x)^3M_{j-1} + (x-x_{j-1})^3M_j}{6(x_j-x_{j-1})} + \frac{(x_j-x)y_{j-1} + (x-x_{j-1})y_j}{x_j-x_{j-1}} - \frac{1}{6} (x_j-x{j-1})[(x_j-x) M_{j-1} + (x-x_{j-1}) M_j]$
+$s(x) = \frac{(x_j-x)^3M_{j-1} + (x-x_{j-1})^3M_j}{6(x_j-x_{j-1})} + \frac{(x_j-x)y_{j-1} + (x-x_{j-1})y_j}{x_j-x_{j-1}} - \frac{1}{6} (x_j-x_{j-1})[(x_j-x) M_{j-1} + (x-x_{j-1}) M_j]$
 
 for $x_{j-1} \leq x \leq x_j$ and $j = 1, 2, \dots, n$
 
