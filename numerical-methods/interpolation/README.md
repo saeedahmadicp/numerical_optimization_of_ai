@@ -10,7 +10,7 @@ Lagrange interpolation is a method used to approximate a function by a polynomia
 
 A linear Lagrange polynomial is given by:
 
-$P_1(x) = y_1*L_1(x) + y_2*L_2(x)$
+$P_1(x) = y_1 L_1(x) + y_2 L_2(x)$
 
 where $L_1(x)$ and $L_2(x)$ are the Lagrange basis polynomials defined by:
 
@@ -22,7 +22,7 @@ where $x_1$ and $x_2$ are the two data points used to construct the polynomial. 
 
 A Lagrange polynomial of degree $n$ is given by:
 
-$P_n(x) = y_1*L_1(x) + y_2*L_2(x) + \dots + y_n*L_n(x)$
+$P_n(x) = y_1 L_1(x) + y_2 L_2(x) + \dots + y_n L_n(x)$
 
 where $L_i(x)$ is the Lagrange basis polynomial defined by:
 
