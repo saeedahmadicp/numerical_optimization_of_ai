@@ -1,5 +1,5 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from . import np
+
 
 def lagrange_interpolation(x_values, y_values):
     """
