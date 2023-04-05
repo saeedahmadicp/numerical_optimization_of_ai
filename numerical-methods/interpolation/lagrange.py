@@ -1,4 +1,4 @@
-from . import np
+import numpy as np
 
 
 def lagrange_interpolation(x_values, y_values):

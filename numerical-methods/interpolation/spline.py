@@ -1,4 +1,4 @@
-from . import np
+import numpy as np
 
 
 def cubic_spline(x_values, y_values):
