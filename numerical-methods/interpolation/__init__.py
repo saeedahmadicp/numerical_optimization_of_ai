@@ -1,4 +1,3 @@
-import numpy as np
 from .lagrange import lagrange_interpolation
 from .spline import cubic_spline
 
