@@ -23,7 +23,7 @@ Simpson's rule is a method used to approximate the definite integral of a functi
 
 The Simpson's rule is given by:
 
-$A = h/3  [f(x_0) + 4 f(x_1) + 2 f(x_2) + 4 f(x_3) + ... + 2 f(x_{n-2}) + 4 f(x_{n-1}) + f(x_n)]$
+$A = \frac{h}{3}  [f(x_0) + 4 f(x_1) + 2 f(x_2) + 4 f(x_3) + ... + 2 f(x_{n-2}) + 4 f(x_{n-1}) + f(x_n)]$
 
 where:
 * $A$ is the area under the curve of the function
