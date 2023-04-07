@@ -13,10 +13,9 @@ The forward difference is a method used to approximate the derivative of a funct
 
 $\frac{d}{dx} f(x) = \frac{f(x + h) - f(x)}{h}$
 
-### Approximation Error in Forward Difference
 The approximation error in the forward difference is given by:
 
-$\frac{d}{dx} f(x) - \frac{f(x + h) - f(x)}{h} = \frac{h f^{(2)}(\xi)}{2}$
+$\left|\frac{d}{dx} f(x) - \frac{f(x + h) - f(x)}{h}\right| = \frac{h f^{(2)}(\xi)}{2}$
 
 where $\xi$ is a number between $x$ and $x + h$. The approximation error in forward difference is on the order of the step size: $O(h)$.
 
@@ -25,10 +24,9 @@ The backward difference is a method used to approximate the derivative of a func
 
 $\frac{d}{dx} f(x) = \frac{f(x) - f(x - h)}{h}$
 
-### Approximation Error in Backward Difference
 The approximation error in the backward difference is given by:
 
-$\frac{d}{dx} f(x) - \frac{f(x) - f(x - h)}{h} = \frac{h f^{(2)}(\xi)}{2}$
+$\left|\frac{d}{dx} f(x) - \frac{f(x) - f(x - h)}{h}\right| = \frac{h f^{(2)}(\xi)}{2}$
 
 where $\xi$ is a number between $x - h$ and $x$. The approximation error in backward difference is on the order of the step size: $O(h)$.
 
@@ -37,9 +35,8 @@ The central difference is a method used to approximate the derivative of a funct
 
 $\frac{d}{dx} f(x) = \frac{f(x + h) - f(x - h)}{2h}$
 
-### Approximation Error in Central Difference
 The approximation error in the central difference is given by:
 
-$\frac{d}{dx} f(x) - \frac{f(x + h) - f(x - h)}{2h} = \frac{h^2 f^{(3)}(\xi)}{12}$
+$\left|\frac{d}{dx} f(x) - \frac{f(x + h) - f(x - h)}{2h}\right| = \frac{h^2 f^{(3)}(\xi)}{12}$
 
 where $\xi$ is a number between $x - h$ and $x + h$. The approximation error in central difference is of second order: $O(h^2)$. The central difference is the most accurate of the three methods because as $h$ gets smaller, the approximation error gets smaller faster than the other methods.
