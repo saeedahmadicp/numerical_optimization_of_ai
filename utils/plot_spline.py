@@ -1,5 +1,6 @@
 from interpolation.spline import cubic_spline
 
+__all__ = ["cubic_spline_plot"]
 
 def cubic_spline_plot(x_values, y_values):
     """

@@ -1,7 +1,5 @@
 import numpy as np
-from elimination_method import eliminationSearchMethod
-from fibonacci_search import fibonacciSearchMethod
-from golden_section_search import goldenSearchMethod
+from numerical_methods import eliminationSearchMethod, fibonacciSearchMethod, goldenSearchMethod
 
 from utils import findInitialInterval, plotRootFindingMethods
 from functions import func1, func2, func3, func4, func5

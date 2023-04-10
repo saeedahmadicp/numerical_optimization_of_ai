@@ -1,5 +1,6 @@
 import numpy as np
 
+__all__ = ["lagrange_interpolation"]
 
 def lagrange_interpolation(x_values, y_values):
     """
