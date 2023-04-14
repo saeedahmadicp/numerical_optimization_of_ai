@@ -13,7 +13,7 @@ def goldenSearchMethod(f, a, b, N, tol=1e-6):
     E = []
     tai = (-1 + math.sqrt(5)) / 2
     x1 = a + (1-tai) * (b - a)
-    x2 = b - tai * (b - a)
+    x2 = a + tai * (b - a)
     for i in range(N):
         N -= 1
         
@@ -26,7 +26,7 @@ def goldenSearchMethod(f, a, b, N, tol=1e-6):
         
         ## calculate new x1 and x2
         x1 = a + (1-tai) * (b - a)
-        x2 = b - tai * (b - a)
+        x2 = a + tai * (b - a)
         
         ## append error to the list
         E.append(abs(f((a + b) / 2)))
