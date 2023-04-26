@@ -6,6 +6,9 @@ from .fibonacci_search import fibonacciSearchMethod
 from .golden_section_search import goldenSearchMethod
 from .elimination_method import eliminationSearchMethod
 from .nelder_and_mead_method import nelderAndMeadMethod
+from .powell_method import powell_conjugate_direction_method
+
 
 __all__ = ["bisectionMethod", "newtonMethod", "regularFalsiMethod", "secantMethod", 
-           "fibonacciSearchMethod", "goldenSearchMethod", "eliminationSearchMethod", "nelderAndMeadMethod"]
+           "fibonacciSearchMethod", "goldenSearchMethod", "eliminationSearchMethod", 
+           "nelderAndMeadMethod", "powell_conjugate_direction_method"]

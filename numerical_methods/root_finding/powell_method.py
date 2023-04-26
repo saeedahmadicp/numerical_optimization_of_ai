@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize_scalar
 
 
-
+__all__ = ['powell_conjugate_direction_method']
 
 def powell_conjugate_direction_method(func, x0, tol, max_iters):
     """
