@@ -2,6 +2,7 @@ from interpolation.lagrange import lagrange_interpolation
 import matplotlib.pyplot as plt
 import numpy as np
 
+__all__ = ["lagrange_interpolation_plot"]
 
 def lagrange_interpolation_plot(x_values, y_values):
     """

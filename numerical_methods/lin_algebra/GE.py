@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ['GE']
+
 def GE(A, b):
     """
     This function employs the Gaussian elimination method to solve the linear system Ax=b.

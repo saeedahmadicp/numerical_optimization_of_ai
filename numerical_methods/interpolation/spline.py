@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["cubic_spline"]
+
 
 def cubic_spline(x_values, y_values):
     """

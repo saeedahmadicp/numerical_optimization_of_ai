@@ -1,5 +1,8 @@
 import numpy as np
 
+
+__all__ = ['GEpivot']
+
 def GEpivot(A,b):
     """
     This function employs the Gaussian elimination method with partial pivoting to solve the linear system Ax=b.
