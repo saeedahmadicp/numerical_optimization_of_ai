@@ -33,6 +33,7 @@ def nelderAndMeadMethod(func, noOfPoints, iters, tol):
     
     ## Error list
     Errors = []
+    x_history = [x_best.copy()]
     
     ## Optimization loop
     for i in range(iters):
@@ -69,6 +70,8 @@ def nelderAndMeadMethod(func, noOfPoints, iters, tol):
                     simplex[i, :] = sigma * (simplex[i, :] + simplex[0, :])
         
         
+        x_history.append(simplex[0, :].copy())
+        
         ### Termination condition
         if np.std(f_values) < tol:
             break
@@ -82,7 +85,7 @@ def nelderAndMeadMethod(func, noOfPoints, iters, tol):
         Errors.append(f_best)
         
         
-    return x_best, Errors, len(Errors)
+    return x_best, Errors, len(Errors), np.array(x_history)
         
  
 
@@ -91,16 +94,29 @@ if __name__ == "__main__":
     def func(x, y):
         return x**2 + y**2
     
-    x, E, N = nelderAndMeadMethod(func, 3, 100, 1e-8)
-    print("x = ", x)
+    x_min, E, N, history = nelderAndMeadMethod(func, 3, 100, 1e-8)
+    print("x = ", x_min)
     print("E = ", E)
     print("N = ", N)
     
     
-    ## plot the error  
-    iterations = np.arange(1, N+1)
-    plt.plot(iterations, E)
-    plt.xlabel("Iterations")
-    plt.ylabel("Error")
-    plt.title(f'Nelder-Mead Method: func = x^2 + y^2')
+    ## Define the range of the contour plot
+    x = np.linspace(-2, 2, 100)
+    y = np.linspace(-2, 2, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = func(X, Y)
+    
+    ### Plot the contour
+    plt.contour(X, Y, Z, levels=np.logspace(-1, 3, 10), cmap='jet')
+    plt.colorbar(label='f(x, y)')
+    
+    
+    ## plot the movement of the best point during the iterations
+    plt.plot(history[:, 0], history[:, 1], 'k.-')
+    plt.plot(x_min[0], x_min[1], 'r*', label='Optimum')
+    plt.legend()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Nelder-Mead method')
     plt.show()
+    
