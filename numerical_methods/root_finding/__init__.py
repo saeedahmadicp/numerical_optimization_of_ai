@@ -5,7 +5,7 @@ from .secant_method import secantMethod
 from .fibonacci_search import fibonacciSearchMethod
 from .golden_section_search import goldenSearchMethod
 from .elimination_method import eliminationSearchMethod
-
+from .nelder_and_mead_method import nelderAndMeadMethod
 
 __all__ = ["bisectionMethod", "newtonMethod", "regularFalsiMethod", "secantMethod", 
-           "fibonacciSearchMethod", "goldenSearchMethod", "eliminationSearchMethod",]
+           "fibonacciSearchMethod", "goldenSearchMethod", "eliminationSearchMethod", "nelderAndMeadMethod"]
