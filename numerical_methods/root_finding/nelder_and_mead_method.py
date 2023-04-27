@@ -92,7 +92,7 @@ def nelderAndMeadMethod(func, noOfPoints, iters, tol):
 ## Test the algorithm
 if __name__ == "__main__":
     def func(x, y):
-        return x**2 + y**2
+        return x**2 -2*x*y + 2*y**2 - 8*y + 16
     
     x_min, E, N, history = nelderAndMeadMethod(func, 3, 100, 1e-8)
     print("x = ", x_min)
@@ -117,6 +117,6 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Nelder-Mead method')
+    plt.title('Nelder-Mead method, function = x**2 -2*x*y + 2*y**2 - 8*y + 16')
     plt.show()
     

@@ -1,17 +1,18 @@
 import numpy as np
+import torch 
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize_scalar
 
 
-__all__ = ['powell_conjugate_direction_method']
+__all__ = ['steepest_descent_method']
 
-def powell_conjugate_direction_method(func, x0, tol, max_iters):
+def steepest_descent_method(func, variables, alpha, tol, max_iters):
     """
-    Powell's conjugate direction method optimisation algorithm
+    Steepest descent method optimisation algorithm
     
     Parameters:
         func (function): the objective function to be optimised
-        initial_directions (list): initial directions
+        variables (list): list of variables
+        alpha (float): learning rate
         tol (float): tolerance value for termination
         max_iters (int): maximum number of iterations
         
@@ -24,43 +25,38 @@ def powell_conjugate_direction_method(func, x0, tol, max_iters):
     ## Error list
     E = []
     
-    n = len(x0)
-    f0 = func(*x0)
-    directions = np.eye(n)
-    iters = 0
+    # history
+    history = []
     
-    ## history
-    history = [x0.copy()]
+    x = np.random.rand(len(variables))
+    x = torch.tensor(x, requires_grad=True)
+    iters = 0
     
     while iters < max_iters:
         iters += 1
-        x_prev = x0.copy()
-        history.append(x_prev)
         
-        # Minimise along each direction
-        for i in range(n):
-            res = minimize_scalar(lambda alpha: func(*(x0 + alpha * directions[i, :])))
-            x0 = x0 + res.x * directions[i, :]
-            E.append(abs(func(*x0)))
-            
-        # Update directions
-        for i in range(n - 1):
-            directions[i, :] = directions[i + 1, :]
-        directions[-1, :] = x0 - x_prev
+        history.append(x.detach().clone().numpy())
+        x_prev = x.clone()
+        f = func(*x)
+        f.backward()
+        x.data = x.data - alpha * x.grad
+        x.grad.zero_()
+        E.append(abs(func(*x).detach().numpy()))
         
         ## Check for convergence
-        if np.linalg.norm(x0 - x_prev) < tol:
+        if torch.norm(x - x_prev) < tol:
             break
         
-    return x0, E, len(E), np.array(history)
-    
-    
+    return x.detach().numpy(), E, len(E), np.array(history)
+
+
 if __name__ == '__main__':
-    func = lambda x, y: x**2 -2*x*y + 2*y**2 - 8*y + 16
-    x0 = np.random.rand(2)
+    func = lambda x, y: (x) ** 2 + (y) ** 2
+    variables = ['x', 'y']
+    alpha = 0.1
     tol = 1e-6
     max_iters = 1000
-    x_min, E, N, history = powell_conjugate_direction_method(func, x0, tol, max_iters)
+    x_min, E, N, history = steepest_descent_method(func, variables, alpha, tol, max_iters)
     print(f'x = {x_min}')
     print(f'f(x) = {func(*x_min)}')
     print(f'N = {N}')
@@ -82,6 +78,5 @@ if __name__ == '__main__':
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Powell Method, function = x**2 -2*x*y + 2*y**2 - 8*y + 16')
+    plt.title('Steepest Descent Method, function = x^2 + y^2')
     plt.show()
-
