@@ -9,6 +9,9 @@ This directory contains implementations of various numerical methods for finding
 5. [Elimination Method](#elimination-method)
 6. [Fibonacci Search](#fibonacci-search)
 7. [Golden Section Search](#golden-section-search)
+8. [Steepest Descent Method](#steepest-descent-method)
+9. [Newton Hessian Method](#newton-hessian-method)
+10. [Nelder and Mead Method](#nelder-and-mead-method)
 
 #### Usage
 ```python
