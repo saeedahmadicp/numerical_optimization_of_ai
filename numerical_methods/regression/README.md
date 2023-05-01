@@ -36,3 +36,45 @@ By solving the above equations, we get the following equations for the weights:
 $$a = \dfrac{(n+1) \sum\limits_{i=0}^{n} x_i y_i - \sum\limits_{i=0}^{n} x_i \sum\limits_{i=0}^{n} y_i}{(n+1) \sum\limits_{i=0}^{n} x_i^2 - (\sum\limits_{i=0}^{n} x_i)^2}$$
 
 $$b = \frac{1}{n+1} {\sum_{i=0}^{n} y_i - a \sum_{i=0}^{n} x_i}$$
+
+Example:
+Find the linear least square approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1.
+
+Solution:
+Based on the above equations, we calculate the following weights:
+
+$$a = 1.16, b = 1.26$$
+
+Therefore, the linear least square approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1 is:
+
+$$y = 1.16 x + 1.26$$
+
+## Polynomial Regression
+In the above example, the linear fit was not a good approximation of the data. This is because the data is not linear. Instead, the data is exponential. To fit a curve to the data, we can use polynomial regression. One way to to this is to use the least squares approximation using Chebychev polynomials. To approximate a function $f(x)$ using Chebychev polynomials, we use the following equation:
+
+$$f(x) \approx c_0 T_0(x) + c_1 T_1(x) + c_2 T_2(x) + \cdots + c_n T_n(x)$$
+
+where $T_i(x)$ are the basis Chebychev polynomials. To find the basis Chebychev polynomials, we use the following Chebychev recurrence relations:
+
+$$ T_n(x) = cos(n \cdot cos^{-1}(x)) for -1 \leq x \leq 1$$
+
+$$ T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x) for n \geq 1$$
+
+The first few Chebychev polynomials are given as:
+
+$$T_0(x) = 1$$
+
+$$T_1(x) = x$$
+
+$$T_2(x) = 2x^2 - 1$$
+
+$$T_3(x) = 4x^3 - 3x$$
+
+### Orthogonality of Chebychev Polynomials
+The Chebychev polynomials are orthogonal over the interval $[-1,1]$. This means that the integral of the product of any two Chebychev polynomials is zero. This is given as:
+
+$$\int_{-1}^{1} T_n(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx = {\begin{cases} 0 & n \neq m \\ \pi & n = m = 0 \\ \frac{\pi}{2} & n = m \neq 0 \end{cases}}$$
+
+The coefficients $c_i$ can be found by using the following equation:
+
+$$c_m = {\begin{cases} \frac{2}{\pi} \int_{-1}^{1} f(x) \frac{1}{\sqrt{1-x^2}} dx & m = 0 \\ \frac{2}{\pi} \int_{-1}^{1} f(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx & m \neq 0 \end{cases}}$$
