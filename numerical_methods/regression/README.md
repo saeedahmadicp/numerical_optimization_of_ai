@@ -56,9 +56,9 @@ $$f(x) \approx c_0 T_0(x) + c_1 T_1(x) + c_2 T_2(x) + \cdots + c_n T_n(x)$$
 
 where $T_i(x)$ are the basis Chebychev polynomials. To find the basis Chebychev polynomials, we use the following Chebychev recurrence relations:
 
-$$ T_n(x) = cos(n \cdot cos^{-1}(x)) for -1 \leq x \leq 1$$
+$$ T_n(x) = cos(n \cdot cos^{-1}(x)), -1 \leq x \leq 1$$
 
-$$ T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x) for n \geq 1$$
+$$ T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x), n \geq 1$$
 
 The first few Chebychev polynomials are given as:
 
@@ -73,8 +73,21 @@ $$T_3(x) = 4x^3 - 3x$$
 ### Orthogonality of Chebychev Polynomials
 The Chebychev polynomials are orthogonal over the interval $[-1,1]$. This means that the integral of the product of any two Chebychev polynomials is zero. This is given as:
 
-$$\int_{-1}^{1} T_n(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx = {\begin{cases} 0 & n \neq m \\ \pi & n = m = 0 \\ \frac{\pi}{2} & n = m \neq 0 \end{cases}}$$
+$$
+\int_{-1}^{1} T_n(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx = 
+\begin{cases} 
+0 & n \neq m \\ 
+\pi & n = m = 0 \\ 
+\frac{\pi}{2} & n = m \neq 0 
+\end{cases}
+$$
 
 The coefficients $c_i$ can be found by using the following equation:
 
-$$c_m = {\begin{cases} \frac{2}{\pi} \int_{-1}^{1} f(x) \frac{1}{\sqrt{1-x^2}} dx & m = 0 \\ \frac{2}{\pi} \int_{-1}^{1} f(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx & m \neq 0 \end{cases}}$$
+$$
+c_m = \begin{cases}
+\frac{2}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m = 0 \\
+\\
+\frac{1}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m \neq 0 
+\end{cases}
+$$
