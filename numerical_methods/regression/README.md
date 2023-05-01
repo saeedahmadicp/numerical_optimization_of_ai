@@ -2,8 +2,8 @@
 This folder contains the following algorithms for fitting a curve to data:
 
 ## Algorithms
-* [Linear Regression](linear_regression.py)
-* [Polynomial Regression](polynomial_regression.py)
+* [Linear Regression](linear.py)
+* [Polynomial Regression](chebyshev.py)
 
 ## Linear Regression
 Linear regression is a method for fitting a linear curve to data. The linear curve is defined as:
