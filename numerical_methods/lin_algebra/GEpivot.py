@@ -1,11 +1,10 @@
 import numpy as np
 
-
-__all__ = ['GEpivot']
-
 def GEpivot(A,b):
     """
-    This function employs the Gaussian elimination method with partial pivoting to solve the linear system Ax=b.
+    This function employs the Gaussian elimination method with partial 
+    pivoting to solve the linear system Ax=b.
+    
     Input:
         A: coefficient square matrix
         b: right side column vector
@@ -27,23 +26,22 @@ def GEpivot(A,b):
 
     # elimination step
     for k in range(n-1):
-        # Pivoting: Find the maximal element in column k, starting from row k, then swap that row with row k:
+        # pivoting: find the maximal element in column k, starting from row k, 
+        # then swap that row with row k
         for i in range(k+1,n):
             if abs(A[i,k]) > abs(A[k,k]):
-                # Swap rows k and i if the leading entry A(k,k) is smaller than A(i,k) in magnitude
+                # swap rows k and i if the leading entry A(k,k) is smaller than A(i,k) in magnitude
                 A[[k,i],:] = A[[i,k],:]
                 b[[k,i]] = b[[i,k]]
         
-        # Row elimination.
+        # row elimination.
         for i in range(k+1,n):
-            # PERFORM ROW OPERATION: multiply row k by -A(i,k) and add to row i to eliminate A(i,k). 
-            # Note that the leading entry has been normalized to one.
             factor = A[i,k]/A[k,k]
             A[i,k+1:n] -= factor*A[k,k+1:n]
             A[i,k] = factor
             b[i] -= factor*b[k]
     
-    # Backsubstitution: Solve the upper triangular linear system.
+    # back substitution: solve the upper triangular linear system.
     x = np.zeros(n)
     x[n-1] = b[n-1]/A[n-1,n-1]
     for i in range(n-2,-1,-1):
@@ -56,16 +54,14 @@ def GEpivot(A,b):
 
 
 if __name__ == "__main__":
-    # Define the test case (up to 4 floating point)
     A = np.array([[6,2,2],[2,0.6667,0.3333],[1,2,-1]])
     b = np.array([-2,1,0])
-
-    # Solve the system using GEpivot function
     x, _, _ = GEpivot(A, b)
+    print("The solution is: ", x)
 
-    # Check the solution
     expected_x = np.array([2.6, -3.8, -5.0])
     tolerance = 1e-3
+
     if np.allclose(x, expected_x, rtol=tolerance, atol=tolerance):
         print("Test case passed: the solution is correct.")
     else:
