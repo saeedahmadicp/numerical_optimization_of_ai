@@ -91,3 +91,33 @@ c_m = \begin{cases}
 \frac{1}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m \neq 0 
 \end{cases}
 $$
+
+Where $P_m(x)$ is the $m^{th}$ Chebychev basis polynomial.
+
+Example. Find the Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1.
+
+Solution. Let's approximate $f(x)=e^x$ using the first 5 Chebychev polynomials. The first 5 Chebychev polynomials are given as:
+
+$$T_0(x) = 1$$
+
+$$T_1(x) = x$$
+
+$$T_2(x) = 2x^2 - 1$$
+
+$$T_3(x) = 4x^3 - 3x$$
+
+$$T_4(x) = 8x^4 - 8x^2 + 1$$
+
+Therefore, the Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1 is:
+
+$$f(x) \approx c_0 T_0(x) + c_1 T_1(x) + c_2 T_2(x) + c_3 T_3(x) + c_4 T_4(x)$$
+
+where $c_i$ are the coefficients of the Chebychev polynomials. To find the coefficients, we use the above equation for $c_m$. The coefficients are given as:
+
+$$c_0 = 2.53, c_1 = 0.56, c_2 = 0.13, c_3 = 0.02, c_4 = 0.002$$
+
+Therefore, the Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1 is:
+
+$$f(x) \approx 2.53 + 0.56 x + 0.13 (2x^2 - 1) + 0.02 (4x^3 - 3x) + 0.002 (8x^4 - 8x^2 + 1)$$
+
+$$f(x) \approx 0.016 x^4 + 0.08 x^3 + 0.244 x^2 + 0.5 x + 2.402$$
