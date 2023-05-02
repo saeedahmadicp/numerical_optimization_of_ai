@@ -70,6 +70,8 @@ $$T_2(x) = 2x^2 - 1$$
 
 $$T_3(x) = 4x^3 - 3x$$
 
+$$T_4(x) = 8x^4 - 8x^2 + 1$$
+
 ### Orthogonality of Chebychev Polynomials
 The Chebychev polynomials are orthogonal over the interval $[-1,1]$. This means that the integral of the product of any two Chebychev polynomials is zero. This is given as:
 
@@ -96,19 +98,7 @@ Where $P_m(x)$ is the $m^{th}$ Chebychev basis polynomial.
 
 Example. Find the Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1.
 
-Solution. Let's approximate $f(x)=e^x$ using the first 5 Chebychev polynomials. The first 5 Chebychev polynomials are given as:
-
-$$T_0(x) = 1$$
-
-$$T_1(x) = x$$
-
-$$T_2(x) = 2x^2 - 1$$
-
-$$T_3(x) = 4x^3 - 3x$$
-
-$$T_4(x) = 8x^4 - 8x^2 + 1$$
-
-Therefore, the Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1 is:
+Solution. The Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1 is:
 
 $$f(x) \approx c_0 T_0(x) + c_1 T_1(x) + c_2 T_2(x) + c_3 T_3(x) + c_4 T_4(x)$$
 
