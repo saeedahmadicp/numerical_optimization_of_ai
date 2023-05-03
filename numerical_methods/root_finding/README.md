@@ -61,3 +61,23 @@ The `Fibonacci Search` is a `golden section search algorithm` that divides an in
 ### Golden Section Search
 --------------------
 The `golden section search` is a `root-finding algorithm` that uses the golden ratio to efficiently narrow down the search interval to find the minimum or maximum of a function. The algorithm works by dividing the search interval into two parts in such a way that the ratio of the longer part to the shorter part is equal to the golden ratio. The function is then evaluated at the two new points created by this division, and the interval is updated to exclude the point that gives the higher function value. This process is repeated until the interval becomes small enough to yield a satisfactory approximation to the minimum or maximum of the function. Read more about the Golden Section Search [here.](https://docest.com/golden-section-search-method)
+
+### Steepest Descent Method
+----------------
+The Steepest Descent Method is an iterative optimization algorithm that can be used to find the minimum of a function. It works by taking steps in the direction of steepest descent, which is the direction of the negative gradient of the function.
+
+The update rule for the Steepest Descent Method is given by:
+> $x_{k+1} = x_k - \alpha_k \nabla f(x_k)$
+
+where $x_k$ is the current estimate of the minimum, $\alpha_k$ is the step size at iteration $k$, $\nabla f(x_k)$ is the gradient of the function $f$ at $x_k$.
+
+The algorithm continues until a stopping criterion is met, such as when the norm of the gradient falls below a certain threshold.
+
+For more information on the Steepest Descent Method and its implementation, please refer to the code in this repository.
+
+### Newton Hessian Method
+----------------
+
+### Nelder and Mead Method
+----------------
+
