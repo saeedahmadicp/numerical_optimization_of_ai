@@ -77,6 +77,19 @@ For more information on the Steepest Descent Method and its implementation, plea
 
 ### Newton Hessian Method
 ----------------
+The Newton-Hessian method is a numerical optimization technique used to find the minimum or maximum of a function. It uses the first and second derivatives of the function to iteratively update an initial guess for the optimal solution until a convergence criteria is met.
+
+The method is based on the idea of approximating the function locally with a quadratic Taylor series and finding the stationary point of this approximation. The second derivative matrix, also known as the Hessian matrix, is used to determine whether the stationary point is a minimum, maximum, or saddle point.
+
+The update rule for the Newton-Hessian method involves solving a system of linear equations that depends on the Hessian matrix and the gradient of the function. The method is known for its fast convergence rate but can be computationally expensive due to the need to compute the Hessian matrix.
+
+Mathematically, the Newton-Hessian method can be expressed as:
+
+> $x_{k+1} = x_k - [H(f(x_k))]^{-1} ∇f(x_k)$
+
+where $x_k$ is the current guess for the optimal solution, $H(f(x_k))$ is the Hessian matrix of the function evaluated at $x_k$, $∇f(x_k)$ is the gradient of the function evaluated at $x_k$, and $[H(f(x_k))]^{-1}$ is the inverse of the Hessian matrix.
+
+Overall, the Newton-Hessian method is a powerful optimization technique for finding the optimal solution of a function, especially for high-dimensional problems.
 
 ### Nelder and Mead Method
 ----------------
