@@ -93,4 +93,5 @@ Overall, the Newton-Hessian method is a powerful optimization technique for find
 
 ### Nelder and Mead Method
 ----------------
+The Nelder and Mead method, or simplex method, is an optimization algorithm used to find the minimum of a function. It works by creating a simplex, which is a geometrical shape made up of points in the function's parameter space. The simplex is then iteratively adjusted to find the minimum of the function. The algorithm is widely used due to its simplicity and effectiveness, particularly in cases where the gradient of the function is unknown or difficult to compute.
 
