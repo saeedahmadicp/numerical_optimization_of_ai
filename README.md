@@ -4,16 +4,32 @@ This repository is a collection of numerical functions implemented in Python, ai
 The folders are organized as follows:
 
 - **[Differentiation](/numerical_methods/differentiation/):** This folder contains functions for numerical differentiation methods, including: 
-    - [`forward difference`](/numerical_methods/differentiation/forward_difference.py)
-    - [`backward difference`](/numerical_methods/differentiation/backward_difference.py)
-    - [`central difference`](/numerical_methods/differentiation/central_difference.py). <br><br>
+    - [`Forward Difference`](/numerical_methods/differentiation/forward_difference.py)
+    - [`Backward Difference`](/numerical_methods/differentiation/backward_difference.py)
+    - [`Central Difference`](/numerical_methods/differentiation/central_difference.py) <br><br>
 - **[Integration](/numerical_methods/integration/):** This folder contains functions for numerical integration methods, including:
-    - [`trapezoidal rule`](/numerical_methods/integration/trapezoidal.py)
-    - [`Simpson's rule`](/numerical_methods/integration/simpson.py). <br><br>
-- **[Interpolation](/numerical_methods/interpolation/):** This folder contains functions for numerical interpolation methods, including the [`Lagrange interpolation`](/numerical_methods/interpolation/lagrange.py) and [`Spline interpolation`](/numerical_methods/interpolation/spline.py). <br><br>
-- **[Linear Algebra](/numerical_methods/lin_algebra/):** This folder contains functions for numerical linear algebra, including the [`Gaussian elimination without pivoting`](/numerical_methods/lin_algebra/GE.py), [`Gaussain elimination with pivoting`](/numerical_methods/lin_algebra/GEpivot.py), [`Jacobi`](/numerical_methods/lin_algebra/Jacobi.py), and [`Gauss-Seidel`](/numerical_methods/lin_algebra/GaussSeidel.py) methods. <br><br>
-- **[Regression](/numerical_methods/regression/):** This folder contains functions for regression analysis, including [`linear regression`](/numerical_methods/regression/linear.py) and polynomial regression with the [`chebyshev polynomials`](/numerical_methods/regression/chebyshev.py). <br><br>
-- **[Root Finding](/numerical_methods/root_finding/):** This folder contains functions for finding roots of equations, including the [`bisection method`](/numerical_methods/root_finding/bisection.py), [`secant method`](/numerical_methods/root_finding/secant.py), [`Newton-Raphson`](/numerical_methods/root_finding/newton.py), [`Newton-Hessian`](/numerical_methods/root_finding/newton_hessian.py), [`Powell method`](/numerical_methods/root_finding/powell.py), [`Nelder-Mead`](/numerical_methods/root_finding/nelder_mead.py), [`Regula Falsi`](/numerical_methods/root_finding/regula_falsi.py), and the [`Steepest Descent`](/numerical_methods/root_finding/steepest_descent.py) method.
+    - [`Trapezoidal Rule`](/numerical_methods/integration/trapezoidal.py)
+    - [`Simpson's Rule`](/numerical_methods/integration/simpson.py) <br><br>
+- **[Interpolation](/numerical_methods/interpolation/):** This folder contains functions for numerical interpolation methods, including:
+    - [`Lagrange Interpolation`](/numerical_methods/interpolation/lagrange.py)
+    - [`Spline Interpolation`](/numerical_methods/interpolation/spline.py) <br><br>
+- **[Linear Algebra](/numerical_methods/lin_algebra/):** This folder contains functions for numerical linear algebra, including:
+    - [`Gaussian Elimination without pivoting`](/numerical_methods/lin_algebra/GE.py)
+    - [`Gaussain Elimination with pivoting`](/numerical_methods/lin_algebra/GEpivot.py)
+    - [`Jacobi`](/numerical_methods/lin_algebra/Jacobi.py)
+    - [`Gauss-Seidel`](/numerical_methods/lin_algebra/GaussSeidel.py) <br><br>
+- **[Regression](/numerical_methods/regression/):** This folder contains functions for regression analysis, including:
+    - [`Linear Regression`](/numerical_methods/regression/linear.py)
+    - [`Polynomial Regression with chebyshev`](/numerical_methods/regression/chebyshev.py) <br><br>
+- **[Root Finding](/numerical_methods/root_finding/):** This folder contains functions for finding roots of equations, including:
+    - [`Bisection Method`](/numerical_methods/root_finding/bisection.py)
+    - [`Secant Method`](/numerical_methods/root_finding/secant.py)
+    - [`Newton-Raphson`](/numerical_methods/root_finding/newton.py)
+    - [`Newton-Hessian`](/numerical_methods/root_finding/newton_hessian.py)
+    - [`Powell Method`](/numerical_methods/root_finding/powell.py)
+    - [`Nelder-Mead`](/numerical_methods/root_finding/nelder_mead.py)
+    - [`Regula Falsi`](/numerical_methods/root_finding/regula_falsi.py)
+    - [`Steepest Descent`](/numerical_methods/root_finding/steepest_descent.py)
 
 Each function has been implemented in a modular fashion, making it easy to integrate into your own code. Additionally, extensive mathematical documentation has been provided for each folder to aid in understanding of the functions. We hope that these functions will help you in the optimization of your AI models.
 
