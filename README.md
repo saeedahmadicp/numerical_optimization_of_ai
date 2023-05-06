@@ -12,6 +12,10 @@ The folders are organized as follows:
 
 Each function has been implemented in a modular fashion, making it easy to integrate into your own code. Additionally, extensive mathematical documentation has been provided for each folder to aid in understanding of the functions. We hope that these functions will help you in the optimization of your AI models.
 
+## Naming Convention
+The directories, files, and functions have been named according to the following convention:
+[PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/#package-and-module-names)
+
 ## Contribute
 We welcome any contributions to the repository, including new functions, bug fixes, and documentation improvements. To contribute, please follow the steps below:
 
