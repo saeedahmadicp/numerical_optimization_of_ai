@@ -21,7 +21,11 @@ def trapezoidal(f, a, b, n, *args, **kwargs):
     # Calculate the step size (h is the width of each subinterval)
     h = (b - a) / n
 
-    if num_args == 1 or num_args == 2:
+    if num_args == 1:
+        left = f(a) / 2
+        right = f(b) / 2
+        middle = np.sum(f(a + h * np.arange(1, n)))
+    elif num_args == 2:
         left = f(a, *args, **kwargs) / 2
         right = f(b, *args, **kwargs) / 2
         middle = np.sum(f(a + h * np.arange(1, n), *args, **kwargs))

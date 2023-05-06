@@ -22,14 +22,17 @@ def simpson(f, a, b, n, *args, **kwargs):
     h = (b - a) / n
 
     # Evaluate the integrand at the left and right endpoints
-    if num_args == 1 or num_args == 2:
+    if num_args == 1:
+        left = f(a)
+        right = f(b)
+        even = np.sum(f(a + h * np.arange(2, n, 2)))
+        odd = np.sum(f(a + h * np.arange(1, n, 2)))
+    elif num_args == 2:
         left = f(a, *args, **kwargs)
         right = f(b, *args, **kwargs)
+        even = np.sum(f(a + h * np.arange(2, n, 2), *args, **kwargs))
+        odd = np.sum(f(a + h * np.arange(1, n, 2), *args, **kwargs))
     else:
         raise ValueError("The function f must take either 1 or 2 arguments.")
-
-    # Calculate the sum of the odd and even terms
-    odd = np.sum(f(a + h * np.arange(1, n, 2), *args, **kwargs))
-    even = np.sum(f(a + h * np.arange(2, n, 2), *args, **kwargs))
 
     return h / 3 * (left + right + 4 * odd + 2 * even)
