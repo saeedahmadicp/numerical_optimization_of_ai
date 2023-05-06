@@ -3,8 +3,13 @@ This repository is a collection of numerical functions implemented in Python, ai
 
 The folders are organized as follows:
 
-- **[Differentiation](/numerical_methods/differentiation/):** This folder contains functions for numerical differentiation methods, including the [`forward difference`](/numerical_methods/differentiation/forward_difference.py), [`backward difference`](/numerical_methods/differentiation/backward_difference.py), and [`central difference`](/numerical_methods/differentiation/central_difference.py). <br><br>
-- **[Integration](/numerical_methods/integration/):** This folder contains functions for numerical integration methods, including the [`trapezoidal rule`](/numerical_methods/integration/trapezoidal.py) and [`Simpson's rule`](/numerical_methods/integration/simpson.py). <br><br>
+- **[Differentiation](/numerical_methods/differentiation/):** This folder contains functions for numerical differentiation methods, including: 
+    - [`forward difference`](/numerical_methods/differentiation/forward_difference.py)
+    - [`backward difference`](/numerical_methods/differentiation/backward_difference.py)
+    - [`central difference`](/numerical_methods/differentiation/central_difference.py). <br><br>
+- **[Integration](/numerical_methods/integration/):** This folder contains functions for numerical integration methods, including:
+    - [`trapezoidal rule`](/numerical_methods/integration/trapezoidal.py)
+    - [`Simpson's rule`](/numerical_methods/integration/simpson.py). <br><br>
 - **[Interpolation](/numerical_methods/interpolation/):** This folder contains functions for numerical interpolation methods, including the [`Lagrange interpolation`](/numerical_methods/interpolation/lagrange.py) and [`Spline interpolation`](/numerical_methods/interpolation/spline.py). <br><br>
 - **[Linear Algebra](/numerical_methods/lin_algebra/):** This folder contains functions for numerical linear algebra, including the [`Gaussian elimination without pivoting`](/numerical_methods/lin_algebra/GE.py), [`Gaussain elimination with pivoting`](/numerical_methods/lin_algebra/GEpivot.py), [`Jacobi`](/numerical_methods/lin_algebra/Jacobi.py), and [`Gauss-Seidel`](/numerical_methods/lin_algebra/GaussSeidel.py) methods. <br><br>
 - **[Regression](/numerical_methods/regression/):** This folder contains functions for regression analysis, including [`linear regression`](/numerical_methods/regression/linear.py) and polynomial regression with the [`chebyshev polynomials`](/numerical_methods/regression/chebyshev.py). <br><br>
