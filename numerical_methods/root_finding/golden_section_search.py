@@ -1,6 +1,6 @@
 import math
 
-from .elimination_method import eliminationStep
+from .elimination import eliminationStep
 
 def goldenSearchMethod(f, a, b, N, tol=1e-6):
     """

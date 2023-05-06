@@ -1,4 +1,4 @@
-from .elimination_method import eliminationStep
+from .elimination import eliminationStep
 
 __all__ = ['fibonacciGenerator', 'fibonacciSearchMethod']
 
