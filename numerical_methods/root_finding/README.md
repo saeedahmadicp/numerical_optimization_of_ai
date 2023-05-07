@@ -12,6 +12,7 @@ This directory contains implementations of various numerical methods for finding
 8. [Steepest Descent Method](#steepest-descent-method)
 9. [Newton Hessian Method](#newton-hessian-method)
 10. [Nelder and Mead Method](#nelder-and-mead-method)
+11. [Powell Conjugate Method](#powell-conjugate-method)
 
 #### Usage
 ```python
@@ -94,4 +95,8 @@ Overall, the Newton-Hessian method is a powerful optimization technique for find
 ### Nelder and Mead Method
 ----------------
 The Nelder and Mead method, or simplex method, is an optimization algorithm used to find the minimum of a function. It works by creating a simplex, which is a geometrical shape made up of points in the function's parameter space. The simplex is then iteratively adjusted to find the minimum of the function. The algorithm is widely used due to its simplicity and effectiveness, particularly in cases where the gradient of the function is unknown or difficult to compute.
+
+### Powell Conjugate Method
+----------------
+The Powell Conjugate Method is an optimization algorithm that is commonly used for unconstrained optimization problems. The method searches for the minimum of a function by iteratively moving in a set of conjugate directions.
 
