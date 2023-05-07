@@ -28,9 +28,10 @@ def gauss_seidel(A, b, x0, delta, max_it):
     iflag = 1
     k = 0
     x = x0.copy()
-    
+    prev_err = np.linalg.norm(x-x0, np.inf) / (np.linalg.norm(x, np.inf) + np.finfo(float).eps)
+
     while k < max_it:
-        k = k + 1
+        k += 1
 
         # update x(1), the first component of the solution
         x[0] = (b[0] - np.dot(A[0,1:], x[1:])) / A[0,0]
@@ -43,13 +44,24 @@ def gauss_seidel(A, b, x0, delta, max_it):
                 x[n-1] = (b[n-1] - np.dot(A[n-1,:n-1], x[:n-1])) / A[n-1,n-1]
 
         # compute relative error
-        relerr = np.linalg.norm(x-x0, np.inf) / (np.linalg.norm(x, np.inf) + np.finfo(np.float).eps)
-        x0 = x.copy()
+        relerr = np.linalg.norm(x-x0, np.inf) / (np.linalg.norm(x, np.inf) + np.finfo(float).eps)
         if relerr < delta:
             break
-            
+        elif relerr > prev_err:
+            # error has increased, break out of loop and return current solution
+            iflag = -1
+            break
+        prev_err = relerr
+        x0 = x.copy()
+        
     itnum = k
     if itnum == max_it:
         iflag = -1
-        
-    return x, iflag, itnum
+    
+    if iflag == -1:
+        print('Gauss-Seidel failed to converge in %d iterations.' % max_it)
+        print('The last computed solution is:', x)
+        return x, iflag, itnum
+    else:
+        print('Gauss-Seidel converged in %d iterations.' % itnum)
+        return x, iflag, itnum
