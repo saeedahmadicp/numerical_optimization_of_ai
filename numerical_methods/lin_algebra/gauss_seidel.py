@@ -1,6 +1,6 @@
 import numpy as np
 
-def GaussSeidel(A, b, x0, delta, max_it):
+def gauss_seidel(A, b, x0, delta, max_it):
     """
     A program implementing the Gauss-Seidel iteration method to solve
     the linear system Ax=b.
@@ -30,7 +30,7 @@ def GaussSeidel(A, b, x0, delta, max_it):
     while k < max_it:
         k = k + 1
 
-        # Update x(1), the first component of the solution
+        # update x(1), the first component of the solution
         x[0] = (b[0] - np.dot(A[0,1:], x[1:])) / A[0,0]
         for i in range(1, n):
             if i < n - 1:
@@ -41,7 +41,7 @@ def GaussSeidel(A, b, x0, delta, max_it):
                 x[n-1] = (b[n-1] - np.dot(A[n-1,:n-1], x[:n-1])) / A[n-1,n-1]
 
         # compute relative error
-        relerr = np.linalg.norm(x-x0, np.inf)/(np.linalg.norm(x, np.inf)+np.finfo(np.float).eps)
+        relerr = np.linalg.norm(x-x0, np.inf) / (np.linalg.norm(x, np.inf) + np.finfo(np.float).eps)
         x0 = x.copy()
         if relerr < delta:
             break
@@ -51,22 +51,3 @@ def GaussSeidel(A, b, x0, delta, max_it):
         iflag = -1
         
     return x, iflag, itnum
-
-
-if __name__ == "__main__":
-    A = np.array([[10, 2, 1], [1, 5, 1], [2, 3, 10]])
-    b = np.array([7, -8, 6])
-    x0 = np.zeros(3)
-    delta = 1e-6
-    max_it = 1000
-
-    x, iflag, itnum = GaussSeidel(A, b, x0, delta, max_it)
-    print("Solution vector: ", x)
-
-    expected_x = np.linalg.solve(A, b)
-    tolerance = 1e-6
-    
-    if np.allclose(x, expected_x, rtol=tolerance, atol=tolerance):
-        print("Test case passed: the solution is correct.")
-    else:
-        print("Test case failed: the solution is not correct.") 

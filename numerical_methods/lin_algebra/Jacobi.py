@@ -1,20 +1,20 @@
 import numpy as np
 
-def Jacobi(A, b, x0, delta, max_it):
+def jacobi(A, b, x0, delta, max_it):
     """
     A function implementing the Jacobi iteration method to solve the linear system Ax=b.
 
     Inputs:
-    A: square coefficient matrix
-    b: right side vector
-    x0: initial guess
-    delta: error tolerance for the relative difference between two consecutive iterates
-    max_it: maximum number of iterations to be allowed
+        A: square coefficient matrix
+        b: right side vector
+        x0: initial guess
+        delta: error tolerance for the relative difference between two consecutive iterates
+        max_it: maximum number of iterations to be allowed
 
     Outputs:
-    x: numerical solution vector
-    iflag: 1 if a numerical solution satisfying the error tolerance is found within max_it iterations, -1 otherwise
-    itnum: the number of iterations used to compute x
+        x: numerical solution vector
+        iflag: 1 if a numerical solution satisfying the error tolerance is found within max_it iterations, -1 otherwise
+        itnum: the number of iterations used to compute x
     """
 
     iflag = 1
@@ -37,22 +37,3 @@ def Jacobi(A, b, x0, delta, max_it):
     if itnum == max_it:
         iflag = -1
     return x, iflag, itnum
-
-
-if __name__ == "__main__":
-    A = np.array([[10, 2, 1], [1, 5, 1], [2, 3, 10]])
-    b = np.array([7, -8, 6])
-    x0 = np.zeros(3)
-    delta = 1e-6
-    max_it = 1000
-
-    x, iflag, itnum = Jacobi(A, b, x0, delta, max_it)
-    print("The solution vector is:\n", x)
-
-    expected_x = np.linalg.solve(A, b)
-    tolerance = 1e-6
-    
-    if np.allclose(x, expected_x, rtol=tolerance, atol=tolerance):
-        print("Test case passed: the solution is correct.")
-    else:
-        print("Test case failed: the solution is not correct.") 
