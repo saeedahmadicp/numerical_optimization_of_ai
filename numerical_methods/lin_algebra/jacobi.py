@@ -36,6 +36,11 @@ def jacobi(A, b, x0, delta, max_it):
             break
 
     itnum = k
-    if itnum == max_it:
+    if itnum == max_it or not np.allclose(A @ x, b):
         iflag = -1
+        print('Jacobi failed to find the correct solution in %d iterations.' % max_it)
+        print('The last computed solution is:', x)
+    else:
+        print('Jacobi converged to the correct solution in %d iterations.' % itnum)
+    
     return x, iflag, itnum
