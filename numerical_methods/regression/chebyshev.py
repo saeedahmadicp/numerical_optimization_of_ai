@@ -1,78 +1,56 @@
 import numpy as np
+from collections import namedtuple
+from r_squared import r_squared
 
 def chebyshev(x, y, n):
     """
-    This function returns the coefficients of the Chebyshev regression model.
+    Given the x-values, the y-values, and the degree of the polynomial, this
+    function returns the weights of the Chebyshev regression model.
+
+    Parameters:
+        x : np.ndarray
+            The x-values of the data.
+        y : np.ndarray
+            The y-values of the data.
+        n : int
+            The degree of the polynomial.  
+
+    Returns:
+        a : np.ndarray
+            The weights of the Chebyshev regression model.
+        y_pred : np.ndarray
+            The predicted y-values of the Chebyshev regression model.
+        r_squared : float
+            The R-squared value of the Chebyshev regression model.
     """
-    # Calculating the total number of values
+
+    # calculating the total number of values
     m = len(x)
 
-    # Calculating the weights
+    # calculating the weights
     a = np.zeros(n + 1)
     for i in range(n + 1):
         a[i] = (2 / m) * np.sum(y * np.cos(i * np.arccos(x)))
 
-    # Return the weights
-    return a
+    # calculate the predicted y-values
+    y_pred = predict(x, a)
+
+    # calculate the R-squared value
+    r2 = r_squared(y, y_pred)
+
+    # create a named tuple to return the results
+    Result = namedtuple('Result', ['weights', 'y_pred', 'r_squared'])
+    return Result(a, y_pred, r2)
 
 
 def predict(x, a):
     """
     This function returns the predicted values of y.
     """
-    # Calculating the predicted values
+    # calculating the predicted values
     y_pred = np.zeros(len(x))
     for i in range(len(x)):
         for j in range(len(a)):
             y_pred[i] += a[j] * np.cos(j * np.arccos(x[i]))
 
-    # Return the predicted values
     return y_pred
-
-
-def r_squared(y, y_pred):
-    """
-    This function returns the R-squared value.
-    """
-    # Calculating the mean of y
-    y_mean = np.mean(y)
-
-    # Calculating the total sum of squares
-    ss_tot = np.sum((y - y_mean) ** 2)
-
-    # Calculating the residual sum of squares
-    ss_res = np.sum((y - y_pred) ** 2)
-
-    # Calculating the R-squared value
-    r2 = 1 - (ss_res / ss_tot)
-
-    # Return the R-squared value
-    return r2
-
-
-if __name__ == "__main__":
-    """
-    This is the main function.
-    """
-    # Defining the data
-    x = np.array([-1, -0.6, -0.2, 0.2, 0.6, 1])
-    f = lambda x: np.exp(x)
-    y = f(x)
-
-    # Calculating the weights
-    a = chebyshev(x, y, 3)
-
-    # Calculating the predicted values
-    y_pred = predict(x, a)
-
-    # Printing the R-squared value
-    print("R-squared:", r_squared(y, y_pred))
-
-    # Plotting the results
-    import matplotlib.pyplot as plt
-    plt.scatter(x, y, color="blue")
-    plt.plot(x, y_pred, color="red")
-    plt.title("Chebyshev Regression")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.show()

@@ -1,6 +1,6 @@
-__all__ = ['bisectionMethod']
+__all__ = ['bisection']
 
-def bisectionMethod(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
+def bisection(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
     """
     This function finds the root of a function f using the bisection method
     :param: f: function to be evaluated

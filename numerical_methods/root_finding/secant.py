@@ -1,7 +1,7 @@
-__all__ = ['secantMethod']
+__all__ = ['secant']
 
 
-def secantMethod(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
+def secant(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
     """
     This function finds the root of a function f using the secant method.
     param: f: function to be evaluated
