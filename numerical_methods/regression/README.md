@@ -10,7 +10,7 @@ Regression is a widely used technique in machine learning to estimate the relati
 
 ### Linear Regression
 > Linear regression is a statistical method used to model the relationship between a dependent variable and one or more independent variables. In simple linear regression, there is only one independent variable and a linear relationship is assumed between that variable and the dependent variable. The aim is to find the line that best represents the relationship between the variables by minimizing the distance between the observed data points and the line. This line can then be used to predict the dependent variable for a given value of the independent variable. 
-
+>
 > Linear regression is a method for fitting a linear curve to data. The linear curve is defined as:
 > $$y = a x + b$$
 > where $a$ is the slope of the line and $b$ is the y-intercept. The goal of linear regression is to find the values of $a$ and $b$ that minimize the error between the linear curve and the data. The error between the linear curve and a single data point is given as the y-distance between the linear curve and the data point. The total error is given as the sum of the errors between the linear curve and all of the data points.
@@ -43,8 +43,8 @@ Regression is a widely used technique in machine learning to estimate the relati
 > In the above example, the linear fit was not a good approximation of the data. This is because the data is not linear. Instead, the data is exponential. To fit a curve to the data, we can use polynomial regression. One way to to this is to use the least squares approximation using Chebychev polynomials. To approximate a function $f(x)$ using Chebychev polynomials, we use the following equation:
 > $$f(x) \approx c_0 T_0(x) + c_1 T_1(x) + c_2 T_2(x) + \cdots + c_n T_n(x)$$
 > where $T_i(x)$ are the basis Chebychev polynomials. To find the basis Chebychev polynomials, we use the following Chebychev recurrence relations:
-> $$ T_n(x) = cos(n \cdot cos^{-1}(x)), -1 \leq x \leq 1$$
-> $$ T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x), n \geq 1$$
+> $$T_n(x) = cos(n \cdot cos^{-1}(x)), -1 \leq x \leq 1$$
+> $$T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x), n \geq 1$$
 > The first few Chebychev polynomials are given as:
 > $$T_0(x) = 1$$
 > $$T_1(x) = x$$
@@ -54,24 +54,27 @@ Regression is a widely used technique in machine learning to estimate the relati
 
 ### Orthogonality of Chebychev Polynomials
 > The Chebychev polynomials are orthogonal over the interval $[-1,1]$. This means that the integral of the product of any two Chebychev polynomials is zero. This is given as:
-> $$
-> \int_{-1}^{1} T_n(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx = 
-> \begin{cases} 
-> 0 & n \neq m \\ 
-> \pi & n = m = 0 \\ 
-> \frac{\pi}{2} & n = m \neq 0 
-> \end{cases}
-> $$
+>
+> $$\int_{-1}^{1} T_n(x) T_m(x) \frac{1}{\sqrt{1-x^2}} dx = 
+\begin{cases} 
+0 & n \neq m \\ 
+\pi & n = m = 0 \\ 
+\frac{\pi}{2} & n = m \neq 0 
+\end{cases}
+$$
+>
 > The coefficients $c_i$ can be found by using the following equation:
-> $$
-> c_m = \begin{cases}
-> \frac{2}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m = 0 \\
-> \\
-> \frac{1}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m \neq 0 
-> \end{cases}
-> $$
+>
+> $$c_m = 
+> \begin{cases}
+\frac{2}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m = 0 \\
+\\
+\frac{1}{\pi} \int_{-1}^{1} f(x) P_m(x) \frac{1}{\sqrt{1-x^2}} dx & m \neq 0 
+\end{cases}
+$$
+>
 > where $P_m(x)$ is the $m^{th}$ Chebychev basis polynomial.
-
+>
 > Example. Find the Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1.
 > Solution. The Chebychev polynomial approximation of $f(x)=e^x$ over $[-1,1]$ using 5 data points equally spaced between -1 and 1 is:
 > $$f(x) \approx c_0 T_0(x) + c_1 T_1(x) + c_2 T_2(x) + c_3 T_3(x) + c_4 T_4(x)$$
