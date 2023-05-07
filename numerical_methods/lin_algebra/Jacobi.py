@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ['jacobi']
+
 def jacobi(A, b, x0, delta, max_it):
     """
     A function implementing the Jacobi iteration method to solve the linear system Ax=b.

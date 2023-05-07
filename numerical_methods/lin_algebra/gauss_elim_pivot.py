@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ['gauss_elim_pivot']
+
 def gauss_elim_pivot(A, b):
     """
     This function employs the Gaussian elimination method with partial 

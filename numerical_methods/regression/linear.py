@@ -1,6 +1,6 @@
 import numpy as np
 
-def linear_regression(x, y):
+def linear(x, y):
     """
     This function returns the coefficients of the linear regression model.
     """
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     y = f(x)
 
     # Calculating the weights
-    a, b = linear_regression(x, y)
+    a, b = linear(x, y)
 
     # Calculating the predicted values
     y_pred = predict(x, a, b)

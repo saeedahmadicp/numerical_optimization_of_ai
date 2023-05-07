@@ -1,6 +1,6 @@
 import numpy as np
 
-def chebyshev_regression(x, y, n):
+def chebyshev(x, y, n):
     """
     This function returns the coefficients of the Chebyshev regression model.
     """
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     y = f(x)
 
     # Calculating the weights
-    a = chebyshev_regression(x, y, 3)
+    a = chebyshev(x, y, 3)
 
     # Calculating the predicted values
     y_pred = predict(x, a)

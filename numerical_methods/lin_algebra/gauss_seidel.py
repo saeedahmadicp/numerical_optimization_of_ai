@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ['gauss_seidel']
+
 def gauss_seidel(A, b, x0, delta, max_it):
     """
     A program implementing the Gauss-Seidel iteration method to solve
