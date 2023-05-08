@@ -1,9 +1,9 @@
 import torch
 
-__all__ = ['newtonMethod']
+__all__ = ['newton']
 
 
-def newtonMethod(f: callable, x0: float, tol: float, max_iter: int) -> tuple:
+def newton(f: callable, x0: float, tol: float, max_iter: int) -> tuple:
     """
     Find the root of the function f using the Newton-Raphson method.
     :param: f: function to be evaluated

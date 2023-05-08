@@ -1,6 +1,6 @@
-from .GE import GE
-from .GEpivot import GEpivot
-from .GaussSeidel import GaussSeidel
-from .Jacobi import Jacobi
+from .gauss_elim import gauss_elim
+from .gauss_elim_pivot import gauss_elim_pivot
+from .gauss_seidel import gauss_seidel
+from .jacobi import jacobi
 
-__all__ = ['GE', 'GEpivot', 'GaussSeidel', 'Jacobi']
+__all__ = ['gauss_elim', 'gauss_elim_pivot', 'gauss_seidel', 'jacobi']

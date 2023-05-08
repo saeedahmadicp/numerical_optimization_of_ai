@@ -2,7 +2,6 @@ import numpy as np
 
 __all__ = ["cubic_spline"]
 
-
 def cubic_spline(x_values, y_values):
     """
     This function performs cubic spline interpolation.
@@ -10,6 +9,7 @@ def cubic_spline(x_values, y_values):
     param: y_values: list of y values
     return: function that interpolates the given points
     """
+
     n = len(x_values)
     h = [x_values[i+1] - x_values[i] for i in range(n-1)]
     A = np.zeros((n, n))
@@ -25,6 +25,7 @@ def cubic_spline(x_values, y_values):
     c = np.linalg.solve(A, b)
     b = [(y_values[i+1] - y_values[i]) / h[i] - h[i] * (c[i+1] + 2 * c[i]) / 3 for i in range(n-1)]
     d = [(c[i+1] - c[i]) / (3 * h[i]) for i in range(n-1)]
+    
     def _basis(i):
         """
         This function returns the basis function for the ith interval.
@@ -43,4 +44,3 @@ def cubic_spline(x_values, y_values):
         return _basis(i)(x)
     
     return _spline
-
