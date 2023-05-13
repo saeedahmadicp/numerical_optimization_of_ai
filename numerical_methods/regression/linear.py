@@ -1,6 +1,6 @@
 import numpy as np
 from collections import namedtuple
-from r_squared import r_squared
+from .r_squared import r_squared
 
 def linear(x, y):
     """

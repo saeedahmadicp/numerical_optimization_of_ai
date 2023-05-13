@@ -16,7 +16,7 @@ def plotRootFindingMethods(index, data):
         data[key]['iterations'] = [i for i in range(1, len(data[key]['errors'])+1)]
          
 
-    Figure = plt.figure(figsize=(10, 10))
+    Figure = plt.figure(figsize=(5, 5))
     Figure.set_facecolor("white")
     Figure.set_edgecolor("black")
     Figure.set_linewidth(2)
@@ -33,5 +33,5 @@ def plotRootFindingMethods(index, data):
     plt.legend(title="Root finding methods", loc="upper right", fontsize=20)
     
     
-    plt.savefig(f'root_finding_methods_{index}.png')
+    #plt.savefig(f'root_finding_methods_{index}.png')
     plt.show()

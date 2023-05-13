@@ -45,7 +45,10 @@ def findInitialInterval(f, x0, d0):
 
 
 if __name__ == "__main__":
-    f = lambda x: x**2
+    f = lambda x: x
     x0 = np.random.rand(1)[0]
     d0 = 0.1
+    a, b = findInitialInterval(f, x0, d0)
     print(findInitialInterval(f, x0, d0))
+    print(f"function value at a: {f(a)}")
+    print(f"function value at b: {f(b)}")

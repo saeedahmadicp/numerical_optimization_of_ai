@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["r_squared"]
+
 def r_squared(y, y_pred):
     """
     Given the actual y-values and the predicted y-values, this function returns
