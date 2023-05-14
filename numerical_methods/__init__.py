@@ -9,4 +9,4 @@ from .root_finding import powell_conjugate_direction_method, newton_hessian_meth
 _all__ = ['forward_difference', 'backward_difference', 'central_difference', 'trapezoidal', 'simpson', 'lagrange_interpolation', 'cubic_spline',
            'gauss_seidel', 'jacobi', 'gauss_elim', 'gauss_elim_pivot', 'linear', 'chebyshev', 'bisection', 'newton',
              'regularFalsiMethod', 'secant', 'fibonacciSearchMethod', 'goldenSearchMethod', 'eliminationSearchMethod', 'nelderAndMeadMethod',
-             'newton_hessian_method', 'steepest_descent_method', 'powell_conjugate_direction_method']
+             'newton', 'steepest_descent_method', 'powell_conjugate_direction_method']

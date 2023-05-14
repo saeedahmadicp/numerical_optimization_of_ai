@@ -17,6 +17,7 @@ def newton(f: callable, x0: float, tol: float, max_iter: int) -> tuple:
     N = 0
 
     while N < max_iter:
+        guess = torch.tensor(guess, requires_grad=True)
         derivative = torch.autograd.grad(f(guess), guess)[0]
         guess = guess - f(guess) / derivative
         E.append(abs(f(guess).detach().numpy()))
