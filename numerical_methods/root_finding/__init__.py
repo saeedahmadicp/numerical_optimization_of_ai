@@ -10,6 +10,7 @@ from .powell import powell_conjugate_direction_method
 from .newton_hessian import newton_hessian_method
 from .steepest_descent import steepest_descent_method
 
+
 __all__ = ["bisection", "newton", "regularFalsiMethod", "secant", 
            "fibonacciSearchMethod", "goldenSearchMethod", "eliminationSearchMethod", 
            "nelderAndMeadMethod", "powell_conjugate_direction_method", "newton_hessian_method", "steepest_descent_method"]
