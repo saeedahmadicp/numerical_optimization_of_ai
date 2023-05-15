@@ -55,8 +55,8 @@ We welcome any contributions to the repository, including new functions, bug fix
 <table>
   <tbody>
     <tr>
-      <td align="center"><a href="https://github.com/saeedahmadicp"><img src="https://avatars.githubusercontent.com/saeedahmadicp?v=4?s=100" width="100px;" alt="Saeed Ahmad"/><br /><sub><b>Saeed Ahmad</b></sub></a><br /><a href="https://github.com/saeedahmadicp/Numerical_Optimization_of_ai/commits?author=saeedahmadicp" title="Code">💻</a> <a href="https://github.com/saeedahmadicp/Numerical_Optimization_of_ai/commits?author=saeedahmadicp" title="Documentation">📖</a></td>
-      <td align="center"><a href="https://github.com/ali-izhar"><img src="https://avatars3.githubusercontent.com/ali-izhar?v=4?s=100" width="100px;" alt="Izhar Ali"/><br /><sub><b>Izhar Ali</b></sub></a><br /><a href="https://github.com/saeedahmadicp/Numerical_Optimization_of_ai/commits?author=ali-izhar" title="Code">💻</a><a href="https://github.com/saeedahmadicp/Numerical_Optimization_of_ai/commits?author=ali-izhar" title="Documentation">📖</a></td></td>
+      <td align="center"><a href="https://github.com/saeedahmadicp"><img src="https://avatars.githubusercontent.com/saeedahmadicp?v=4?s=100" width="100px;" alt="Saeed Ahmad"/><br /><sub><b>Saeed Ahmad</b></sub></a><br /><a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=saeedahmadicp" title="Code">💻</a> <a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=saeedahmadicp" title="Documentation">📖</a></td>
+      <td align="center"><a href="https://github.com/ali-izhar"><img src="https://avatars3.githubusercontent.com/ali-izhar?v=4?s=100" width="100px;" alt="Izhar Ali"/><br /><sub><b>Izhar Ali</b></sub></a><br /><a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=ali-izhar" title="Code">💻</a><a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=ali-izhar" title="Documentation">📖</a></td></td>
       </td>
  </tr>
   </tbody>
