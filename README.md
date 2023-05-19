@@ -38,6 +38,7 @@ Each function has been implemented in a modular fashion, making it easy to integ
 - Online Courses / Youtube Playlists: 
   - [Convex Optimization by Stephen Boyd (Stanford University)](https://www.youtube.com/watch?v=McLq1hEq3UY&list=PL3940DD956CDF0622&ab_channel=Stanford)
 - Books: 
+  - [Vector Calculas by Jerrold E.Marsden, ANthony J.Tromba](https://vdoc.pub/download/vector-calculus-4jm439esqbq0)
   - [Numerical Optimization by Jorge Nocedal and Stephen J. Wright](https://www.csie.ntu.edu.tw/~r97002/temp/num_optimization.pdf)
   - [Practical Optimization: Algorithms and Engineering Applications by Andreas Antoniou and Wu-Sheng Lu](https://doc.lagout.org/science/0_Computer%20Science/2_Algorithms/Practical%20Optimization_%20Algorithms%20and%20Engineering%20Applications%20%5BAntoniou%20%26%20Lu%202007-03-12%5D.pdf)
   - [Optimization Methods for Large-Scale Machine Learning by Léon Bottou and Frank E. Curtis](https://coral.ise.lehigh.edu/frankecurtis/files/papers/BottCurtNoce18.pdf)
