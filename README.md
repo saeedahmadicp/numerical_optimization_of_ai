@@ -36,6 +36,7 @@ Each function has been implemented in a modular fashion, making it easy to integ
 
 ## Resources
 - Online Courses / Youtube Playlists: 
+  - [Root Finding by Oscar Veliz](https://www.youtube.com/watch?v=MlP_W-obuNg&list=PLb0Tx2oJWuYIpNE23qYHGQD42TIR3ThNz&ab_channel=OscarVeliz)
   - [Convex Optimization by Stephen Boyd (Stanford University)](https://www.youtube.com/watch?v=McLq1hEq3UY&list=PL3940DD956CDF0622&ab_channel=Stanford)
 - Books: 
   - [Vector Calculas by Jerrold E.Marsden, ANthony J.Tromba](https://vdoc.pub/download/vector-calculus-4jm439esqbq0)
