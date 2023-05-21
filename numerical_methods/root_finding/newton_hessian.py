@@ -1,7 +1,5 @@
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-
 
 __all__ = ['newton_hessian']
 
@@ -21,7 +19,7 @@ def newton_hessian(func, variables, tol, max_iters):
         N (int): number of iterations
     """
     
-    ## Error list
+    # Error list
     E = []
     
     # history
@@ -44,39 +42,8 @@ def newton_hessian(func, variables, tol, max_iters):
         x.grad.zero_()
         E.append(abs(func(*x).detach().numpy()))
         
-        ## Check for convergence
+        # Check for convergence
         if torch.norm(x - x_prev) < tol:
             break
         
     return x.detach().numpy(), E, len(E), np.array(history)
-
-
-if __name__ == '__main__':
-    func = lambda x, y: (x ) ** 2 + (y) ** 2
-    variables = ['x', 'y']
-    tol = 1e-6
-    max_iters = 1000
-    x_min, E, N, history = newton_hessian(func, variables, tol, max_iters)
-    print(f'x = {x_min}')
-    print(f'f(x) = {func(*x_min)}')
-    print(f'N = {N}')
-    
-    ## Define the range of the contour plot
-    x = np.linspace(-2, 2, 100)
-    y = np.linspace(-2, 2, 100)
-    X, Y = np.meshgrid(x, y)
-    Z = func(X, Y)
-    
-    ### Plot the contour
-    plt.contour(X, Y, Z, levels=np.logspace(-1, 3, 10), cmap='jet')
-    plt.colorbar(label='f(x, y)')
-    
-    
-    ## plot the movement of the best point during the iterations
-    plt.plot(history[:, 0], history[:, 1], 'k.-')
-    plt.plot(x_min[0], x_min[1], 'r*', label='Optimum')
-    plt.legend()
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Newton Hessian Method, function = x^2 + y^2')
-    plt.show()

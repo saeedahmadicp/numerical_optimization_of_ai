@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 __all__ = ['nelder_mead']
 
@@ -19,23 +18,23 @@ def nelder_mead(func, noOfPoints, iters, tol):
         N (int): number of iterations
     """
     
-    ## generate the initial simplex
+    # generate the initial simplex
     n = noOfPoints - 1
     simplex = np.random.rand(noOfPoints, n)
     x_best = simplex[0, :]
     f_best = func(*x_best)
     
-    ## Define the reflection, expansion, contraction and shrinkage coefficients
+    # Define the reflection, expansion, contraction and shrinkage coefficients
     alpha = 1
     gamma = 2
     rho = 0.5
     sigma = 0.5
     
-    ## Error list
+    # Error list
     Errors = []
     x_history = [x_best.copy()]
     
-    ## Optimization loop
+    # Optimization loop
     for i in range(iters):
         f_values = np.array([func(*x) for x in simplex])
         order = np.argsort(f_values)
@@ -72,51 +71,17 @@ def nelder_mead(func, noOfPoints, iters, tol):
         
         x_history.append(simplex[0, :].copy())
         
-        ### Termination condition
+        # Termination condition
         if np.std(f_values) < tol:
             break
         
-        ## Update the best value
+        # Update the best value
         if f_values[0] < f_best:
             x_best = simplex[0, :]
             f_best = f_values[0]
 
-        ## Update the error list 
+        # Update the error list 
         Errors.append(f_best)
         
         
     return x_best, Errors, len(Errors), np.array(x_history)
-        
- 
-
-## Test the algorithm
-if __name__ == "__main__":
-    def func(x, y):
-        return x**2 -2*x*y + 2*y**2 - 8*y + 16
-    
-    x_min, E, N, history = nelder_mead(func, 3, 100, 1e-8)
-    print("x = ", x_min)
-    print("E = ", E)
-    print("N = ", N)
-    
-    
-    ## Define the range of the contour plot
-    x = np.linspace(-2, 2, 100)
-    y = np.linspace(-2, 2, 100)
-    X, Y = np.meshgrid(x, y)
-    Z = func(X, Y)
-    
-    ### Plot the contour
-    plt.contour(X, Y, Z, levels=np.logspace(-1, 3, 10), cmap='jet')
-    plt.colorbar(label='f(x, y)')
-    
-    
-    ## plot the movement of the best point during the iterations
-    plt.plot(history[:, 0], history[:, 1], 'k.-')
-    plt.plot(x_min[0], x_min[1], 'r*', label='Optimum')
-    plt.legend()
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Nelder-Mead method, function = x**2 -2*x*y + 2*y**2 - 8*y + 16')
-    plt.show()
-    

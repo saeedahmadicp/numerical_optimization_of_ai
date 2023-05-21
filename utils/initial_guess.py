@@ -1,8 +1,8 @@
 import numpy as np
 
-__all__ = ["findInitialInterval"]
+__all__ = ["find_initial_interval"]
 
-def findInitialInterval(f, x0, d0):
+def find_initial_interval(f, x0, d0):
     """
     :param f: function to be evaluated
     :param x0: initial guess
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     f = lambda x: x
     x0 = np.random.rand(1)[0]
     d0 = 0.1
-    a, b = findInitialInterval(f, x0, d0)
-    print(findInitialInterval(f, x0, d0))
+    a, b = find_initial_interval(f, x0, d0)
+    print(find_initial_interval(f, x0, d0))
     print(f"function value at a: {f(a)}")
     print(f"function value at b: {f(b)}")

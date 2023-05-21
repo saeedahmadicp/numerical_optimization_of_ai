@@ -19,21 +19,22 @@ def golden_search(f, a, b, N, tol=1e-6):
     for i in range(N):
         N -= 1
         
-        ## if the function value on x1 is same as on x2, then adding a small value to x2 will make it different
+        # if the function value on x1 is same as on x2, then adding a 
+        # small value to x2 will make it different
         if f(x1) == f(x2):
             x2 += 1e-6
         
-        ## apply elimination step
+        # apply elimination step
         a, b = elim_step(f, a, b, x1, x2)
         
-        ## calculate new x1 and x2
+        # calculate new x1 and x2
         x1 = a + (1-tai) * (b - a)
         x2 = a + tai * (b - a)
         
-        ## append error to the list
+        # append error to the list
         E.append(abs(f((a + b) / 2)))
         
-        ## check if the error is less than the tolerance
+        # check if the error is less than the tolerance
         if abs(b - a) < tol:
             return a, E, i
         
