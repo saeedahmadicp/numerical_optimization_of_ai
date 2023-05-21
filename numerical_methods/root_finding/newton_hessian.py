@@ -3,9 +3,9 @@ import torch
 import matplotlib.pyplot as plt
 
 
-__all__ = ['newton_hessian_method']
+__all__ = ['newton_hessian']
 
-def newton_hessian_method(func, variables, tol, max_iters):
+def newton_hessian(func, variables, tol, max_iters):
     """
     Newton-Hessian method optimisation algorithm
     
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     variables = ['x', 'y']
     tol = 1e-6
     max_iters = 1000
-    x_min, E, N, history = newton_hessian_method(func, variables, tol, max_iters)
+    x_min, E, N, history = newton_hessian(func, variables, tol, max_iters)
     print(f'x = {x_min}')
     print(f'f(x) = {func(*x_min)}')
     print(f'N = {N}')

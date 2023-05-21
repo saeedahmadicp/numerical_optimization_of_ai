@@ -3,9 +3,9 @@ import torch
 import matplotlib.pyplot as plt
 
 
-__all__ = ['steepest_descent_method']
+__all__ = ['steepest_descent']
 
-def steepest_descent_method(func, variables, alpha, tol, max_iters):
+def steepest_descent(func, variables, alpha, tol, max_iters):
     """
     Steepest descent method optimisation algorithm
     
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     alpha = 0.1
     tol = 1e-6
     max_iters = 1000
-    x_min, E, N, history = steepest_descent_method(func, variables, alpha, tol, max_iters)
+    x_min, E, N, history = steepest_descent(func, variables, alpha, tol, max_iters)
     print(f'x = {x_min}')
     print(f'f(x) = {func(*x_min)}')
     print(f'N = {N}')

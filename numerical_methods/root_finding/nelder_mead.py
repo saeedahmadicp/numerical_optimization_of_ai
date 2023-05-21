@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-__all__ = ['nelderAndMeadMethod']
+__all__ = ['nelder_mead']
 
-def nelderAndMeadMethod(func, noOfPoints, iters, tol):
+def nelder_mead(func, noOfPoints, iters, tol):
     """
     Nelder-Mead method optimisation algorithm
     
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     def func(x, y):
         return x**2 -2*x*y + 2*y**2 - 8*y + 16
     
-    x_min, E, N, history = nelderAndMeadMethod(func, 3, 100, 1e-8)
+    x_min, E, N, history = nelder_mead(func, 3, 100, 1e-8)
     print("x = ", x_min)
     print("E = ", E)
     print("N = ", N)

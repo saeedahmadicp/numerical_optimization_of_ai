@@ -1,8 +1,10 @@
 import math
 
-from .elimination import eliminationStep
+from .elimination import elim_step
 
-def goldenSearchMethod(f, a, b, N, tol=1e-6):
+__all__ = ['golden_search']
+
+def golden_search(f, a, b, N, tol=1e-6):
     """
     :param f: function to be evaluated
     :param a: lower bound of the interval
@@ -22,7 +24,7 @@ def goldenSearchMethod(f, a, b, N, tol=1e-6):
             x2 += 1e-6
         
         ## apply elimination step
-        a, b = eliminationStep(f, a, b, x1, x2)
+        a, b = elim_step(f, a, b, x1, x2)
         
         ## calculate new x1 and x2
         x1 = a + (1-tai) * (b - a)
@@ -36,12 +38,3 @@ def goldenSearchMethod(f, a, b, N, tol=1e-6):
             return a, E, i
         
     return (a + b) / 2, E, N
-
-
-if __name__ == "__main__":
-    f = lambda x: abs(x - 0.3)
-    a = 0
-    b = 1
-    N = 5
-    x, E, N = goldenSearchMethod(f, a, b, N)
-    print(x, E, N)

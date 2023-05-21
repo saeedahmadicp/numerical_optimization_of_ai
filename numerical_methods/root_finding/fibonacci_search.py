@@ -1,8 +1,8 @@
-from .elimination import eliminationStep
+from .elimination import elim_step
 
-__all__ = ['fibonacciGenerator', 'fibonacciSearchMethod']
+__all__ = ['fib_generator', 'fibonacci_search']
 
-def fibonacciGenerator(n):
+def fib_generator(n):
     """
     Generates the Fibonacci sequence up to n
     :param n: the number of elements in the sequence
@@ -14,7 +14,7 @@ def fibonacciGenerator(n):
     return fib
 
 
-def fibonacciSearchMethod(f, a, b, N, tol=1e-6):
+def fibonacci_search(f, a, b, N, tol=1e-6):
     """
     :param f: function to be evaluated
     :param a: lower bound of the interval
@@ -23,14 +23,14 @@ def fibonacciSearchMethod(f, a, b, N, tol=1e-6):
     :return: x: root of the function, E: list of errors, N: number of iterations
     """
     E = []
-    fib = fibonacciGenerator(N + 1)
+    fib = fib_generator(N + 1)
     x1 = a + fib[N - 2] / fib[N] * (b - a)
     x2 = b - fib[N - 2] / fib[N] * (b - a)
     for i in range(N):
         N -= 1
         
         ## apply elimination step
-        a, b = eliminationStep(f, a, b, x1, x2)
+        a, b = elim_step(f, a, b, x1, x2)
         
         ## terminate if the function value on x1 is same as on x2
         if f(a) == f(b):
@@ -50,12 +50,3 @@ def fibonacciSearchMethod(f, a, b, N, tol=1e-6):
             return a, E, i
         
     return (a + b) / 2, E, N
-
-
-if __name__ == "__main__":
-    f = lambda x: abs(x - 0.3)
-    a = 0
-    b = 1
-    N = 5
-    x, E, N = fibonacciSearchMethod(f, a, b, N)
-    print(x, E, N)

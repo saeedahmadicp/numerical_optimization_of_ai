@@ -1,7 +1,7 @@
-__all__ = ['regularFalsiMethod']
+__all__ = ['regula_falsi']
 
 
-def regularFalsiMethod(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
+def regula_falsi(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
     """
     This function finds the root of a function f using the regular falsi method.
     :param: f: function to be evaluated

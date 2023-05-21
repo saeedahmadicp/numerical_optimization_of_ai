@@ -1,9 +1,9 @@
 import random
 
-__all__ = ['eliminationStep', 'eliminationSearch']
+__all__ = ['elim_step', 'elimination_search']
 
 
-def eliminationStep(func, a, b , x1, x2, delta=1e-6):
+def elim_step(func, a, b , x1, x2, delta=1e-6):
     """
     :param func: function to be evaluated
     :param a: lower bound of the interval
@@ -26,7 +26,7 @@ def eliminationStep(func, a, b , x1, x2, delta=1e-6):
 """
 The problem with elimination method is that it is not guaranteed to converge to the root as it depends on the random numbers generated.
 """  
-def eliminationSearchMethod(func, a, b, N, tol=1e-6):
+def elimination_search(func, a, b, N, tol=1e-6):
     """
     :param func: function to be evaluated
     :param a: lower bound of the interval
@@ -43,7 +43,7 @@ def eliminationSearchMethod(func, a, b, N, tol=1e-6):
         x2 = random.uniform(a, b)
         
         ## apply elimination step
-        a, b = eliminationStep(func, a, b, x1, x2)
+        a, b = elim_step(func, a, b, x1, x2)
         
         ## append error to the list
         E.append(abs(func((a+b)/2)))
@@ -58,5 +58,3 @@ def eliminationSearchMethod(func, a, b, N, tol=1e-6):
             return (a+b)/2, E, i
         
     return (a+b)/2, E, N
-
-

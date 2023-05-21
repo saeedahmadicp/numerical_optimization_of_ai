@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize_scalar
 
 
-__all__ = ['powell_conjugate_direction_method']
+__all__ = ['powell_conjugate_direction']
 
-def powell_conjugate_direction_method(func, x0, tol, max_iters):
+def powell_conjugate_direction(func, x0, tol, max_iters):
     """
     Powell's conjugate direction method optimisation algorithm
     
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     x0 = np.random.rand(2)
     tol = 1e-6
     max_iters = 1000
-    x_min, E, N, history = powell_conjugate_direction_method(func, x0, tol, max_iters)
+    x_min, E, N, history = powell_conjugate_direction(func, x0, tol, max_iters)
     print(f'x = {x_min}')
     print(f'f(x) = {func(*x_min)}')
     print(f'N = {N}')
