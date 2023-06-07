@@ -1,5 +1,5 @@
 # Numerical Optimization of AI
-This repository is a collection of numerical functions implemented in Python, aimed at aiding the optimization of artificial intelligence models. The functions are organized into different folders based on their function, making it easy to find the required function for a specific task.
+This repository is a collection of numerical functions implemented in Python, aimed at aiding the optimization of artificial intelligence models along with the basic differential calculus methodologies. The functions are organized into different folders based on their function, making it easy to find the required function for a specific task.
 
 The folders are organized as follows:
 
