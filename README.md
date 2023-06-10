@@ -30,6 +30,7 @@ The folders are organized as follows:
     - [`Nelder-Mead`](/numerical_methods/root_finding/nelder_mead.py)
     - [`Regula Falsi`](/numerical_methods/root_finding/regula_falsi.py)
     - [`Steepest Descent`](/numerical_methods/root_finding/steepest_descent.py)
+    - [`Newton-Quasi-Methods`](#)
 
 Each function has been implemented in a modular fashion, making it easy to integrate into your own code. Additionally, extensive mathematical documentation has been provided for each folder to aid in understanding of the functions. We hope that these functions will help you in the optimization of your AI models.
 
