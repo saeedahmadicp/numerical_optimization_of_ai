@@ -65,7 +65,7 @@ We welcome any contributions to the repository, including new functions, bug fix
 ## Contributors ✨
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
+<!-- markdown lint-disable -->
 <table>
   <tbody>
     <tr>
