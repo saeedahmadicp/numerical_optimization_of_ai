@@ -49,7 +49,7 @@ jupyter_server==2.5.0
 jupyter_server_fileid==0.9.0
 jupyter_server_terminals==0.4.4
 jupyter_server_ydoc==0.8.0
-jupyterlab==3.6.3
+jupyterlab==3.6.7
 jupyterlab-git==0.41.0
 jupyterlab-pygments==0.2.2
 jupyterlab_server==2.22.1
