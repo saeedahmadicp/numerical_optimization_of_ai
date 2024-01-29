@@ -9,9 +9,8 @@ from .nelder_mead import nelder_mead
 from .powell import powell_conjugate_direction
 from .newton_hessian import newton_hessian
 from .steepest_descent import steepest_descent
-from .quasi_newton import sr1, dfp, bfgs
+
 
 __all__ = ["bisection", "newton", "regula_falsi", "secant", 
            "fibonacci_search", "golden_search", "elimination_search", 
-           "nelder_mead", "powell_conjugate_direction", "newton_hessian", "steepest_descent",
-           "sr1", "dfp", "bfgs"]
+           "nelder_mead", "powell_conjugate_direction", "newton_hessian", "steepest_descent"]

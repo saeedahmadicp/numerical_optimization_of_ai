@@ -1,23 +1,40 @@
 # Contributing Guidelines
 
-Thank you for considering contributing to our project! We appreciate your interest in helping us improve our software.
+Thank you for considering contributing to our Numerical Optimization of AI project! We value your interest and efforts in enhancing the capabilities and quality of our software.
 
-To get started, please follow these steps:
+To contribute, here's a step-by-step guide to get you started:
 
-- Fork the repository on GitHub.
+- **Fork the Repository:** Begin by forking the repository on GitHub. This creates a copy of the repository in your own GitHub account.
 
-- Clone the forked repository to your local machine using the `git clone` command.
+- **Clone the Forked Repository:** Clone the forked repository to your local machine using the `git clone` command. This step allows you to work on the files locally.
 
-- Create a new branch to work on using the `git checkout -b <branch-name>` command. Please give your branch a descriptive name that relates to the changes you plan to make.
+  ```bash
+  git clone [URL of your forked repository]
+  ```
 
-- Make the necessary changes to the code in your local repository.
+- **Create a New Branch:** Before making any changes, switch to a new branch using the `git checkout` command. You can name the branch anything you want, but it's recommended to use a descriptive name that reflects the changes you're going to make.
 
-- Test your changes thoroughly to make sure they work as expected.
+  ```bash
+  git checkout -b [name_of_your_new_branch]
+  ```
 
-- Commit your changes using the `git commit` command. Please provide a detailed commit message that explains the changes you have made.
+- **Make Changes:** Make the necessary changes or additions to the code in your local repository. Focus on making changes that are clear and address specific issues or enhancements.
 
-- Push your changes to your branch on GitHub using the `git push origin <branch-name>` command.
+- **Test Your Changes:** After implementing your changes, test them thoroughly to ensure they work as intended and don't introduce any new issues.
 
-- Finally, create a pull request (PR) on GitHub. In your PR, please provide the details of the changes you have made and any relevant information that might help us understand your contribution better.
+- **Commit Your Changes:** Commit your changes to the branch with a clear and detailed commit message. This helps us understand the changes you've made and why you made them.
 
-We appreciate your time and effort in contributing to our project. Thank you!
+  ```bash
+  git add .
+  git commit -m "your commit message"
+  ```
+
+- **Push Your Changes:** Push your changes from your local repository to the remote repository on GitHub.
+
+  ```bash
+    git push origin [name_of_your_new_branch]
+  ```
+
+- **Submit a Pull Request:** Once your changes are pushed, submit a pull request (PR) to the main repository. In your PR description, provide details about the changes and their purpose. Make sure to reference any related issues.
+
+- **Await Review:** Your PR will be reviewed by the maintainers of the project. Be responsive to any feedback or requests for changes.

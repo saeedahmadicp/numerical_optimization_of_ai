@@ -1,82 +1,37 @@
-# Numerical Optimization of AI
-This repository is a collection of numerical functions implemented in Python, aimed at aiding the optimization of artificial intelligence models along with the basic differential calculus methodologies. The functions are organized into different folders based on their function, making it easy to find the required function for a specific task.
+# Numerical Optimization of AI 🚀
 
-The folders are organized as follows:
+Welcome to the repository dedicated to numerical functions that aid in optimizing artificial intelligence models. Implemented in Python, these functions are categorized based on their functionality, simplifying the search for the specific task at hand.
 
-- **[Differentiation](/numerical_methods/differentiation/):** This folder contains functions for numerical differentiation methods, including: 
-    - [`Forward Difference`](/numerical_methods/differentiation/forward_difference.py)
-    - [`Backward Difference`](/numerical_methods/differentiation/backward_difference.py)
-    - [`Central Difference`](/numerical_methods/differentiation/central_difference.py) <br><br>
-- **[Integration](/numerical_methods/integration/):** This folder contains functions for numerical integration methods, including:
-    - [`Trapezoidal Rule`](/numerical_methods/integration/trapezoidal.py)
-    - [`Simpson's Rule`](/numerical_methods/integration/simpson.py) <br><br>
-- **[Interpolation](/numerical_methods/interpolation/):** This folder contains functions for numerical interpolation methods, including:
-    - [`Lagrange Interpolation`](/numerical_methods/interpolation/lagrange.py)
-    - [`Spline Interpolation`](/numerical_methods/interpolation/spline.py) <br><br>
-- **[Linear Algebra](/numerical_methods/lin_algebra/):** This folder contains functions for numerical linear algebra, including:
-    - [`Gaussian Elimination without pivoting`](/numerical_methods/lin_algebra/GE.py)
-    - [`Gaussain Elimination with pivoting`](/numerical_methods/lin_algebra/GEpivot.py)
-    - [`Jacobi`](/numerical_methods/lin_algebra/Jacobi.py)
-    - [`Gauss-Seidel`](/numerical_methods/lin_algebra/GaussSeidel.py) <br><br>
-- **[Regression](/numerical_methods/regression/):** This folder contains functions for regression analysis, including:
-    - [`Linear Regression`](/numerical_methods/regression/linear.py)
-    - [`Polynomial Regression with chebyshev`](/numerical_methods/regression/chebyshev.py) <br><br>
-- **[Root Finding](/numerical_methods/root_finding/):** This folder contains functions for finding roots of equations, including:
-    - [`Bisection Method`](/numerical_methods/root_finding/bisection.py)
-    - [`Secant Method`](/numerical_methods/root_finding/secant.py)
-    - [`Newton-Raphson`](/numerical_methods/root_finding/newton.py)
-    - [`Newton-Hessian`](/numerical_methods/root_finding/newton_hessian.py)
-    - [`Powell Method`](/numerical_methods/root_finding/powell.py)
-    - [`Nelder-Mead`](/numerical_methods/root_finding/nelder_mead.py)
-    - [`Regula Falsi`](/numerical_methods/root_finding/regula_falsi.py)
-    - [`Steepest Descent`](/numerical_methods/root_finding/steepest_descent.py)
-    - [`Newton-Quasi-Methods`](#)
+📢 **Call to Collaborators:** Are you intrigued by the intersection of numerical methods and AI optimization? We invite passionate individuals to contribute! Find out how to get started [here](./CONTRIBUTING.md).
 
-Each function has been implemented in a modular fashion, making it easy to integrate into your own code. Additionally, extensive mathematical documentation has been provided for each folder to aid in understanding of the functions. We hope that these functions will help you in the optimization of your AI models.
+<details>
+  <summary>🌌 Repository Vision</summary>
+  
+  - **Diverse Optimization Techniques:** This repository focuses on a variety of numerical methods essential for optimizing AI models, from differentiation to root finding.
+  - **Practical Implementations:** Each function is implemented to be modular and easily integrated into various AI projects, offering practical solutions for complex optimization challenges.
+  - **Educational Perspective:** Alongside code implementations, the repository provides extensive mathematical documentation, enhancing understanding and learning.
 
+</details>
 
-## Resources
-- Online Courses / Youtube Playlists: 
-  - [Root Finding by Oscar Veliz](https://www.youtube.com/watch?v=MlP_W-obuNg&list=PLb0Tx2oJWuYIpNE23qYHGQD42TIR3ThNz&ab_channel=OscarVeliz)
-  - [Convex Optimization by Stephen Boyd (Stanford University)](https://www.youtube.com/watch?v=McLq1hEq3UY&list=PL3940DD956CDF0622&ab_channel=Stanford)
-- Books: 
-  - [Vector Calculas by Jerrold E.Marsden, ANthony J.Tromba](https://vdoc.pub/download/vector-calculus-4jm439esqbq0)
-  - [Numerical Optimization by Jorge Nocedal and Stephen J. Wright](https://www.csie.ntu.edu.tw/~r97002/temp/num_optimization.pdf)
-  - [Practical Optimization: Algorithms and Engineering Applications by Andreas Antoniou and Wu-Sheng Lu](https://doc.lagout.org/science/0_Computer%20Science/2_Algorithms/Practical%20Optimization_%20Algorithms%20and%20Engineering%20Applications%20%5BAntoniou%20%26%20Lu%202007-03-12%5D.pdf)
-  - [Optimization Methods for Large-Scale Machine Learning by Léon Bottou and Frank E. Curtis](https://coral.ise.lehigh.edu/frankecurtis/files/papers/BottCurtNoce18.pdf)
+## 📚 Curated Learning Resources
 
+Here are some recommended resources to deepen your understanding of numerical optimization:
 
+| Course/Resource                                                                                | Provider/Platform             |
+| ---------------------------------------------------------------------------------------------- | ----------------------------- |
+| [Root Finding by Oscar Veliz](https://www.youtube.com/watch?v=MlP_W-obuNg&list=PLb0Tx2oJWuYIpNE23qYHGQD42TIR3ThNz&ab_channel=OscarVeliz) | YouTube                       |
+| [Convex Optimization by Stephen Boyd (Stanford University)](https://www.youtube.com/watch?v=McLq1hEq3UY&list=PL3940DD956CDF0622&ab_channel=Stanford) | YouTube                       |
+| [Numerical Optimization by Jorge Nocedal and Stephen J. Wright](https://coral.ise.lehigh.edu/frankecurtis/files/papers/BottCurtNoce18.pdf) | Online Book                   |
 
-## Naming Convention
-The directories, files, and functions have been named according to the following convention:
-[PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/#package-and-module-names)
+## 💡 Personal Motivation
+As enthusiasts of mathematics and computer science, the complex world of AI optimization captured our interest. This journey through numerical optimization is not just about code, but about understanding and harnessing mathematical principles to solve real-world problems.
 
-## Contribute
-We welcome any contributions to the repository, including new functions, bug fixes, and documentation improvements. To contribute, please follow the steps below:
+## 🤝 Contributors and Collaborators
 
-1. Fork the repository
-2. Create a new branch
-3. Make your changes
-4. Commit your changes
-5. Push your changes to your fork
-6. Create a pull request
+| Name                       | GitHub Profile                           |
+| -------------------------- | ---------------------------------------- |
+| Saeed Ahmad                | [saeedahmadicp](https://github.com/saeedahmadicp) |
+| Izhar Ali                  | [ali-izhar](https://github.com/ali-izhar)    |
 
-
-## Contributors ✨
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdown lint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center"><a href="https://github.com/saeedahmadicp"><img src="https://avatars.githubusercontent.com/saeedahmadicp?v=4?s=100" width="100px;" alt="Saeed Ahmad"/><br /><sub><b>Saeed Ahmad</b></sub></a><br /><a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=saeedahmadicp" title="Code">💻</a> <a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=saeedahmadicp" title="Documentation">📖</a></td>
-      <td align="center"><a href="https://github.com/ali-izhar"><img src="https://avatars3.githubusercontent.com/ali-izhar?v=4?s=100" width="100px;" alt="Izhar Ali"/><br /><sub><b>Izhar Ali</b></sub></a><br /><a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=ali-izhar" title="Code">💻</a><a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/commits?author=ali-izhar" title="Documentation">📖</a></td></td>
-      </td>
- </tr>
-  </tbody>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+## 📜 License
+This repository is licensed under the [MIT License](./LICENSE).
