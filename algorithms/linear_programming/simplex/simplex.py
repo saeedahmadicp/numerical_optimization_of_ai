@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["SimplexSolver"]
+
 class SimplexSolver:
     def __init__(self, obj, lhs_ineq, rhs_ineq, var_names=None):
         """
@@ -15,17 +17,18 @@ class SimplexSolver:
         self.lhs_ineq = np.array(lhs_ineq)
         self.rhs_ineq = np.array(rhs_ineq)
         self.num_vars = len(obj)
-        self.var_names = vars if vars else [f'x{i+1}' for i in range(self.num_vars)]
+        self.var_names = var_names if var_names else [f"x{i+1}" for i in range(self.num_vars)]
 
     def add_slack_variables(self):
         """Add slack variables to the inequalities to convert them to equations
         and convert the objective function to a maximization problem.
         """
         num_rows, _ = self.lhs_ineq.shape
-        self.slack_vars = np.eye(num_rows)
+        slack_size = num_rows
+        self.slack_vars = np.eye(slack_size)
         self.tableau = np.hstack((self.lhs_ineq, self.slack_vars, self.rhs_ineq.reshape(-1, 1)))
-        self.obj_with_slack = np.concatenate((self.obj, np.zeros(num_rows)))
-        self.tableau = np.vstack((self.tableau, np.concatenate((self.obj_with_slack, np.array([0])))))
+        self.obj_row = np.concatenate((self.obj, np.zeros(slack_size + 1)))
+        self.tableau = np.vstack((self.tableau, self.obj_row))
 
     def pivot(self, row, col):
         """Apply the pivot operation to the row and column given.
@@ -33,20 +36,33 @@ class SimplexSolver:
         row (int): Row index of the pivot element
         col (int): Column index of the pivot element
         """
-        self.tableau[row] /= self.tableau[row, col]
-        for i in range(len(self.tableau)):
-            if i != row:
-                self.tableau[i] -= self.tableau[i, col] * self.tableau[row]
+        self.tableau[row, :] /= self.tableau[row, col]
+        num_rows, _ = self.tableau.shape
+        for r in range(num_rows):
+            if r != row:
+                self.tableau[r, :] -= self.tableau[r, col] * self.tableau[row, :]
+
+    def find_pivot(self):
+        """Find the pivot element in the current tableau.
+        The pivot column is the most negative entry in the bottom row.
+        The pivot row is the row with the minimum ratio of the right-hand side to the pivot column.
+        Returns:
+        (int, int): The pivot row and column
+        """
+        pivot_col = np.argmin(self.tableau[-1, :-1])
+        if self.tableau[-1, pivot_col] >= 0:
+            return None  # Optimal solution found
+        ratios = np.array([self.tableau[i, -1] / self.tableau[i, pivot_col] if self.tableau[i, pivot_col] > 0 else np.inf for i in range(len(self.tableau) - 1)])
+        pivot_row = ratios.argmin()
+        return pivot_row, pivot_col
 
     def simplex_algorithm(self):
         """Apply the simplex algorithm to solve the linear programming problem."""
         self.add_slack_variables()
-        while any(self.tableau[-1, :-1] < 0):
-            pivot_col = np.argmin(self.tableau[-1, :-1])
-            ratios = self.tableau[:-1, -1] / self.tableau[:-1, pivot_col]
-            valid_ratios = [ratios[i] if ratios[i] > 0 else float('inf') for i in range(len(ratios))]
-            pivot_row = np.argmin(valid_ratios)
-            self.pivot(pivot_row, pivot_col)
+        pivot = self.find_pivot()
+        while pivot is not None:
+            self.pivot(*pivot)
+            pivot = self.find_pivot()
         return self.tableau[-1, -1]
 
     def solve(self):
@@ -54,5 +70,5 @@ class SimplexSolver:
         and the values of the variables at which the maximum value occurs.
         """
         max_value = self.simplex_algorithm()
-        variables = self.tableau[:-1, -1] - np.dot(self.tableau[:-1, :-self.num_vars-1], self.obj)
-        return max_value, variables[:self.num_vars]
+        solution = {self.var_names[i]: self.tableau[i, -1] for i in range(self.num_vars)}
+        return max_value, solution
