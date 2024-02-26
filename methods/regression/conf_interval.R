@@ -1,5 +1,5 @@
-data= data.frame(x = c(1,2,3,4,5,6,7,8,9,10),y=c(2,4,7,7.5,9,12,13,15,18.5,20.2))
 
+data= data.frame(x = c(1,2,3,4,5,6,7,8,9,10),y=c(2,4,7,7.5,9,12,13,15,18.5,20.2))
 plot(data$x,data$y)
 abline(data.fit, col = "red")
 data.fit = lm(data$y~data$x)
