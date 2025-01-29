@@ -1,53 +1,81 @@
+# methods/root_finding/powell.py
+
+"""Powell's conjugate direction method for optimization."""
+
+from typing import Callable, List, Tuple
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import minimize_scalar
 
-__all__ = ['powell_conjugate_direction']
+__all__ = ["powell_conjugate_direction"]
 
-def powell_conjugate_direction(func, x0, tol, max_iters):
-    """
-    Powell's conjugate direction method optimisation algorithm
-    
-    Parameters:
-        func (function): the objective function to be optimised
-        initial_directions (list): initial directions
-        tol (float): tolerance value for termination
-        max_iters (int): maximum number of iterations
-        
+
+def powell_conjugate_direction(
+    f: Callable[..., float],
+    x0: NDArray[np.float64],
+    tol: float = 1e-6,
+    max_iter: int = 100,
+    verbose: bool = False,
+) -> Tuple[NDArray[np.float64], List[float], int, NDArray[np.float64]]:
+    """Find minimum using Powell's conjugate direction method.
+
+    Args:
+        f: Function to minimize
+        x0: Initial guess
+        tol: Convergence tolerance
+        max_iter: Maximum number of iterations
+        verbose: Whether to print progress
+
     Returns:
-        x (float): the optimised value
-        E (list): the list of errors
-        N (int): number of iterations
+        Tuple of (x_min, errors, iterations, history) where:
+            x_min: Approximate minimizer
+            errors: List of function values at each iteration
+            iterations: Number of iterations used
+            history: Array of points visited
+
+    Example:
+        >>> def f(x, y): return x**2 + 2*y**2
+        >>> x0 = np.array([1.0, 1.0])
+        >>> x, errs, iters, _ = powell_conjugate_direction(f, x0)
+        >>> np.allclose(x, [0, 0], atol=1e-5)
+        True
     """
-    
-    # Error list
-    E = []
-    
     n = len(x0)
-    f0 = func(*x0)
+    x = x0.copy()
     directions = np.eye(n)
-    iters = 0
-    
-    # history
+    errors = []
     history = [x0.copy()]
-    
-    while iters < max_iters:
-        iters += 1
-        x_prev = x0.copy()
-        history.append(x_prev)
-        
-        # Minimise along each direction
-        for i in range(n):
-            res = minimize_scalar(lambda alpha: func(*(x0 + alpha * directions[i, :])))
-            x0 = x0 + res.x * directions[i, :]
-            E.append(abs(func(*x0)))
-            
+
+    for i in range(max_iter):
+        x_prev = x.copy()
+
+        # Minimize along each direction
+        for j in range(n):
+            # Create line search function
+            def line_func(alpha):
+                return f(*(x + alpha * directions[j]))
+
+            # Minimize along current direction
+            res = minimize_scalar(line_func)
+            if not res.success:
+                if verbose:
+                    print("Line search failed")
+                continue
+
+            x = x + res.x * directions[j]
+            errors.append(f(*x))
+            history.append(x.copy())
+
         # Update directions
-        for i in range(n - 1):
-            directions[i, :] = directions[i + 1, :]
-        directions[-1, :] = x0 - x_prev
-        
-        # Check for convergence
-        if np.linalg.norm(x0 - x_prev) < tol:
-            break
-        
-    return x0, E, len(E), np.array(history)
+        directions[:-1] = directions[1:]
+        directions[-1] = x - x_prev
+
+        # Check convergence
+        if np.linalg.norm(x - x_prev) < tol:
+            if verbose:
+                print(f"Converged in {i + 1} iterations")
+            return x, errors, i + 1, np.array(history)
+
+    if verbose:
+        print(f"Failed to converge in {max_iter} iterations")
+    return x, errors, max_iter, np.array(history)

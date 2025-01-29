@@ -1,32 +1,65 @@
-__all__ = ['regula_falsi']
+# methods/root_finding/regula_falsi.py
+
+"""Regula falsi (false position) method for finding roots."""
+
+from typing import Callable, List, Tuple
 
 
-def regula_falsi(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
+def regula_falsi(
+    f: Callable[[float], float],
+    a: float,
+    b: float,
+    tol: float = 1e-6,
+    max_iter: int = 100,
+) -> Tuple[float, List[float], int]:
+    """Find root of f(x) = 0 using regula falsi method.
+
+    Args:
+        f: Function to find root of
+        a: Left endpoint of interval
+        b: Right endpoint of interval
+        tol: Error tolerance
+        max_iter: Maximum number of iterations
+
+    Returns:
+        Tuple of (root, errors, iterations) where:
+            root: Approximate root of f(x) = 0
+            errors: List of absolute errors |f(x)|
+            iterations: Number of iterations used
+
+    Raises:
+        ValueError: If f(a) and f(b) have same sign
+
+    Example:
+        >>> f = lambda x: x**2 - 2
+        >>> x, errs, iters = regula_falsi(f, 1, 2)
+        >>> abs(x - 2**0.5) < 1e-6
+        True
     """
-    This function finds the root of a function f using the regular falsi method.
-    :param: f: function to be evaluated
-    :param: a: lower bound of the interval
-    :param: b: upper bound of the interval
-    :param: tol: tolerance
-    :param: max_iter: maximum number of iterations
-    :return: x: root of the function, E: list of errors, N: number of iterations
-    """    
-    if f(a)*f(b) > 0:
-        raise ValueError("The function must have opposite signs at the interval endpoints.")
-    
-    E = []
-    N = 0
+    # Validate input interval
+    fa, fb = f(a), f(b)
+    if fa * fb >= 0:
+        raise ValueError("Function must have opposite signs at interval endpoints")
 
-    while N < max_iter:
-        x = b - f(b)*(b-a)/(f(b)-f(a))
-        E.append(abs(f(x)))
+    errors = []
+    iterations = 0
 
-        if E[-1] <= tol:
-            return x, E, N
-        elif f(a)*f(x) < 0:
-            b = x
+    while iterations < max_iter:
+        # Compute false position
+        c = b - fb * (b - a) / (fb - fa)
+        fc = f(c)
+        errors.append(abs(fc))
+
+        # Check convergence
+        if abs(fc) <= tol:
+            return c, errors, iterations
+
+        # Update interval
+        if fa * fc < 0:
+            b, fb = c, fc
         else:
-            a = x
-        N += 1
-        
-    return x, E, N
+            a, fa = c, fc
+
+        iterations += 1
+
+    return (a + b) / 2, errors, iterations

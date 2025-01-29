@@ -1,40 +1,117 @@
 # Contributing Guidelines
 
-Thank you for considering contributing to our Numerical Optimization of AI project! We value your interest and efforts in enhancing the capabilities and quality of our software.
+Thank you for considering contributing to our Numerical Optimization repository! This document outlines the process and guidelines for contributing.
 
-To contribute, here's a step-by-step guide to get you started:
+## Ways to Contribute
 
-- **Fork the Repository:** Begin by forking the repository on GitHub. This creates a copy of the repository in your own GitHub account.
+You can contribute in several ways:
+- Implementing new optimization algorithms
+- Improving existing implementations
+- Adding examples and use cases
+- Enhancing documentation
+- Fixing bugs
+- Adding tests
+- Suggesting improvements
 
-- **Clone the Forked Repository:** Clone the forked repository to your local machine using the `git clone` command. This step allows you to work on the files locally.
+## Getting Started
 
-  ```bash
-  git clone [URL of your forked repository]
-  ```
+1. **Fork the Repository**
+   ```bash
+   # Clone your fork
+   git clone https://github.com/your-username/repository-name.git
+   cd repository-name
 
-- **Create a New Branch:** Before making any changes, switch to a new branch using the `git checkout` command. You can name the branch anything you want, but it's recommended to use a descriptive name that reflects the changes you're going to make.
+   # Add upstream remote
+   git remote add upstream https://github.com/original-owner/repository-name.git
+   ```
 
-  ```bash
-  git checkout -b [name_of_your_new_branch]
-  ```
+2. **Create a Branch**
+   ```bash
+   # Create and switch to a new branch
+   git checkout -b feature/your-feature-name
+   ```
 
-- **Make Changes:** Make the necessary changes or additions to the code in your local repository. Focus on making changes that are clear and address specific issues or enhancements.
+## Development Guidelines
 
-- **Test Your Changes:** After implementing your changes, test them thoroughly to ensure they work as intended and don't introduce any new issues.
+### Code Style
+- Follow PEP 8 style guide for Python code
+- Use meaningful variable and function names
+- Add docstrings to functions and classes
+- Include type hints where appropriate
 
-- **Commit Your Changes:** Commit your changes to the branch with a clear and detailed commit message. This helps us understand the changes you've made and why you made them.
+### Documentation
+Each contribution should include:
+- Clear docstrings explaining functionality
+- Mathematical background (if applicable)
+- Usage examples
+- References to relevant papers/resources
 
-  ```bash
-  git add .
-  git commit -m "your commit message"
-  ```
+### Implementation Requirements
+- Write clean, readable code
+- Include necessary tests
+- Provide performance benchmarks (if applicable)
+- Add example usage in docstrings
 
-- **Push Your Changes:** Push your changes from your local repository to the remote repository on GitHub.
+### Testing
+- Add unit tests for new functionality
+- Ensure all tests pass before submitting
+- Include test cases with edge conditions
 
-  ```bash
-    git push origin [name_of_your_new_branch]
-  ```
+## Submitting Changes
 
-- **Submit a Pull Request:** Once your changes are pushed, submit a pull request (PR) to the main repository. In your PR description, provide details about the changes and their purpose. Make sure to reference any related issues.
+1. **Commit Your Changes**
+   ```bash
+   git add .
+   git commit -m "Brief description of changes"
+   ```
 
-- **Await Review:** Your PR will be reviewed by the maintainers of the project. Be responsive to any feedback or requests for changes.
+2. **Update Your Fork**
+   ```bash
+   git fetch upstream
+   git rebase upstream/main
+   ```
+
+3. **Push Changes**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+4. **Create Pull Request**
+   - Go to the repository on GitHub
+   - Click "New Pull Request"
+   - Select your branch
+   - Fill in the PR template
+
+## Pull Request Guidelines
+
+Your PR should include:
+- Clear description of changes
+- Reference to any related issues
+- List of new dependencies (if any)
+- Updates to documentation
+- Test results
+
+## Code Review Process
+
+1. Maintainers will review your PR
+2. Address any requested changes
+3. Once approved, your PR will be merged
+
+## Best Practices
+
+- Keep PRs focused and reasonably sized
+- Write clear commit messages
+- Update documentation as needed
+- Test thoroughly before submitting
+- Be responsive to feedback
+
+## Questions?
+
+If you have questions, feel free to:
+- Open an issue
+- Ask in the discussions section
+- Contact the maintainers
+
+---
+
+Thank you for contributing to making numerical optimization more accessible to everyone! 🚀

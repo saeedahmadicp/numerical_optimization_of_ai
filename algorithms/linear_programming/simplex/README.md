@@ -30,30 +30,45 @@ To use the Simplex Solver, follow these steps:
 
 ## Example
 ```python
-from simplex_solver import SimplexSolver
+"""
+LINEAR PROGRAMMING PROBLEM:
 
-# Objective function (Maximize Z = 4x1 + 3x2 + 6x3)
-obj = [-4, -3, -6]  # Coefficients for the objective function (note the negative sign for maximization)
+A farmer has a 320 acre farm on which she plants two crops: corn and soybeans. For
+each acre of corn planted, her expenses are $50 and for each acre of soybeans planted, her expenses
+are $100. Each acre of corn requires 100 bushels of storage and yields a profit of $60; each acre of
+soybeans requires 40 bushels of storage and yields a profit of $90. If the total amount of storage
+space available is 19,200 bushels and the farmer has only $20,000 on hand, how many acres of each
+crop should she plant in order to maximize her profit? What will her profit be if she follows this
+strategy?
 
-# Constraints (3x1 + x2 + 3x3 <= 30, 2x1 + 2x2 + 3x3 <= 40)
-lhs_ineq = [
-  [3, 1, 3],  # Coefficients for the first constraint
-  [2, 2, 3]   # Coefficients for the second constraint
-]
-rhs_ineq = [30, 40]  # Right-hand side of the constraints
+Let x1 be the number of acres of corn and x2 be the number of acres of soybeans. 
 
-# Variable names
-var_names = ["x1", "x2", "x3"]
+OBJECTIVE FUNCTION:
+Maximize: 60x1 + 90x2
 
-# Creating an instance of SimplexSolver
+CONSTRAINTS:
+50x1 + 100x2 <= 20000 (total expenses)
+100x1 + 40x2 <= 19200 (total storage space)
+x1, x2 >= 0 (non-negativity)
+"""
+
+# objective function to maximize
+obj = [-60, -90]
+
+# left-hand side of inequalities
+lhs_ineq = [[50, 100], [100, 40]]
+
+# right-hand side of inequalities
+rhs_ineq = [20000, 19200]
+
+var_names = ["corn", "soybeans"]
+
 solver = SimplexSolver(obj, lhs_ineq, rhs_ineq, var_names)
-
-# Solving the problem
 max_value, solution = solver.solve()
 
-# Displaying the results
-print("Maximum value of Z:", max_value)
-print("Solution:")
-for var, value in solution.items():
-    print(f"{var} = {value}")
+print("Maximum profit:", max_value)
+print("-" * 25)
+print("Optimal planting strategy:")
+for var, val in zip(var_names, solution):
+    print(f"{var}: {val}")
 ```

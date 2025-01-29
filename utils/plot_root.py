@@ -1,31 +1,30 @@
+# utils/plot_root.py
+
+"""Plotting utilities for root-finding methods."""
+
 from matplotlib import pyplot as plt
 
 __all__ = ["plot_root"]
 
+
 def plot_root(index, data):
+    """Plot convergence of different root-finding methods.
+
+    Args:
+        index: Function index for plot title
+        data: Dict of method results containing errors and iterations
     """
-    :param index: index of the function
-    :param data: dictionary of the methods and their data containing the errors and iterations
-    :return: None
-    
-    Description: plot the absolute errors vs iterations for each method
-    """
-    
-    # add another key for the iteration list
-    for key in data.keys():
-        data[key]['iterations'] = [i for i in range(1, len(data[key]['errors'])+1)]
-         
-    Figure = plt.figure()
-    
-    # plot the erros vs iterations for each method
-    for key in data.keys():
-        plt.plot(data[key]['iterations'], data[key]['errors'], label=key)
-    
+    # Add iteration indices to data
+    for method_data in data.values():
+        method_data["iterations"] = list(range(1, len(method_data["errors"]) + 1))
+
+    # Create convergence plot
+    plt.figure()
+    for method, method_data in data.items():
+        plt.plot(method_data["iterations"], method_data["errors"], label=method)
+
     plt.xlabel("Iterations")
     plt.ylabel("Absolute Errors")
-    plt.title("Absolute Errors vs Iterations", )
-    plt.legend(title="Root finding methods", loc="upper right",)
-    
-    
-    # plt.savefig(f'root_finding_methods_{index}.png')
+    plt.title("Convergence Comparison")
+    plt.legend(title="Root finding methods", loc="upper right")
     plt.show()

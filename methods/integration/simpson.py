@@ -1,38 +1,56 @@
+# methods/integration/simpson.py
+
+"""Simpson's rule for numerical integration."""
+
+from typing import Callable, Any, Union
 import numpy as np
-import inspect
+from numpy.typing import NDArray
 
 __all__ = ["simpson"]
 
-def simpson(f, a, b, n, *args, **kwargs):
+
+def simpson(
+    f: Callable[..., Union[float, NDArray[np.float64]]],
+    a: float,
+    b: float,
+    n: int,
+    *args: Any,
+    **kwargs: Any,
+) -> float:
+    """Approximate definite integral using Simpson's rule.
+
+    Args:
+        f: Function to integrate
+        a: Lower bound of integration
+        b: Upper bound of integration
+        n: Number of subintervals (must be even)
+        *args: Additional positional arguments for f
+        **kwargs: Additional keyword arguments for f
+
+    Returns:
+        Approximation of ∫[a,b] f(x)dx
+
+    Example:
+        >>> f = lambda x: x**2
+        >>> simpson(f, 0, 1, 100)
+        0.3333333333333333  # Approximates ∫[0,1] x²dx = 1/3
+
+    Raises:
+        ValueError: If n is not even
     """
-    This function performs the Simpson's rule.
-    :param f: function to integrate
-    :param a: lower bound
-    :param b: upper bound
-    :param n: number of subintervals
-    :param args: additional positional arguments for the function f
-    :param kwargs: additional keyword arguments for the function f
-    :return: approximation of the integral
-    """
+    if n % 2 != 0:
+        raise ValueError("Number of subintervals must be even")
 
-    # Check the number of arguments that the function f takes
-    num_args = len(inspect.signature(f).parameters)
+    try:
+        h = (b - a) / n  # Step size
+        x = np.linspace(a, b, n + 1)  # Integration points
+        y = f(x, *args, **kwargs)  # Function values
 
-    # Calculate the step size (h is the width of each subinterval)
-    h = (b - a) / n
+        # Apply Simpson's rule: h/3 * (f₀ + 4f₁ + 2f₂ + 4f₃ + ... + 2fₙ₋₂ + 4fₙ₋₁ + fₙ)
+        weights = np.ones(n + 1)
+        weights[1:-1:2] = 4  # Odd indices get weight 4
+        weights[2:-1:2] = 2  # Even indices get weight 2
 
-    # Evaluate the integrand at the left and right endpoints
-    if num_args == 1:
-        left = f(a)
-        right = f(b)
-        even = np.sum(f(a + h * np.arange(2, n, 2)))
-        odd = np.sum(f(a + h * np.arange(1, n, 2)))
-    elif num_args == 2:
-        left = f(a, *args, **kwargs)
-        right = f(b, *args, **kwargs)
-        even = np.sum(f(a + h * np.arange(2, n, 2), *args, **kwargs))
-        odd = np.sum(f(a + h * np.arange(1, n, 2), *args, **kwargs))
-    else:
-        raise ValueError("The function f must take either 1 or 2 arguments.")
-
-    return h / 3 * (left + right + 4 * odd + 2 * even)
+        return h / 3 * np.sum(weights * y)
+    except Exception as e:
+        raise ValueError(f"Error in Simpson integration: {str(e)}")

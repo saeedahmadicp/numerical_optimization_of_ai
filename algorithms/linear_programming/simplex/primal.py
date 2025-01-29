@@ -1,6 +1,9 @@
+# algorithms/linear_programming/simplex/simplex.py
+
 import numpy as np
 
 __all__ = ["SimplexSolver"]
+
 
 class SimplexSolver:
     def __init__(self, obj, lhs_ineq, rhs_ineq, var_names=None):
@@ -17,7 +20,9 @@ class SimplexSolver:
         self.lhs_ineq = np.array(lhs_ineq)
         self.rhs_ineq = np.array(rhs_ineq)
         self.num_vars = len(obj)
-        self.var_names = var_names if var_names else [f"x{i+1}" for i in range(self.num_vars)]
+        self.var_names = (
+            var_names if var_names else [f"x{i+1}" for i in range(self.num_vars)]
+        )
 
     def add_slack_variables(self):
         """Add slack variables to the inequalities to convert them to equations
@@ -26,7 +31,9 @@ class SimplexSolver:
         num_rows, _ = self.lhs_ineq.shape
         slack_size = num_rows
         self.slack_vars = np.eye(slack_size)
-        self.tableau = np.hstack((self.lhs_ineq, self.slack_vars, self.rhs_ineq.reshape(-1, 1)))
+        self.tableau = np.hstack(
+            (self.lhs_ineq, self.slack_vars, self.rhs_ineq.reshape(-1, 1))
+        )
         self.obj_row = np.concatenate((self.obj, np.zeros(slack_size + 1)))
         self.tableau = np.vstack((self.tableau, self.obj_row))
 
@@ -52,7 +59,16 @@ class SimplexSolver:
         pivot_col = np.argmin(self.tableau[-1, :-1])
         if self.tableau[-1, pivot_col] >= 0:
             return None  # Optimal solution found
-        ratios = np.array([self.tableau[i, -1] / self.tableau[i, pivot_col] if self.tableau[i, pivot_col] > 0 else np.inf for i in range(len(self.tableau) - 1)])
+        ratios = np.array(
+            [
+                (
+                    self.tableau[i, -1] / self.tableau[i, pivot_col]
+                    if self.tableau[i, pivot_col] > 0
+                    else np.inf
+                )
+                for i in range(len(self.tableau) - 1)
+            ]
+        )
         pivot_row = ratios.argmin()
         return pivot_row, pivot_col
 
@@ -70,5 +86,7 @@ class SimplexSolver:
         and the values of the variables at which the maximum value occurs.
         """
         max_value = self.simplex_algorithm()
-        solution = {self.var_names[i]: self.tableau[i, -1] for i in range(self.num_vars)}
+        solution = {
+            self.var_names[i]: self.tableau[i, -1] for i in range(self.num_vars)
+        }
         return max_value, solution

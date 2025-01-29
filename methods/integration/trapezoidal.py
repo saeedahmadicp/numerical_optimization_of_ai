@@ -1,35 +1,46 @@
+# methods/integration/trapezoidal.py
+
+"""Trapezoidal rule for numerical integration."""
+
+from typing import Callable, Any, Union
 import numpy as np
-import inspect
+from numpy.typing import NDArray
 
 __all__ = ["trapezoidal"]
 
-def trapezoidal(f, a, b, n, *args, **kwargs):
+
+def trapezoidal(
+    f: Callable[..., Union[float, NDArray[np.float64]]],
+    a: float,
+    b: float,
+    n: int,
+    *args: Any,
+    **kwargs: Any,
+) -> float:
+    """Approximate definite integral using the trapezoidal rule.
+
+    Args:
+        f: Function to integrate
+        a: Lower bound of integration
+        b: Upper bound of integration
+        n: Number of subintervals
+        *args: Additional positional arguments for f
+        **kwargs: Additional keyword arguments for f
+
+    Returns:
+        Approximation of ∫[a,b] f(x)dx
+
+    Example:
+        >>> f = lambda x: x**2
+        >>> trapezoidal(f, 0, 1, 100)
+        0.3333583333333333  # Approximates ∫[0,1] x²dx = 1/3
     """
-    This function performs the trapezoidal rule.
-    param: f: function to integrate
-    param: a: lower bound
-    param: b: upper bound
-    param: n: number of subintervals
-    *args: additional positional arguments for the function f
-    **kwargs: additional keyword arguments for the function f
-    return: approximation of the integral
-    """
+    try:
+        h = (b - a) / n  # Step size
+        x = np.linspace(a, b, n + 1)  # Integration points
+        y = f(x, *args, **kwargs)  # Function values
 
-    # Check the number of arguments that the function f takes
-    num_args = len(inspect.signature(f).parameters)
-
-    # Calculate the step size (h is the width of each subinterval)
-    h = (b - a) / n
-
-    if num_args == 1:
-        left = f(a) / 2
-        right = f(b) / 2
-        middle = np.sum(f(a + h * np.arange(1, n)))
-    elif num_args == 2:
-        left = f(a, *args, **kwargs) / 2
-        right = f(b, *args, **kwargs) / 2
-        middle = np.sum(f(a + h * np.arange(1, n), *args, **kwargs))
-    else:
-        raise ValueError("The function f must take either 1 or 2 arguments.")
-
-    return h * (left + middle + right)
+        # Apply trapezoidal rule: h * (f₀/2 + f₁ + f₂ + ... + fₙ₋₁ + fₙ/2)
+        return h * (np.sum(y) - (y[0] + y[-1]) / 2)
+    except Exception as e:
+        raise ValueError(f"Error in trapezoidal integration: {str(e)}")

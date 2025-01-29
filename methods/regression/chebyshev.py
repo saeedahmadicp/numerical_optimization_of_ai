@@ -1,56 +1,86 @@
+# methods/regression/chebyshev.py
+
+"""Chebyshev polynomial regression."""
+
 import numpy as np
-from collections import namedtuple
+from numpy.typing import NDArray
+from typing import NamedTuple, Union
 from .r_squared import r_squared
 
-def chebyshev(x, y, n):
-    """
-    Given the x-values, the y-values, and the degree of the polynomial, this
-    function returns the weights of the Chebyshev regression model.
 
-    Parameters:
-        x : np.ndarray
-            The x-values of the data.
-        y : np.ndarray
-            The y-values of the data.
-        n : int
-            The degree of the polynomial.  
+class ChebyshevResult(NamedTuple):
+    """Results from Chebyshev polynomial regression."""
+
+    weights: NDArray[np.float64]
+    y_pred: NDArray[np.float64]
+    r_squared: float
+
+
+def chebyshev(
+    x: Union[NDArray[np.float64], np.ndarray],
+    y: Union[NDArray[np.float64], np.ndarray],
+    degree: int,
+) -> ChebyshevResult:
+    """Fit Chebyshev polynomial regression of specified degree.
+
+    Args:
+        x: Independent variable values (must be in [-1, 1])
+        y: Dependent variable values
+        degree: Degree of polynomial
 
     Returns:
-        a : np.ndarray
-            The weights of the Chebyshev regression model.
-        y_pred : np.ndarray
-            The predicted y-values of the Chebyshev regression model.
-        r_squared : float
-            The R-squared value of the Chebyshev regression model.
-    """
+        NamedTuple containing:
+            weights: Coefficients of Chebyshev polynomials
+            y_pred: Predicted y values
+            r_squared: R² score (coefficient of determination)
 
-    # calculating the total number of values
+    Raises:
+        ValueError: If x values outside [-1, 1] or degree < 0
+
+    Example:
+        >>> x = np.linspace(-1, 1, 100)
+        >>> y = np.cos(2*np.pi*x) + 0.1*np.random.randn(100)
+        >>> result = chebyshev(x, y, degree=4)
+    """
+    # Input validation
+    if np.any(np.abs(x) > 1):
+        raise ValueError("x values must be in [-1, 1]")
+    if degree < 0:
+        raise ValueError("Degree must be non-negative")
+
+    # Convert to float64 for numerical stability
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
     m = len(x)
 
-    # calculating the weights
-    a = np.zeros(n + 1)
-    for i in range(n + 1):
-        a[i] = (2 / m) * np.sum(y * np.cos(i * np.arccos(x)))
+    # Compute Chebyshev coefficients
+    weights = np.zeros(degree + 1, dtype=np.float64)
+    for i in range(degree + 1):
+        weights[i] = (2 / m) * np.sum(y * np.cos(i * np.arccos(x)))
 
-    # calculate the predicted y-values
-    y_pred = predict(x, a)
-
-    # calculate the R-squared value
+    # Compute predictions
+    y_pred = predict(x, weights)
     r2 = r_squared(y, y_pred)
 
-    # create a named tuple to return the results
-    Result = namedtuple('Result', ['weights', 'y_pred', 'r_squared'])
-    return Result(a, y_pred, r2)
+    return ChebyshevResult(weights, y_pred, r2)
 
 
-def predict(x, a):
+def predict(
+    x: Union[NDArray[np.float64], np.ndarray], weights: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Evaluate Chebyshev polynomial at given points.
+
+    Args:
+        x: Points at which to evaluate polynomial
+        weights: Coefficients of Chebyshev polynomials
+
+    Returns:
+        Polynomial values at x
     """
-    This function returns the predicted values of y.
-    """
-    # calculating the predicted values
-    y_pred = np.zeros(len(x))
-    for i in range(len(x)):
-        for j in range(len(a)):
-            y_pred[i] += a[j] * np.cos(j * np.arccos(x[i]))
+    x = np.asarray(x, dtype=np.float64)
+    y = np.zeros_like(x)
 
-    return y_pred
+    for i, w in enumerate(weights):
+        y += w * np.cos(i * np.arccos(x))
+
+    return y

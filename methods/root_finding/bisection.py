@@ -1,38 +1,69 @@
-__all__ = ['bisection']
+# methods/root_finding/bisection.py
 
-def bisection(f: callable, a: float, b: float, tol: float, max_iter: int) -> tuple:
+"""Bisection method for finding roots of continuous functions."""
+
+from typing import Callable, List, Tuple
+
+__all__ = ["bisection"]
+
+
+def bisection(
+    f: Callable[[float], float],
+    a: float,
+    b: float,
+    tol: float = 1e-6,
+    max_iter: int = 100,
+) -> Tuple[float, List[float], int]:
+    """Find root of f(x) = 0 using bisection method.
+
+    Args:
+        f: Function to find root of
+        a: Left endpoint of interval
+        b: Right endpoint of interval
+        tol: Error tolerance
+        max_iter: Maximum number of iterations
+
+    Returns:
+        Tuple of (root, errors, iterations) where:
+            root: Approximate root of f(x) = 0
+            errors: List of absolute errors |f(x)|
+            iterations: Number of iterations used
+
+    Raises:
+        ValueError: If f(a) and f(b) have same sign
+
+    Example:
+        >>> f = lambda x: x**2 - 2
+        >>> x, errs, iters = bisection(f, 1, 2)
+        >>> abs(x - 2**0.5) < 1e-6
+        True
     """
-    This function finds the root of a function f using the bisection method
-    :param: f: function to be evaluated
-    :param: a: lower bound of the interval
-    :param: b: upper bound of the interval
-    :param: tol: tolerance
-    :param: max_iter: maximum number of iterations
-    :return: x: root of the function, E: list of errors, N: number of iterations
-    """
-    # raise ValueError if initial conditions do not satisfy the bisection method requirement
-    if f(a) * f(b) >= 0:
-        raise ValueError("The function has the same sign at both ends of the interval")
-    
-    # initialize error list and iteration counter 
-    E = [] 
-    N = 0 
-    
-    # iterate until max iterations or tolerance is met
-    while N < max_iter: 
-        
-        x = (a + b) / 2 
-        E.append(abs(f(x)))
-        
-        # check if tolerance is met
-        if E[-1] <= tol: 
-            return x, E, N
-        
-        ## apply elimination step
-        elif f(a) * f(x) < 0: 
-            b = x
+    # Validate input interval
+    fa, fb = f(a), f(b)
+    if fa * fb >= 0:
+        raise ValueError("Function must have opposite signs at interval endpoints")
+
+    errors = []
+    iterations = 0
+
+    while iterations < max_iter:
+        # Compute midpoint
+        c = (a + b) / 2
+        fc = f(c)
+        errors.append(abs(fc))
+
+        # Check convergence
+        if abs(fc) <= tol:
+            return c, errors, iterations
+
+        # Update interval
+        if fa * fc < 0:
+            b = c
+            fb = fc
         else:
-            a = x
-            
-        N += 1
-    return x, E, N
+            a = c
+            fa = fc
+
+        iterations += 1
+
+    return (a + b) / 2, errors, iterations
