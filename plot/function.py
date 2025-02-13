@@ -158,11 +158,17 @@ class FunctionPlotter:
         ax = fig.add_axes([0.1, 0.1, 0.85, 0.85])
         self.plot(func, x_range, ax=ax)
 
-        y = func(np.array(x_range))
-        y_min, y_max = min(y), max(y)
-        y_padding = (y_max - y_min) * 0.1
+        # Calculate function range with more points for better range estimation
+        x = np.linspace(x_range[0], x_range[1], self.config.points * 2)
+        y = func(x)
+        y_min, y_max = np.min(y), np.max(y)
 
-        ax.set_xlim(x_range)
+        # Add padding to the view limits (20% padding)
+        x_padding = (x_range[1] - x_range[0]) * 0.2
+        y_padding = (y_max - y_min) * 0.2
+
+        # Set initial view limits with padding
+        ax.set_xlim(x_range[0] - x_padding, x_range[1] + x_padding)
         ax.set_ylim(y_min - y_padding, y_max + y_padding)
 
         self._pan_data = None
@@ -242,27 +248,42 @@ class FunctionPlotter:
         return fig
 
 
-if __name__ == "__main__":
-    f = PiecewiseFunction(
-        pieces=[
-            (lambda x: x != 0, lambda x: x**2 * np.sin(1 / x) + 2 * x**2),
-            (lambda x: x == 0, lambda x: 0),
-        ],
-        latex_str=r"x^2 \sin\left(\frac{1}{x}\right) + 2x^2 \text{ if } x \neq 0, \quad 0 \text{ if } x = 0",
-    )
+# if __name__ == "__main__":
+#     # Example 1: Simple quadratic function
+#     @latex_function(r"x^2 - 2x + 1")
+#     def f1(x):
+#         return x**2 - 2 * x + 1  # Simple quadratic: (x-1)^2
 
-    config = FunctionPlotConfig(
-        style=PlotStyle.NORMAL,
-        figsize=(12, 8),
-        color="blue",
-        grid=True,
-        title=r"$f(x) = " + f.latex_str + "$",
-        points=2000,
-        linewidth=1.5,
-        show_zeros=True,
-        show_extrema=True,
-    )
+#     # Example 2: Piecewise function
+#     f2 = PiecewiseFunction(
+#         pieces=[
+#             (lambda x: x != 0, lambda x: x**2 * np.sin(1 / x) + 2 * x**2),
+#             (lambda x: x == 0, lambda x: 0),
+#         ],
+#         latex_str=r"x^2 \sin\left(\frac{1}{x}\right) + 2x^2 \text{ if } x \neq 0, \quad 0 \text{ if } x = 0",
+#     )
 
-    plotter = FunctionPlotter(config)
-    fig = plotter.plot_interactive(f, x_range=(-1, 1))
-    plt.show()
+#     # Common plot configuration
+#     base_config = dict(
+#         style=PlotStyle.NORMAL,
+#         figsize=(12, 8),
+#         color="blue",
+#         grid=True,
+#         points=2000,
+#         linewidth=1.5,
+#         show_zeros=True,
+#         show_extrema=True,
+#     )
+
+#     # Plot both functions
+#     plotter = FunctionPlotter(
+#         FunctionPlotConfig(**base_config, title=r"$f_1(x) = " + f1.latex_str + "$")
+#     )
+#     fig1 = plotter.plot_interactive(f1, x_range=(-2, 4))
+#     plt.show()
+
+#     plotter = FunctionPlotter(
+#         FunctionPlotConfig(**base_config, title=r"$f_2(x) = " + f2.latex_str + "$")
+#     )
+#     fig2 = plotter.plot_interactive(f2, x_range=(-1, 1))
+#     plt.show()
