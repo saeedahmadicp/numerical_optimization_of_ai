@@ -1,10 +1,8 @@
-# utils/initial_guess.py
+# utils/misc.py
 
-"""Utility for finding initial intervals for root-finding methods."""
+"""Miscellaneous utility functions."""
 
 import numpy as np
-
-__all__ = ["find_initial_interval"]
 
 
 def find_initial_interval(f, x0, d0):
