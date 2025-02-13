@@ -12,3 +12,9 @@
 # - Conjugate Gradient
 # - Quasi-Newton Methods (BFGS, L-BFGS)
 # - Ellipsoid Method
+# - Sequential Quadratic Programming (SQP)
+# - Augmented Lagrangian Methods
+# - Penalty Methods
+# - Merit Functions
+# - Filter Methods
+# - Derivative-Free Optimization

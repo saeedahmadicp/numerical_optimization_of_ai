@@ -11,8 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
 
 
 class PlotStyle(Enum):
