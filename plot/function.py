@@ -11,6 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
 
 class PlotStyle(Enum):
@@ -21,6 +23,9 @@ class PlotStyle(Enum):
     GRADIENT = "gradient"
     SCATTER = "scatter"
     STEM = "stem"
+    SURFACE_3D = "surface_3d"  # 3D surface plot
+    CONTOUR_3D = "contour_3d"  # 3D contour plot
+    WIREFRAME_3D = "wireframe_3d"  # 3D wireframe plot
 
 
 @dataclass
@@ -40,6 +45,12 @@ class FunctionPlotConfig:
     show_zeros: bool = False
     show_extrema: bool = False
     dpi: int = 100
+
+    # 3D specific configurations
+    view_angle: Tuple[float, float] = (30, -60)  # (elevation, azimuth)
+    surface_cmap: str = "viridis"
+    n_contours: int = 20
+    alpha_3d: float = 0.8
 
 
 def latex_function(latex_str):
@@ -247,6 +258,96 @@ class FunctionPlotter:
         pan_factory(ax)
         return fig
 
+    def plot_3d(
+        self,
+        func: Callable[[np.ndarray, np.ndarray], np.ndarray],
+        x_range: Tuple[float, float],
+        y_range: Tuple[float, float],
+        ax: Optional[Axes] = None,
+    ) -> Tuple[Figure, Axes]:
+        """Plot a 3D function over the specified range.
+
+        Args:
+            func: Function taking X, Y meshgrid and returning Z values
+            x_range: Range for x-axis (x_min, x_max)
+            y_range: Range for y-axis (y_min, y_max)
+            ax: Optional matplotlib axes to plot on
+        """
+        if ax is None:
+            fig = plt.figure(figsize=self.config.figsize, dpi=self.config.dpi)
+            ax = fig.add_subplot(111, projection="3d")
+        else:
+            fig = ax.figure
+
+        # Create meshgrid
+        x = np.linspace(x_range[0], x_range[1], self.config.points)
+        y = np.linspace(y_range[0], y_range[1], self.config.points)
+        X, Y = np.meshgrid(x, y)
+        Z = func(X, Y)
+
+        # Set view angle
+        ax.view_init(*self.config.view_angle)
+
+        if self.config.style == PlotStyle.SURFACE_3D:
+            surf = ax.plot_surface(
+                X,
+                Y,
+                Z,
+                cmap=self.config.surface_cmap,
+                alpha=self.config.alpha_3d,
+                linewidth=0,
+            )
+            fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
+
+        elif self.config.style == PlotStyle.CONTOUR_3D:
+            surf = ax.contour3D(
+                X,
+                Y,
+                Z,
+                levels=self.config.n_contours,
+                cmap=self.config.surface_cmap,
+                alpha=self.config.alpha_3d,
+            )
+            fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
+
+        elif self.config.style == PlotStyle.WIREFRAME_3D:
+            ax.plot_wireframe(
+                X,
+                Y,
+                Z,
+                color=self.config.color,
+                alpha=self.config.alpha_3d,
+                linewidth=self.config.linewidth,
+            )
+
+        # Customize plot
+        if self.config.grid:
+            ax.grid(True, alpha=0.3)
+
+        ax.set_title(self.config.title)
+        ax.set_xlabel(self.config.xlabel)
+        ax.set_ylabel(self.config.ylabel)
+        ax.set_zlabel("f(x, y)")
+
+        return fig, ax
+
+    def plot_interactive_3d(
+        self,
+        func: Callable[[np.ndarray, np.ndarray], np.ndarray],
+        x_range: Tuple[float, float],
+        y_range: Tuple[float, float],
+    ) -> Figure:
+        """Create an interactive 3D plot with rotation and zoom capabilities."""
+        fig = plt.figure(figsize=self.config.figsize, dpi=self.config.dpi)
+        ax = fig.add_subplot(111, projection="3d")
+
+        self.plot_3d(func, x_range, y_range, ax=ax)
+
+        # Add interactive rotation message
+        ax.text2D(0.05, 0.95, "Click and drag to rotate", transform=ax.transAxes)
+
+        return fig
+
 
 # if __name__ == "__main__":
 #     # Example 1: Simple quadratic function
@@ -286,4 +387,38 @@ class FunctionPlotter:
 #         FunctionPlotConfig(**base_config, title=r"$f_2(x) = " + f2.latex_str + "$")
 #     )
 #     fig2 = plotter.plot_interactive(f2, x_range=(-1, 1))
+#     plt.show()
+
+#     # Example 3D function (paraboloid)
+#     def paraboloid(x, y):
+#         return x**2 + y**2
+
+#     # Example 3D function (Rosenbrock function)
+#     def rosenbrock(x, y):
+#         return (1 - x) ** 2 + 100 * (y - x**2) ** 2
+
+#     # Configure plot
+#     config = FunctionPlotConfig(
+#         style=PlotStyle.SURFACE_3D,
+#         figsize=(10, 8),
+#         surface_cmap="viridis",
+#         title="Paraboloid",
+#         xlabel="x",
+#         ylabel="y",
+#         points=100,  # Reduce points for smoother 3D rendering
+#         alpha_3d=0.8,
+#     )
+
+#     # Create plotter and show
+#     plotter = FunctionPlotter(config)
+
+#     # Plot paraboloid
+#     fig1 = plotter.plot_interactive_3d(paraboloid, x_range=(-2, 2), y_range=(-2, 2))
+#     plt.show()
+
+#     # Plot Rosenbrock function
+#     config.title = "Rosenbrock Function"
+#     config.style = PlotStyle.CONTOUR_3D
+#     plotter = FunctionPlotter(config)
+#     fig2 = plotter.plot_interactive_3d(rosenbrock, x_range=(-2, 2), y_range=(-1, 3))
 #     plt.show()
