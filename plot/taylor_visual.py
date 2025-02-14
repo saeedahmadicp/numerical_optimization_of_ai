@@ -1,5 +1,4 @@
 import numpy as np
-from function import FunctionPlotter, FunctionPlotConfig, PlotStyle
 import matplotlib.pyplot as plt
 
 

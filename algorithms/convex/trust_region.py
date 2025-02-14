@@ -126,4 +126,3 @@ def trust_region_method(
 #     print(f"Final point: {x_final}")
 #     print(f"Function value decreased from {f(x0):.6f} to {f(x_final):.6f}")
 #     print(f"Number of iterations: {len(history)-1}")
-    
