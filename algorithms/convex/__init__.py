@@ -4,7 +4,6 @@
 
 # TODO: Implement the following algorithms:
 # - Gradient Descent
-# - Newton's Method
 # - Interior Point Methods
 # - Barrier Methods
 # - Proximal Methods
