@@ -8,6 +8,16 @@ from steepest_descent import steepest_descent
 from newton import newton_method
 
 
+# Global optimization parameters
+PARAMS = {
+    "tol": 1e-3,  # Gradient norm tolerance
+    "max_iter": 10000,  # Maximum iterations
+    "alpha_init": 0.01,  # Initial step size
+    "x0": np.array([-1.0, 1.0]),  # Starting point
+    "a": 400.0,  # Rosenbrock parameter
+}
+
+
 def rosenbrock(a: float = 100) -> Tuple[
     Callable[[np.ndarray], float],
     Callable[[np.ndarray], np.ndarray],
@@ -94,50 +104,55 @@ def plot_convergence(f: Callable, histories: dict):
     plt.show()
 
 
+def print_results(
+    name: str, x: np.ndarray, f: Callable, history: list, x_star: np.ndarray
+):
+    """Print optimization results in a consistent format."""
+    print(f"\n{name} Results:")
+    print(f"Solution: {x}")
+    print(f"Function value: {f(x):.2e}")
+    print(f"Iterations: {len(history)-1}")
+    print(f"Distance to optimum: {np.linalg.norm(x - x_star):.2e}")
+
+
 def main():
     # Create Rosenbrock function
-    a = 100  # Standard value
-    f, grad_f, hess_f = rosenbrock(a)
+    f, grad_f, hess_f = rosenbrock(PARAMS["a"])
+    x_star = np.array([1.0, 1.0])  # Known optimum
 
-    # Initial point
-    x0 = np.array([-1.0, 1.0])
+    # Run optimization methods
+    print("\nRunning optimizations...")
 
-    # Run optimization methods with stricter tolerance
-    print("Running Steepest Descent...")
+    # Steepest Descent
     x_sd, hist_sd, f_hist_sd = steepest_descent(
         f,
         grad_f,
-        x0,
-        tol=1e-8,
-        max_iter=10000,
-        alpha_init=0.01,  # Smaller but constant initial step
+        PARAMS["x0"],
+        tol=PARAMS["tol"],
+        max_iter=PARAMS["max_iter"],
+        alpha_init=PARAMS["alpha_init"],
     )
-    print(f"Solution: {x_sd}")
-    print(f"Function value: {f(x_sd)}")
-    print(f"Iterations: {len(hist_sd)-1}\n")
+    print_results("Steepest Descent", x_sd, f, hist_sd, x_star)
 
-    print("Running Newton's Method...")
+    # Newton's Method
     x_nt, hist_nt, f_hist_nt = newton_method(
-        f, grad_f, hess_f, x0, tol=1e-8  # Stricter tolerance
+        f,
+        grad_f,
+        hess_f,
+        PARAMS["x0"],
+        tol=PARAMS["tol"],
     )
-    print(f"Solution: {x_nt}")
-    print(f"Function value: {f(x_nt)}")
-    print(f"Iterations: {len(hist_nt)-1}\n")
+    print_results("Newton's Method", x_nt, f, hist_nt, x_star)
 
     # Plot results
     histories = {"Steepest Descent": hist_sd, "Newton's Method": hist_nt}
 
+    print("\nGenerating plots...")
     # Contour plot with optimization paths
     plot_contours(f, (-2, 2), (-1, 3), histories)
 
     # Convergence plot
     plot_convergence(f, histories)
-
-    # Print distance to optimum
-    x_star = np.array([1.0, 1.0])
-    print("\nDistance to optimum:")
-    print(f"Steepest Descent: {np.linalg.norm(x_sd - x_star)}")
-    print(f"Newton's Method: {np.linalg.norm(x_nt - x_star)}")
 
 
 if __name__ == "__main__":
