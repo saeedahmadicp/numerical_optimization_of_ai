@@ -1,39 +1,106 @@
-# Linear Algebra
+# Linear Algebra Methods
 
-This directory contains implementations of four different methods for solving linear equations and systems of linear equations.
+This module provides implementations of direct and iterative methods for solving linear systems of equations $Ax = b$.
 
-## What is Linear Algebra?
-Linear algebra is a branch of mathematics that focuses on solving systems of linear equations using vector spaces and matrices. It plays a crucial role in various fields such as engineering, physics, computer science, and more.
-
-## Methods
-1. [Gaussian Elimination](#gaussian-elimination)
-2. [Gaussian Elimination with Pivoting](#gaussian-elimination-with-pivoting)
-3. [Gauss-Seidel Iteration](#gauss-seidel-iteration)
-4. [Jacobi Iteration](#jacobi-iteration)
+## Direct Methods
 
 ### Gaussian Elimination
-Gaussian elimination is a method for solving linear systems by converting the matrix to row echelon form using elementary row operations, then back-substituting to find the solution. It's efficient for small systems but can be computationally intensive for large ones. This method is not inherently stable, as it can produce inaccurate results for systems with small pivot elements.
+Basic elimination method that transforms the system into upper triangular form.
 
-### Gaussian Elimination with Pivoting
-Gaussian elimination with pivoting involves swapping rows during the elimination process to ensure that the largest, or a relatively large, element is used as the pivot. This technique improves numerical stability, reducing errors caused by floating-point arithmetic.
-
-### Gauss-Seidel Iteration
-The Gauss-Seidel method is an iterative technique for solving linear systems. It starts with an initial guess and refines it iteratively, using the latest values from the previous iterations. This method can be more efficient than Gaussian elimination for certain types of matrices.
-
-### Jacobi Iteration
-The Jacobi method is another iterative approach, similar to Gauss-Seidel, but it uses the values from the previous iteration for all updates in the current iteration. While it may converge slower than Gauss-Seidel, it is often easier to implement and can be more suitable for parallel processing.
-
-## Usage
-To use these methods, import the corresponding Python file and call the function with your matrix (and vector for Gaussian methods). For example:
-
+$A = LU$ decomposition:
 ```python
-from gauss_elim import gauss_elim
-A = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-b = [1, 2, 3]
-print(gauss_elim(A, b))
+x, A_elim, b_elim = gauss_elim(A, b)
 ```
 
-This will solve the system of linear equations Ax = b using Gaussian elimination.
+- Time complexity: $O(n^3)$
+- Space complexity: $O(n^2)$
+- No pivoting strategy
+- May be unstable for ill-conditioned systems
 
-## Note
-The choice of method should be based on the problem's size, the matrix's properties, and the desired accuracy. Gaussian elimination is versatile but may not be the best choice for large systems or systems with certain numerical properties. The iterative methods, Gauss-Seidel and Jacobi, are often preferred for large systems due to their computational efficiency and suitability for parallelization.
+### Gaussian Elimination with Partial Pivoting
+Enhanced elimination method that selects the largest pivot in each column.
+
+$PA = LU$ decomposition:
+```python
+x, A_elim, b_elim = gauss_elim_pivot(A, b)
+```
+
+- Time complexity: $O(n^3)$
+- Space complexity: $O(n^2)$
+- Better numerical stability
+- Handles zero pivots through row exchanges
+
+## Iterative Methods
+
+### Gauss-Seidel Method
+Iterative method that updates each component using the latest available values.
+
+For each iteration:
+$x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij}x_j^{(k+1)} - \sum_{j>i} a_{ij}x_j^{(k)}\right)$
+
+```python
+x, converged, iterations = gauss_seidel(A, b, x0, tol=1e-6)
+```
+
+- Convergence requires diagonal dominance: $|a_{ii}| > \sum_{j\neq i} |a_{ij}|$
+- Faster convergence than Jacobi
+- Sequential updates
+- Memory efficient: $O(n)$ extra space
+
+### Jacobi Method
+Iterative method that updates all components using previous iteration values.
+
+For each iteration:
+$x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j\neq i} a_{ij}x_j^{(k)}\right)$
+
+```python
+x, converged, iterations = jacobi(A, b, x0, tol=1e-6)
+```
+
+- Convergence requires diagonal dominance
+- Parallel-friendly updates
+- Memory efficient: $O(n)$ extra space
+- Generally slower convergence than Gauss-Seidel
+
+## Usage Example
+
+```python
+import numpy as np
+from methods.lin_algebra import gauss_elim_pivot, gauss_seidel
+
+# Create system Ax = b
+A = np.array([[4, -1, 0], [-1, 4, -1], [0, -1, 4]])
+b = np.array([1, 5, 2])
+
+# Direct solution
+x_direct, _, _ = gauss_elim_pivot(A, b)
+
+# Iterative solution
+x0 = np.zeros_like(b)
+x_iter, conv, iters = gauss_seidel(A, b, x0, tol=1e-8)
+```
+
+## Method Selection Guide
+
+1. **Small Systems** ($n < 1000$):
+   - Use `gauss_elim_pivot` for general cases
+   - Use `gauss_elim` if system is well-conditioned
+
+2. **Large Systems** ($n \geq 1000$):
+   - Use `gauss_seidel` for diagonally dominant systems
+   - Use `jacobi` if parallel computation is available
+
+3. **Special Cases**:
+   - Symmetric positive definite: `gauss_seidel` converges well
+   - Strictly diagonally dominant: All methods are stable
+   - Ill-conditioned: `gauss_elim_pivot` is most reliable
+
+## References
+
+1. Golub, G. H., & Van Loan, C. F. (2013). Matrix Computations (4th ed.)
+2. Saad, Y. (2003). Iterative Methods for Sparse Linear Systems (2nd ed.)
+3. Trefethen, L. N., & Bau III, D. (1997). Numerical Linear Algebra
+
+## License
+
+MIT License - See repository root for details

@@ -1,3 +1,7 @@
+# methods/root_finding/__init__.py
+
+"""Root-finding methods for nonlinear equations."""
+
 from .bisection import bisection
 from .newton import newton
 from .regula_falsi import regula_falsi
@@ -11,6 +15,16 @@ from .newton_hessian import newton_hessian
 from .steepest_descent import steepest_descent
 
 
-__all__ = ["bisection", "newton", "regula_falsi", "secant", 
-           "fibonacci_search", "golden_search", "elimination_search", 
-           "nelder_mead", "powell_conjugate_direction", "newton_hessian", "steepest_descent"]
+__all__ = [
+    "bisection",
+    "newton",
+    "regula_falsi",
+    "secant",
+    "fibonacci_search",
+    "golden_search",
+    "elimination_search",
+    "nelder_mead",
+    "powell_conjugate_direction",
+    "newton_hessian",
+    "steepest_descent",
+]

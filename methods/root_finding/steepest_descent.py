@@ -1,48 +1,80 @@
+# methods/root_finding/steepest_descent.py
+
+"""Steepest descent method for optimization."""
+
+from typing import Callable, List, Tuple
 import numpy as np
-import torch 
+import torch  # type: ignore
+from numpy.typing import NDArray
 
-__all__ = ['steepest_descent']
+__all__ = ["steepest_descent"]
 
-def steepest_descent(func, variables, alpha, tol, max_iters):
-    """
-    Steepest descent method optimisation algorithm
-    
-    Parameters:
-        func (function): the objective function to be optimised
-        variables (list): list of variables
-        alpha (float): learning rate
-        tol (float): tolerance value for termination
-        max_iters (int): maximum number of iterations
-        
+
+def steepest_descent(
+    f: Callable[..., torch.Tensor],
+    x0: NDArray[np.float64],
+    alpha: float = 0.1,
+    tol: float = 1e-6,
+    max_iter: int = 1000,
+    verbose: bool = False,
+) -> Tuple[NDArray[np.float64], List[float], int, NDArray[np.float64]]:
+    """Find minimum using steepest descent method.
+
+    Args:
+        f: Function to minimize (must be differentiable)
+        x0: Initial guess
+        alpha: Learning rate
+        tol: Convergence tolerance
+        max_iter: Maximum number of iterations
+        verbose: Whether to print progress
+
     Returns:
-        x (float): the optimised value
-        E (list): the list of errors
-        N (int): number of iterations
+        Tuple of (x_min, errors, iterations, history) where:
+            x_min: Approximate minimizer
+            errors: List of function values at each iteration
+            iterations: Number of iterations used
+            history: Array of points visited
+
+    Example:
+        >>> def f(x, y): return x**2 + y**2
+        >>> x0 = np.array([1.0, 1.0])
+        >>> x, errs, iters, _ = steepest_descent(f, x0)
+        >>> np.allclose(x, [0, 0], atol=1e-5)
+        True
     """
-    
-    # Error list
-    E = []
-    
-    # history
-    history = []
-    
-    x = np.random.rand(len(variables))
-    x = torch.tensor(x, requires_grad=True)
-    iters = 0
-    
-    while iters < max_iters:
-        iters += 1
-        
-        history.append(x.detach().clone().numpy())
-        x_prev = x.clone()
-        f = func(*x)
-        f.backward()
-        x.data = x.data - alpha * x.grad
-        x.grad.zero_()
-        E.append(abs(func(*x).detach().numpy()))
-        
-        # check for convergence
+    # Convert initial point to tensor
+    x = torch.tensor(x0, requires_grad=True, dtype=torch.float64)
+    errors = []
+    history = [x0.copy()]
+
+    for i in range(max_iter):
+        # Compute gradient
+        fx = f(*x)
+        fx.backward()
+        grad = x.grad
+
+        # Update point
+        with torch.no_grad():
+            x_prev = x.clone()
+            x -= alpha * grad
+        x.requires_grad_(True)
+        x.grad = None
+
+        # Record progress
+        history.append(x.detach().numpy())
+        errors.append(float(fx.detach()))
+
+        # Check convergence
         if torch.norm(x - x_prev) < tol:
-            break
-        
-    return x.detach().numpy(), E, len(E), np.array(history)
+            if verbose:
+                print(f"Converged in {i + 1} iterations")
+            return (
+                x.detach().numpy(),
+                errors,
+                i + 1,
+                np.array(history),
+            )
+
+    if verbose:
+        print(f"Failed to converge in {max_iter} iterations")
+    return x.detach().numpy(), errors, max_iter, np.array(history)

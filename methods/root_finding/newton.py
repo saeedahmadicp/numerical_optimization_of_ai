@@ -1,30 +1,67 @@
-import torch
+# methods/root_finding/newton.py
 
-__all__ = ['newton']
+"""Newton-Raphson method for finding roots of differentiable functions."""
+
+import torch  # type: ignore
+from typing import Callable, List, Tuple
+
+__all__ = ["newton"]
 
 
-def newton(f: callable, x0: float, tol: float, max_iter: int) -> tuple:
+def newton(
+    f: Callable[[torch.Tensor], torch.Tensor],
+    x0: float,
+    tol: float = 1e-6,
+    max_iter: int = 100,
+) -> Tuple[float, List[float], int]:
+    """Find root of f(x) = 0 using Newton-Raphson method.
+
+    Args:
+        f: Function to find root of (must be differentiable)
+        x0: Initial guess
+        tol: Error tolerance
+        max_iter: Maximum number of iterations
+
+    Returns:
+        Tuple of (root, errors, iterations) where:
+            root: Approximate root of f(x) = 0
+            errors: List of absolute errors |f(x)|
+            iterations: Number of iterations used
+
+    Example:
+        >>> f = lambda x: x**2 - 2
+        >>> x, errs, iters = newton(f, 1.5)
+        >>> abs(x - 2**0.5) < 1e-6
+        True
     """
-    Find the root of the function f using the Newton-Raphson method.
-    :param: f: function to be evaluated
-    x0: The initial guess.
-    tol: The tolerance.
-    max_iter: The maximum number of iterations.
-    :return: guess: root of the function, E: list of errors, N: number of iterations
-    """
-    guess = torch.tensor(x0, requires_grad=True)
-    E = []
-    N = 0
+    x = torch.tensor(x0, requires_grad=True, dtype=torch.float64)
+    errors = []
+    iterations = 0
 
-    while N < max_iter:
-        guess = torch.tensor(guess, requires_grad=True)
-        derivative = torch.autograd.grad(f(guess), guess)[0]
-        guess = guess - f(guess) / derivative
-        E.append(abs(f(guess).detach().numpy()))
-        
-        if abs(f(guess)) <= tol:
-            return guess, E, N
-        
-        N += 1
+    while iterations < max_iter:
+        # Compute function value and derivative
+        fx = f(x)
+        fx.backward()
+        derivative = x.grad
 
-    return guess.detach().numpy(), E, N
+        # Check for zero derivative
+        if abs(derivative) < torch.finfo(torch.float64).eps:
+            raise ValueError("Derivative too close to zero")
+
+        # Update x
+        with torch.no_grad():
+            x -= fx / derivative
+        x.requires_grad_(True)
+        x.grad = None
+
+        # Record error and check convergence
+        fx = f(x)
+        error = abs(fx.item())
+        errors.append(error)
+
+        if error <= tol:
+            return float(x), errors, iterations
+
+        iterations += 1
+
+    return float(x), errors, iterations

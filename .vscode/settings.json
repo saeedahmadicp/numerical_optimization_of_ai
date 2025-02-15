@@ -1,6 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./numerical-methods",
-        "./numerical-methods/root-finding"
-    ]
-}

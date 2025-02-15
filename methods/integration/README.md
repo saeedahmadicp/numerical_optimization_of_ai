@@ -1,49 +1,72 @@
-# Integration
+# Numerical Integration Methods
 
-The "Integration" directory contains two different methods for numerically computing the definite integral of a function using Python:
+This module provides implementations of two common numerical integration methods: the trapezoidal rule and Simpson's rule. These methods approximate definite integrals when analytical integration is impractical or impossible.
 
-## What is Numerical Integration?
-In calculus, integration is the process of finding the area under the curve of a function. Sometimes, it may be difficult or impossible to find this integral analytically. Numerical integration, therefore, refers to the process of approximating the integral of a function using numerical methods.
+## Overview
 
-## Methods
-* [Trapezoidal Rule](#trapezoidal-rule)
-* [Simpson's Rule](#simpsons-rule)
+### Trapezoidal Rule
+The approximation for $\int_a^b f(x)dx$ is:
 
-## Trapezoidal Rule
-The trapezoidal rule approximates the definite integral of a function by using a series of trapezoids to estimate the area under the curve. The area under each trapezoid is calculated by multiplying the height (or the interval length) by the average of the base lengths. The formula is given by:
+$\int_a^b f(x)dx \approx h\left[\frac{f(x_0)}{2} + \sum_{i=1}^{n-1} f(x_i) + \frac{f(x_n)}{2}\right]$
 
-$$A = h  \left[\frac{f(x_0)}{2} + f(x_1) + f(x_2) + ... + f(x_{n-1}) + \frac{f(x_n)}{2}\right]$$
+where $h = \frac{b-a}{n}$
 
-where:
-- $A$ is the area under the curve of the function
-- $h$ is the step size
-- $f(x)$ is the function
-- $x_0, x_1, x_2, ..., x_n$ are the points at which the function is evaluated.
+- Second-order accuracy: $O(h^2)$
+- Uses linear interpolation
+- Error term: $-\frac{(b-a)h^2}{12}f''(\xi)$, where $\xi \in [a,b]$
 
-## Simpson's Rule
-Simpson's rule uses parabolic arcs to approximate the area under the curve. The parabolic functions are calculated by interpolating the function through the Lagrange polynomial of degree 2 $(a, \frac{a + b}{2}, b)$, where $a$ and $b$ are the endpoints of the interval and $f(a)$, $f(\frac{a + b}{2})$, and $f(b)$ are the function values at the endpoints and the midpoint of the interval. The areas of these parabolas are then summed to approximate the total area under the curve. The formula for Simpson's rule is:
+### Simpson's Rule
+The approximation for $\int_a^b f(x)dx$ is:
 
-$$A = \frac{h}{3}  [f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + ... + 2f(x_{n-2}) + 4f(x_{n-1}) + f(x_n)]$$
+$\int_a^b f(x)dx \approx \frac{h}{3}\left[f(x_0) + 4\sum_{i=1}^{n/2} f(x_{2i-1}) + 2\sum_{i=1}^{n/2-1} f(x_{2i}) + f(x_n)\right]$
 
-where:
-- $A$ is the area under the curve
-- $h$ is the step size
-- $f(x)$ is the function
-- $x_0, x_1, x_2, ..., x_n$ are the points at which the function is evaluated.
+where $h = \frac{b-a}{n}$
+
+- Fourth-order accuracy: $O(h^4)$
+- Uses quadratic interpolation
+- Error term: $-\frac{(b-a)h^4}{180}f^{(4)}(\xi)$, where $\xi \in [a,b]$
 
 ## Usage
-Each integration method is implemented in a separate Python file in this directory. To use a method, import the corresponding file and call the function with the function to integrate, the lower and upper limits of integration, and the number of subintervals. For example:
 
 ```python
-from trapezoidal import trapezoidal
-f = lambda x: x**2
-a = 0
-b = 1
-n = 100
-print(trapezoidal(f, a, b, n))
+from methods.integration import trapezoidal, simpson
+
+# Define function
+def f(x):
+    return x**2
+
+# Parameters
+a, b = 0.0, 1.0  # Integration bounds
+n = 100          # Number of subintervals
+
+# Compute integrals
+trap = trapezoidal(f, a, b, n)    # ≈ 0.33336
+simp = simpson(f, a, b, n)        # ≈ 0.33333
 ```
 
-This will print an approximation of the definite integral of $f = x^2$ from $x = 0$ to $x = 1$ using the trapezoidal rule with 100 subintervals.
+## Features
 
-## Note
-Each method has its own advantages and considerations. The trapezoidal rule is straightforward but may converge slowly for certain functions. Simpson's rule, while generally more accurate for smooth functions, can be less precise for functions with sharp features or discontinuities. The choice of method should be based on the nature of the function and the required accuracy.
+- Supports scalar and array inputs
+- Handles arbitrary function signatures
+- Provides clear error messages
+- Numerically stable implementations
+- Vectorized operations for efficiency
+
+## Error Handling
+
+All methods include robust error handling:
+```python
+try:
+    result = simpson(f, a, b, n)
+except ValueError as e:
+    print(f"Error: {e}")
+```
+
+## References
+
+1. Burden, R. L., & Faires, J. D. (2011). Numerical Analysis (9th ed.)
+2. Press, W. H., et al. (2007). Numerical Recipes (3rd ed.)
+
+## License
+
+MIT License - See repository root for details
