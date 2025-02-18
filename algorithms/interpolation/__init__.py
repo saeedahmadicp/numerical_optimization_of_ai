@@ -1,4 +1,4 @@
-# methods/interpolation/__init__.py
+# algorithms/interpolation/__init__.py
 
 """Numerical interpolation methods."""
 

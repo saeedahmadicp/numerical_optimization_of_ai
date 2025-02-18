@@ -1,4 +1,4 @@
-# methods/root_finding/__init__.py
+# algorithms/convex/__init__.py
 
 """Root-finding methods for nonlinear equations."""
 

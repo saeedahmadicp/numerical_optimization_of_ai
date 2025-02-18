@@ -1,4 +1,4 @@
-# methods/regression/linear.py
+# algorithms/regression/linear.py
 
 """Linear regression using ordinary least squares method."""
 

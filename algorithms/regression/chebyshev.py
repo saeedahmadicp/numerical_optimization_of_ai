@@ -1,4 +1,4 @@
-# methods/regression/chebyshev.py
+# algorithms/regression/chebyshev.py
 
 """Chebyshev polynomial regression."""
 

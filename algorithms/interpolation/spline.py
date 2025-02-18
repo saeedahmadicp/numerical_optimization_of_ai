@@ -1,4 +1,4 @@
-# methods/interpolation/spline.py
+# algorithms/interpolation/spline.py
 
 """Natural cubic spline interpolation method."""
 

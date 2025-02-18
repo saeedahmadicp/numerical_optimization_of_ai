@@ -1,4 +1,4 @@
-# methods/integration/simpson.py
+# algorithms/integration/simpson.py
 
 """Simpson's rule for numerical integration."""
 

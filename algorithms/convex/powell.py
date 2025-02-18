@@ -1,4 +1,4 @@
-# methods/root_finding/powell.py
+# algorithms/convex/powell.py
 
 """Powell's conjugate direction method for optimization."""
 

@@ -1,4 +1,4 @@
-# methods/root_finding/bisection.py
+# algorithms/convex/bisection.py
 
 """Bisection method for finding roots of continuous functions."""
 

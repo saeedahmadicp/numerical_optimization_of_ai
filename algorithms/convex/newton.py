@@ -1,4 +1,4 @@
-# methods/root_finding/newton.py
+# algorithms/convex/newton.py
 
 """Newton-Raphson method for finding roots of differentiable functions."""
 

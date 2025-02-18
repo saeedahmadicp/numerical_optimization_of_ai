@@ -1,4 +1,4 @@
-"""Quasi-Newton methods for unconstrained optimization."""
+# algorithms/convex/quasi_newton.py
 
 import numpy as np
 from typing import Callable, Tuple, List, Optional

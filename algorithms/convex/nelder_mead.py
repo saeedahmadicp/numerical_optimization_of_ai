@@ -1,3 +1,5 @@
+# algorithms/convex/nelder_mead.py
+
 import numpy as np
 
 __all__ = ["nelder_mead"]

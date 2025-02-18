@@ -1,4 +1,4 @@
-# methods/root_finding/fibonacci_search.py
+# algorithms/convex/fibonacci_search.py
 
 """Fibonacci search method for finding minima."""
 

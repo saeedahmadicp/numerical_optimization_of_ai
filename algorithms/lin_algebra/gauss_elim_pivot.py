@@ -1,4 +1,4 @@
-# methods/lin_algebra/gauss_elim_pivot.py
+# algorithms/lin_algebra/gauss_elim_pivot.py
 
 """Gaussian elimination with partial pivoting for solving linear systems."""
 

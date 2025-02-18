@@ -1,4 +1,4 @@
-# methods/lin_algebra/jacobi.py
+# algorithms/lin_algebra/jacobi.py
 
 """Jacobi iterative method for solving linear systems."""
 

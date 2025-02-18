@@ -1,4 +1,4 @@
-# methods/lin_algebra/gauss_elim.py
+# algorithms/lin_algebra/gauss_elim.py
 
 """Gaussian elimination method for solving linear systems."""
 

@@ -1,4 +1,4 @@
-# methods/root_finding/regula_falsi.py
+# algorithms/convex/regula_falsi.py
 
 """Regula falsi (false position) method for finding roots."""
 

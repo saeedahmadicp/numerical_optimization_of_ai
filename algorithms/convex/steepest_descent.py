@@ -1,4 +1,4 @@
-# methods/root_finding/steepest_descent.py
+# algorithms/convex/steepest_descent.py
 
 """Steepest descent method for optimization."""
 

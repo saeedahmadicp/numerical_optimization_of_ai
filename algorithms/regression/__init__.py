@@ -1,4 +1,4 @@
-# methods/regression/__init__.py
+# algorithms/regression/__init__.py
 
 """Regression methods for curve fitting."""
 

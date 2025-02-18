@@ -1,4 +1,4 @@
-# methods/differentiation/central_difference.py
+# algorithms/differentiation/central_difference.py
 
 """Central difference method for numerical differentiation."""
 

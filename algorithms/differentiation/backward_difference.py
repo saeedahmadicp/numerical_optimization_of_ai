@@ -1,4 +1,4 @@
-# methods/differentiation/backward_difference.py
+# algorithms/differentiation/backward_difference.py
 
 """Backward difference method for numerical differentiation."""
 

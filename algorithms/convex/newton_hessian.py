@@ -1,4 +1,4 @@
-# methods/root_finding/newton_hessian.py
+# algorithms/convex/newton_hessian.py
 
 """Newton-Hessian method for optimization."""
 

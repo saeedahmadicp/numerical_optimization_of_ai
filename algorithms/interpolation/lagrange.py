@@ -1,4 +1,4 @@
-# methods/interpolation/lagrange.py
+# algorithms/interpolation/lagrange.py
 
 """Lagrange polynomial interpolation method."""
 

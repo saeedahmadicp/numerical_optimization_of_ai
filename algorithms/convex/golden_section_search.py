@@ -1,4 +1,4 @@
-# methods/root_finding/golden_section_search.py
+# algorithms/convex/golden_section_search.py
 
 """Golden section search method for finding minima."""
 

@@ -1,4 +1,4 @@
-# methods/lin_algebra/__init__.py
+# algorithms/lin_algebra/__init__.py
 
 """Linear algebra methods for solving systems of equations."""
 

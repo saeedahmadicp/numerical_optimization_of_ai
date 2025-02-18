@@ -1,4 +1,4 @@
-# methods/differentiation/__init__.py
+# algorithms/differentiation/__init__.py
 
 """Numerical differentiation methods."""
 

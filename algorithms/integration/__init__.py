@@ -1,4 +1,4 @@
-# methods/integration/__init__.py
+# algorithms/integration/__init__.py
 
 """Numerical integration methods."""
 

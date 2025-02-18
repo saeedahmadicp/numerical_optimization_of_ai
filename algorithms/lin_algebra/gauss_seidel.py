@@ -1,4 +1,4 @@
-# methods/lin_algebra/gauss_seidel.py
+# algorithms/lin_algebra/gauss_seidel.py
 
 """Gauss-Seidel iterative method for solving linear systems."""
 

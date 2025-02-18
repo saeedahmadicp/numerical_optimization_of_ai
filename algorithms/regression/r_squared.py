@@ -1,4 +1,4 @@
-# methods/regression/r_squared.py
+# algorithms/regression/r_squared.py
 
 """Coefficient of determination (R²) calculation."""
 

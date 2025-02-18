@@ -1,4 +1,4 @@
-# methods/integration/trapezoidal.py
+# algorithms/integration/trapezoidal.py
 
 """Trapezoidal rule for numerical integration."""
 

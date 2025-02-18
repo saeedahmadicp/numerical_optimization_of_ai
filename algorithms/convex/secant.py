@@ -1,4 +1,4 @@
-# methods/root_finding/secant.py
+# algorithms/convex/secant.py
 
 """Secant method for finding roots."""
 

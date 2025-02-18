@@ -1,4 +1,4 @@
-# methods/root_finding/elimination.py
+# algorithms/convex/elimination.py
 
 """Elimination method for finding roots."""
 
