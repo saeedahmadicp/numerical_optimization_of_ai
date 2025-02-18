@@ -1,81 +1,161 @@
 # algorithms/convex/powell.py
 
-"""Powell's conjugate direction method for optimization."""
+"""Powell's conjugate direction method for root finding."""
 
-from typing import Callable, List, Tuple
-import numpy as np
-from numpy.typing import NDArray
+from typing import List, Tuple, Optional
 from scipy.optimize import minimize_scalar
 
-__all__ = ["powell_conjugate_direction"]
+from .protocols import BaseRootFinder, RootFinderConfig
 
 
-def powell_conjugate_direction(
-    f: Callable[..., float],
-    x0: NDArray[np.float64],
+class PowellMethod(BaseRootFinder):
+    """Implementation of Powell's method."""
+
+    def __init__(self, config: RootFinderConfig, x0: float):
+        """
+        Initialize Powell's method.
+
+        Args:
+            config: Configuration including function and tolerances.
+            x0: Initial guess.
+        """
+        # Initialize common attributes from the base class.
+        super().__init__(config)
+        self.x = x0  # Set the current approximation to the initial guess.
+        self._history: List[float] = []  # To record the history of approximations.
+
+        # For the 1D case, initialize the search direction as 1.0.
+        self.direction = 1.0
+        # Keep track of the previous point for updating the direction.
+        self.prev_x: Optional[float] = None
+
+    def _line_search(self, x: float, direction: float) -> float:
+        """
+        Perform line search along the given direction.
+
+        Args:
+            x: Current point.
+            direction: Search direction.
+
+        Returns:
+            Optimal step size (alpha) found along the direction.
+        """
+
+        def objective(alpha: float) -> float:
+            """Objective function for the line search; returns the absolute function value."""
+            return abs(self.func(x + alpha * direction))
+
+        # Use scipy's minimize_scalar to perform the line search along the given direction.
+        result = minimize_scalar(objective)
+        # If the line search failed, return 0.0 as the step size.
+        if not result.success:
+            return 0.0
+
+        # Return the optimal step size.
+        return result.x
+
+    def step(self) -> float:
+        """
+        Perform one iteration of Powell's method.
+
+        Returns:
+            float: Current approximation of the root.
+        """
+        # If the method has already converged, return the current approximation.
+        if self._converged:
+            return self.x
+
+        # Store the current point as the previous point.
+        self.prev_x = self.x
+
+        # Perform a line search along the current direction to determine the step size.
+        alpha = self._line_search(self.x, self.direction)
+
+        # Update the current approximation using the step size and direction.
+        self.x += alpha * self.direction
+        # Record the new approximation in the history.
+        self._history.append(self.x)
+        # Increment the iteration count.
+        self.iterations += 1
+
+        # Update the direction using the difference between the current and previous points.
+        if self.prev_x is not None:
+            # New direction is the difference (current - previous).
+            self.direction = self.x - self.prev_x
+            # Normalize the direction for consistency.
+            if abs(self.direction) > 1e-10:
+                self.direction /= abs(self.direction)
+
+        # Check for convergence based on the function value, change in x, or iteration count.
+        fx = self.func(self.x)
+        if (
+            abs(fx) <= self.tol
+            or (self.prev_x is not None and abs(self.x - self.prev_x) < self.tol)
+            or self.iterations >= self.max_iter
+        ):
+            self._converged = True
+
+        return self.x
+
+    @property
+    def name(self) -> str:
+        return "Powell's Method"
+
+
+def powell_search(
+    f: RootFinderConfig,
+    x0: float,
     tol: float = 1e-6,
     max_iter: int = 100,
-    verbose: bool = False,
-) -> Tuple[NDArray[np.float64], List[float], int, NDArray[np.float64]]:
-    """Find minimum using Powell's conjugate direction method.
+) -> Tuple[float, List[float], int]:
+    """
+    Legacy wrapper for backward compatibility.
 
     Args:
-        f: Function to minimize
-        x0: Initial guess
-        tol: Convergence tolerance
-        max_iter: Maximum number of iterations
-        verbose: Whether to print progress
+        f: Function configuration (or function) for root finding.
+        x0: Initial guess.
+        tol: Error tolerance.
+        max_iter: Maximum number of iterations.
 
     Returns:
-        Tuple of (x_min, errors, iterations, history) where:
-            x_min: Approximate minimizer
-            errors: List of function values at each iteration
-            iterations: Number of iterations used
-            history: Array of points visited
-
-    Example:
-        >>> def f(x, y): return x**2 + 2*y**2
-        >>> x0 = np.array([1.0, 1.0])
-        >>> x, errs, iters, _ = powell_conjugate_direction(f, x0)
-        >>> np.allclose(x, [0, 0], atol=1e-5)
-        True
+        Tuple of (root, errors, iterations) where:
+         - root is the final approximation,
+         - errors is a list of error values per iteration,
+         - iterations is the number of iterations performed.
     """
-    n = len(x0)
-    x = x0.copy()
-    directions = np.eye(n)
-    errors = []
-    history = [x0.copy()]
+    # Create a configuration instance with provided parameters.
+    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
+    # Instantiate Powell's method with the given initial guess.
+    method = PowellMethod(config, x0)
 
-    for i in range(max_iter):
-        x_prev = x.copy()
+    errors = []  # List to store error values per iteration.
+    # Iterate until convergence is achieved.
+    while not method.has_converged():
+        method.step()
+        errors.append(method.get_error())
 
-        # Minimize along each direction
-        for j in range(n):
-            # Create line search function
-            def line_func(alpha):
-                return f(*(x + alpha * directions[j]))
+    # Return the final approximation, error history, and iteration count.
+    return method.x, errors, method.iterations
 
-            # Minimize along current direction
-            res = minimize_scalar(line_func)
-            if not res.success:
-                if verbose:
-                    print("Line search failed")
-                continue
 
-            x = x + res.x * directions[j]
-            errors.append(f(*x))
-            history.append(x.copy())
-
-        # Update directions
-        directions[:-1] = directions[1:]
-        directions[-1] = x - x_prev
-
-        # Check convergence
-        if np.linalg.norm(x - x_prev) < tol:
-            if verbose:
-                print(f"Converged in {i + 1} iterations")
-            return x, errors, i + 1, np.array(history)
-
-    if verbose:
-        print(f"Failed to converge in {max_iter} iterations")
-    return x, errors, max_iter, np.array(history)
+# if __name__ == "__main__":
+#     # Define the function: f(x) = x^2 - 2, aiming to find sqrt(2).
+#     def f(x):
+#         return x**2 - 2
+#
+#     # Using the new protocol-based implementation:
+#     config = RootFinderConfig(func=f, tol=1e-6)
+#     method = PowellMethod(config, x0=1.5)
+#
+#     # Iterate until convergence, printing the progress.
+#     while not method.has_converged():
+#         x = method.step()
+#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
+#
+#     print(f"\nFound root: {x}")
+#     print(f"Iterations: {method.iterations}")
+#     print(f"Final error: {method.get_error():.6e}")
+#
+#     # Or using the legacy wrapper:
+#     root, errors, iters = powell_search(f, 1.5)
+#     print(f"Found root (legacy): {root}")

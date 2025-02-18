@@ -1,88 +1,197 @@
 # algorithms/convex/nelder_mead.py
 
+from typing import List, Tuple
 import numpy as np
 
-__all__ = ["nelder_mead"]
+from .protocols import BaseRootFinder, RootFinderConfig
 
 
-def nelder_mead(func, noOfPoints, iters, tol):
+class NelderMeadMethod(BaseRootFinder):
+    """Implementation of Nelder-Mead method."""
+
+    def __init__(self, config: RootFinderConfig, x0: float, delta: float = 0.1):
+        """
+        Initialize Nelder-Mead method.
+
+        Args:
+            config: Configuration including function and tolerances.
+            x0: Initial guess.
+            delta: Initial simplex size (used to generate the initial simplex).
+        """
+        # Initialize common attributes from the base class.
+        super().__init__(config)
+        self.x = x0  # Set the current approximation.
+        self._history: List[float] = []  # Record the history of approximations.
+
+        # For the 1D case, create an initial simplex consisting of two points:
+        # the initial guess and a second point offset by delta.
+        self.simplex = np.array([x0, x0 + delta])
+        # Evaluate the function at each simplex point (using absolute values for root finding).
+        self.f_values = np.array([abs(self.func(x)) for x in self.simplex])
+
+        # Nelder-Mead parameters:
+        self.alpha = 1.0  # Reflection coefficient.
+        self.gamma = 2.0  # Expansion coefficient.
+        self.rho = 0.5  # Contraction coefficient.
+        self.sigma = 0.5  # Shrink coefficient.
+
+    def _update_simplex(self) -> None:
+        """
+        Update simplex by sorting points based on their function values.
+
+        This ensures that the best (lowest f-value) point is always first.
+        """
+        order = np.argsort(self.f_values)
+        self.simplex = self.simplex[order]
+        self.f_values = self.f_values[order]
+
+    def _try_point(self, x: float) -> float:
+        """
+        Evaluate the function at a given point and return its absolute value.
+
+        Args:
+            x: Point to evaluate.
+
+        Returns:
+            Absolute value of the function at x.
+        """
+        return abs(self.func(x))
+
+    def step(self) -> float:
+        """
+        Perform one iteration of the Nelder-Mead method.
+
+        Returns:
+            float: Current approximation of the root.
+        """
+        # If the method has already converged, return the current approximation.
+        if self._converged:
+            return self.x
+
+        # Update (sort) the simplex based on current function values.
+        self._update_simplex()
+
+        # For the 1D case, the best point is the first element.
+        # Let x0 be the best point, and xn the worst point.
+        x0 = self.simplex[0]
+        xn = self.simplex[-1]
+
+        # Reflection: reflect the worst point across the best point.
+        xr = x0 + self.alpha * (x0 - xn)
+        fr = self._try_point(xr)
+
+        if fr < self.f_values[0]:
+            # Expansion: if reflection is even better than the best,
+            # try expanding further.
+            xe = x0 + self.gamma * (xr - x0)
+            fe = self._try_point(xe)
+            if fe < fr:
+                # Accept the expansion point if it's better.
+                self.simplex[-1] = xe
+                self.f_values[-1] = fe
+            else:
+                # Otherwise, accept the reflection.
+                self.simplex[-1] = xr
+                self.f_values[-1] = fr
+        else:
+            if fr < self.f_values[-1]:
+                # If reflection is better than the worst, accept it.
+                self.simplex[-1] = xr
+                self.f_values[-1] = fr
+            else:
+                # Contraction: if reflection is not better,
+                # contract the simplex towards the best point.
+                xc = x0 + self.rho * (xn - x0)
+                fc = self._try_point(xc)
+                if fc < self.f_values[-1]:
+                    self.simplex[-1] = xc
+                    self.f_values[-1] = fc
+                else:
+                    # Shrink: if contraction fails, shrink the entire simplex.
+                    self.simplex[-1] = x0 + self.sigma * (xn - x0)
+                    self.f_values[-1] = self._try_point(self.simplex[-1])
+
+        # Update current approximation to the best point of the simplex.
+        self.x = self.simplex[0]
+        # Record this approximation.
+        self._history.append(self.x)
+        # Increment iteration count.
+        self.iterations += 1
+
+        # Check convergence:
+        # Convergence if best function value is within tolerance,
+        # or if the standard deviation of function values is below tolerance,
+        # or if maximum iterations are reached.
+        if (
+            self.f_values[0] <= self.tol
+            or np.std(self.f_values) < self.tol
+            or self.iterations >= self.max_iter
+        ):
+            self._converged = True
+
+        return self.x
+
+    @property
+    def name(self) -> str:
+        return "Nelder-Mead Method"
+
+
+def nelder_mead_search(
+    f: RootFinderConfig,
+    x0: float,
+    delta: float = 0.1,
+    tol: float = 1e-6,
+    max_iter: int = 100,
+) -> Tuple[float, List[float], int]:
     """
-    Nelder-Mead method optimisation algorithm
+    Legacy wrapper for backward compatibility.
 
-    Parameters:
-        func (function): the objective function to be optimised
-        noOfPoints (int): number of points in the simplex
-        iters (int): number of iterations
-        tol (float): tolerance value for termination
+    Args:
+        f: Function configuration (or function) for root finding.
+        x0: Initial guess.
+        delta: Initial simplex size.
+        tol: Error tolerance.
+        max_iter: Maximum number of iterations.
 
     Returns:
-        x (float): the optimised value
-        E (list): the list of errors
-        N (int): number of iterations
+        Tuple of (root, errors, iterations) where:
+         - root is the final approximation,
+         - errors is a list of error values per iteration,
+         - iterations is the number of iterations performed.
     """
+    # Create a configuration instance with provided parameters.
+    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
+    # Instantiate the Nelder-Mead method with the initial guess and simplex size.
+    method = NelderMeadMethod(config, x0, delta)
 
-    # generate the initial simplex
-    n = noOfPoints - 1
-    simplex = np.random.rand(noOfPoints, n)
-    x_best = simplex[0, :]
-    f_best = func(*x_best)
+    errors = []  # List to record error values.
+    # Iterate until convergence is reached.
+    while not method.has_converged():
+        method.step()
+        errors.append(method.get_error())
 
-    # Define the reflection, expansion, contraction and shrinkage coefficients
-    alpha = 1
-    gamma = 2
-    rho = 0.5
-    sigma = 0.5
+    # Return final approximation, error history, and number of iterations.
+    return method.x, errors, method.iterations
 
-    # Error list
-    Errors = []
-    x_history = [x_best.copy()]
 
-    # Optimization loop
-    for i in range(iters):
-        f_values = np.array([func(*x) for x in simplex])
-        order = np.argsort(f_values)
-        simplex = simplex[order, :]
-        f_values = f_values[order]
-
-        x_centroid = np.mean(simplex[:-1, :], axis=0)
-        x_reflection = x_centroid + alpha * (x_centroid - simplex[-1, :])
-        f_reflection = func(*x_reflection)
-
-        if f_values[0] <= f_reflection < f_values[-2]:
-            simplex[-1, :] = x_reflection
-        elif f_reflection < f_values[0]:
-            x_expansion = x_centroid + gamma * (x_reflection - x_centroid)
-            f_expansion = func(*x_expansion)
-            if f_expansion < f_reflection:
-                simplex[-1, :] = x_expansion
-            else:
-                simplex[-1, :] = x_reflection
-        elif f_reflection >= f_values[-2]:
-            if f_reflection < f_values[-1]:
-                x_contraction = x_centroid + rho * (x_reflection - x_centroid)
-                f_contraction = func(*x_contraction)
-            else:
-                x_contraction = x_centroid + rho * (simplex[-1, :] - x_centroid)
-                f_contraction = func(*x_contraction)
-
-            if f_contraction < np.min(f_values):
-                simplex[-1, :] = x_contraction
-            else:
-                for i in range(1, noOfPoints):
-                    simplex[i, :] = sigma * (simplex[i, :] + simplex[0, :])
-
-        x_history.append(simplex[0, :].copy())
-
-        # Termination condition
-        if np.std(f_values) < tol:
-            break
-
-        # Update the best value
-        if f_values[0] < f_best:
-            x_best = simplex[0, :]
-            f_best = f_values[0]
-
-        # Update the error list
-        Errors.append(f_best)
-
-    return x_best, Errors, len(Errors), np.array(x_history)
+# if __name__ == "__main__":
+#     # Define the function f(x) = x^2 - 2 (finding sqrt(2))
+#     def f(x):
+#         return x**2 - 2
+#
+#     # Using the new protocol-based implementation:
+#     config = RootFinderConfig(func=f, tol=1e-6)
+#     method = NelderMeadMethod(config, x0=1.5, delta=0.1)
+#
+#     # Iterate until convergence, printing the progress.
+#     while not method.has_converged():
+#         x = method.step()
+#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
+#
+#     print(f"\nFound root: {x}")
+#     print(f"Iterations: {method.iterations}")
+#     print(f"Final error: {method.get_error():.6e}")
+#
+#     # Or using the legacy wrapper:
+#     root, errors, iters = nelder_mead_search(f, 1.5)
+#     print(f"Found root (legacy): {root}")

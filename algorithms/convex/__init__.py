@@ -2,29 +2,31 @@
 
 """Root-finding methods for nonlinear equations."""
 
-from .bisection import bisection
-from .newton import newton
-from .regula_falsi import regula_falsi
-from .secant import secant
-from .fibonacci_search import fibonacci_search
-from .golden_section_search import golden_search
+from .bisection import bisection_search
 from .elimination import elimination_search
-from .nelder_mead import nelder_mead
-from .powell import powell_conjugate_direction
-from .newton_hessian import newton_hessian
-from .steepest_descent import steepest_descent
+from .fibonacci import fibonacci_search
+from .golden_section import golden_section_search
+from .nelder_mead import nelder_mead_search
+from .newton_hessian import newton_hessian_search
+from .newton import newton_search
+from .powell import powell_search
+from .quasi_newton import bfgs_root_search
+from .regula_falsi import regula_falsi_search
+from .secant import secant_search
+from .steepest_descent import steepest_descent_search
 
 
 __all__ = [
-    "bisection",
-    "newton",
-    "regula_falsi",
-    "secant",
-    "fibonacci_search",
-    "golden_search",
+    "bisection_search",
     "elimination_search",
-    "nelder_mead",
-    "powell_conjugate_direction",
-    "newton_hessian",
-    "steepest_descent",
+    "fibonacci_search",
+    "golden_section_search",
+    "nelder_mead_search",
+    "newton_hessian_search",
+    "newton_search",
+    "powell_search",
+    "bfgs_root_search",
+    "regula_falsi_search",
+    "secant_search",
+    "steepest_descent_search",
 ]
