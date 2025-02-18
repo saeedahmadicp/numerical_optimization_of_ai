@@ -1,177 +1,80 @@
-"""Steepest descent method for unconstrained optimization."""
+# methods/root_finding/steepest_descent.py
 
+"""Steepest descent method for optimization."""
+
+from typing import Callable, List, Tuple
 import numpy as np
-from typing import Callable, Tuple, List
-from line_search import backtracking_line_search
+import torch  # type: ignore
+from numpy.typing import NDArray
+
+__all__ = ["steepest_descent"]
 
 
 def steepest_descent(
-    f: Callable[[np.ndarray], float],
-    grad_f: Callable[[np.ndarray], np.ndarray],
-    x0: np.ndarray,
+    f: Callable[..., torch.Tensor],
+    x0: NDArray[np.float64],
+    alpha: float = 0.1,
     tol: float = 1e-6,
     max_iter: int = 1000,
-    alpha_init: float = 1.0,
-) -> Tuple[np.ndarray, List[np.ndarray], List[float]]:
-    """
-    Steepest descent method with backtracking line search.
+    verbose: bool = False,
+) -> Tuple[NDArray[np.float64], List[float], int, NDArray[np.float64]]:
+    """Find minimum using steepest descent method.
 
-    The method iteratively updates:
-        x_{k+1} = x_k - α_k ∇f(x_k)
-    where α_k is determined by line search.
-
-    Parameters:
-        f: Objective function f(x)
-        grad_f: Gradient function ∇f(x)
-        x0: Initial point
-        tol: Tolerance for gradient norm
-        max_iter: Maximum iterations
-        alpha_init: Initial step size for line search
+    Args:
+        f: Function to minimize (must be differentiable)
+        x0: Initial guess
+        alpha: Learning rate
+        tol: Convergence tolerance
+        max_iter: Maximum number of iterations
+        verbose: Whether to print progress
 
     Returns:
-        Tuple containing:
-        - Final iterate x
-        - History of iterates
-        - History of function values
-    """
-    x = x0.copy()
-    history = [x.copy()]
-    f_history = [f(x)]
+        Tuple of (x_min, errors, iterations, history) where:
+            x_min: Approximate minimizer
+            errors: List of function values at each iteration
+            iterations: Number of iterations used
+            history: Array of points visited
 
-    for k in range(max_iter):
+    Example:
+        >>> def f(x, y): return x**2 + y**2
+        >>> x0 = np.array([1.0, 1.0])
+        >>> x, errs, iters, _ = steepest_descent(f, x0)
+        >>> np.allclose(x, [0, 0], atol=1e-5)
+        True
+    """
+    # Convert initial point to tensor
+    x = torch.tensor(x0, requires_grad=True, dtype=torch.float64)
+    errors = []
+    history = [x0.copy()]
+
+    for i in range(max_iter):
         # Compute gradient
-        grad = grad_f(x)
-        grad_norm = np.linalg.norm(grad)
+        fx = f(*x)
+        fx.backward()
+        grad = x.grad
 
-        if grad_norm < tol:
-            break
+        # Update point
+        with torch.no_grad():
+            x_prev = x.clone()
+            x -= alpha * grad
+        x.requires_grad_(True)
+        x.grad = None
 
-        # Use unnormalized gradient for direction
-        p = -grad
+        # Record progress
+        history.append(x.detach().numpy())
+        errors.append(float(fx.detach()))
 
-        # Line search with more conservative parameters
-        alpha = backtracking_line_search(
-            f,
-            grad_f,
-            x,
-            p,
-            alpha_init=alpha_init,  # Keep constant initial step
-            rho=0.8,  # Less aggressive step size reduction
-            c=1e-4,
-            max_iter=50,
-            alpha_min=1e-16,
-        )
+        # Check convergence
+        if torch.norm(x - x_prev) < tol:
+            if verbose:
+                print(f"Converged in {i + 1} iterations")
+            return (
+                x.detach().numpy(),
+                errors,
+                i + 1,
+                np.array(history),
+            )
 
-        # Update iterate
-        x_new = x + alpha * p
-
-        # Prevent too small steps
-        if np.linalg.norm(x_new - x) < tol * 1e-3:
-            break
-
-        x = x_new
-        history.append(x.copy())
-        f_history.append(f(x))
-
-    return x, history, f_history
-
-
-def accelerated_gradient_descent(
-    f: Callable[[np.ndarray], float],
-    grad_f: Callable[[np.ndarray], np.ndarray],
-    x0: np.ndarray,
-    L: float,  # Lipschitz constant of gradient
-    tol: float = 1e-6,
-    max_iter: int = 1000,
-) -> Tuple[np.ndarray, List[np.ndarray], List[float]]:
-    """
-    Nesterov's accelerated gradient descent.
-
-    Uses momentum to achieve faster convergence:
-        y_k = x_k + β_k(x_k - x_{k-1})
-        x_{k+1} = y_k - α_k ∇f(y_k)
-    where β_k is the momentum parameter.
-
-    Parameters:
-        f: Objective function f(x)
-        grad_f: Gradient function ∇f(x)
-        x0: Initial point
-        L: Lipschitz constant of gradient
-        tol: Tolerance for gradient norm
-        max_iter: Maximum iterations
-
-    Returns:
-        Tuple containing:
-        - Final iterate x
-        - History of iterates
-        - History of function values
-    """
-    x = x0.copy()
-    y = x0.copy()
-    x_prev = x0.copy()
-
-    history = [x.copy()]
-    f_history = [f(x)]
-
-    # Initialize step size and momentum parameter
-    alpha = 1 / L
-    t = 1.0
-
-    for k in range(max_iter):
-        # Compute gradient at extrapolated point
-        grad = grad_f(y)
-        if np.linalg.norm(grad) < tol:
-            break
-
-        # Store current x
-        x_prev = x.copy()
-
-        # Update x using gradient at y
-        x = y - alpha * grad
-
-        # Update momentum parameter
-        t_next = (1 + np.sqrt(1 + 4 * t * t)) / 2
-
-        # Update y with momentum
-        beta = (t - 1) / t_next
-        y = x + beta * (x - x_prev)
-
-        # Update t
-        t = t_next
-
-        # Record history
-        history.append(x.copy())
-        f_history.append(f(x))
-
-    return x, history, f_history
-
-
-# if __name__ == "__main__":
-#     # Example usage on quadratic function
-#     A = np.array([[2.0, 0.5], [0.5, 1.0]])
-#     b = np.array([1.0, 2.0])
-
-#     def f(x):
-#         return 0.5 * x.T @ A @ x - b.T @ x
-
-#     def grad_f(x):
-#         return A @ x - b
-
-#     # Initial point
-#     x0 = np.array([0.0, 0.0])
-
-#     # Run both methods
-#     print("Steepest Descent:")
-#     x_sd, hist_sd, f_hist_sd = steepest_descent(f, grad_f, x0)
-#     print(f"Solution: {x_sd}")
-#     print(f"Iterations: {len(hist_sd)-1}")
-#     print(f"Final value: {f_hist_sd[-1]}\n")
-
-#     # Estimate Lipschitz constant (largest eigenvalue of A)
-#     L = np.linalg.eigvals(A).max()
-
-#     print("Accelerated Gradient Descent:")
-#     x_agd, hist_agd, f_hist_agd = accelerated_gradient_descent(f, grad_f, x0, L)
-#     print(f"Solution: {x_agd}")
-#     print(f"Iterations: {len(hist_agd)-1}")
-#     print(f"Final value: {f_hist_agd[-1]}")
+    if verbose:
+        print(f"Failed to converge in {max_iter} iterations")
+    return x.detach().numpy(), errors, max_iter, np.array(history)
