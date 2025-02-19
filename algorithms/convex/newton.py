@@ -29,6 +29,11 @@ class NewtonMethod(BaseRootFinder):
         super().__init__(config)
         self.x = x0  # Set the current approximation to the initial guess.
         self._history: List[float] = []  # Record the history of approximations.
+        self._last_details = {}  # Store details for verbose output
+
+    def get_current_x(self) -> float:
+        """Get the current x value."""
+        return self.x
 
     def step(self) -> float:
         """
@@ -37,28 +42,30 @@ class NewtonMethod(BaseRootFinder):
         Returns:
             float: The current approximation of the root.
         """
-        # If convergence has already been reached, return the current approximation.
         if self._converged:
             return self.x
 
-        # Evaluate the function at the current approximation.
-        fx = self.func(self.x)
-        # Evaluate the derivative at the current approximation.
-        dfx = self.derivative(self.x)  # type: ignore  # Already ensured derivative exists in __init__
+        x_old = self.x
+        fx = self.func(x_old)
+        dfx = self.derivative(x_old)  # type: ignore
 
-        # Avoid division by zero: if derivative is nearly zero, stop iterations.
         if abs(dfx) < 1e-10:
             self._converged = True
-            return self.x
+            return x_old
 
-        # Update the approximation using the Newton-Raphson formula.
-        self.x = self.x - fx / dfx
-        # Record the new approximation.
-        self._history.append(self.x)
-        # Increment the iteration counter.
+        # Calculate step and new x
+        step = -fx / dfx if abs(dfx) > 1e-10 else 0
+        x_new = x_old + step
+
+        # Store iteration details
+        details = {"f(x)": fx, "f'(x)": dfx, "step": step}
+        self.add_iteration(x_old, x_new, details)
+
+        # Update state
+        self.x = x_new
         self.iterations += 1
 
-        # Check convergence: if function value is within tolerance or maximum iterations reached.
+        # Check convergence
         if abs(fx) <= self.tol or self.iterations >= self.max_iter:
             self._converged = True
 
@@ -67,6 +74,9 @@ class NewtonMethod(BaseRootFinder):
     @property
     def name(self) -> str:
         return "Newton's Method"
+
+    def get_iteration_details(self):
+        return self._last_details
 
 
 def newton_search(

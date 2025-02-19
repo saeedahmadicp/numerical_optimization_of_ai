@@ -4,6 +4,7 @@
 
 import argparse
 from typing import Dict, Type, List
+from tabulate import tabulate
 
 from algorithms.convex.protocols import BaseRootFinder, RootFinderConfig
 from algorithms.convex.newton import NewtonMethod
@@ -13,6 +14,7 @@ from algorithms.convex.bisection import BisectionMethod
 from algorithms.convex.regula_falsi import RegulaFalsiMethod
 from plot.rootfinder import RootFindingVisualizer, VisualizationConfig
 from utils.funcs import get_test_function, FUNCTION_MAP
+from utils.midpoint import get_safe_initial_points
 
 # Map method names to their classes - only root finding methods
 METHOD_MAP: Dict[str, Type[BaseRootFinder]] = {
@@ -48,33 +50,35 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Compare Newton methods on a simple quadratic
-  python find_root.py --methods newton newton_hessian --function quadratic --x0 1.5
+  # Compare all methods
+  python find_root.py --all --function quadratic --x0 1.5
   
-  # Test secant method on a challenging function
-  python find_root.py --methods secant --function multiple_roots --x0 0.5 --x1 1.5
+  # Compare specific methods
+  python find_root.py --methods newton secant --function quadratic --x0 1.5
   
-  # Compare multiple methods on trigonometric function
-  python find_root.py --methods newton secant bisection --function sinusoidal
-  
-  # Test convergence on ill-conditioned function
-  python find_root.py --methods newton_hessian --function ill_conditioned --tol 1e-10
+  # Test on a challenging function
+  python find_root.py --methods newton --function multiple_roots --x0 0.5
 """,
     )
 
-    # Method selection
-    parser.add_argument(
+    # Method selection group
+    method_group = parser.add_mutually_exclusive_group()
+    method_group.add_argument(
         "--methods",
         nargs="+",
         choices=list(METHOD_MAP.keys()),
-        default=["newton"],
         help="Root finding methods to compare",
+    )
+    method_group.add_argument(
+        "--all",
+        action="store_true",
+        help="Use all available root finding methods",
     )
 
     # Function selection
     parser.add_argument(
         "--function",
-        choices=list(FUNCTION_MAP.keys()),  # Use root-finding functions
+        choices=list(FUNCTION_MAP.keys()),
         default="quadratic",
         help="Test function to use",
     )
@@ -120,7 +124,22 @@ Examples:
         help="X-axis range for visualization (default: auto-selected based on function)",
     )
 
+    # Show detailed iteration table at the end
+    parser.add_argument(
+        "--show-table",
+        "-t",
+        action="store_true",
+        help="Show detailed iteration table at the end",
+    )
+
     args = parser.parse_args()
+
+    # If neither --methods nor --all is specified, default to newton
+    if not args.methods and not args.all:
+        args.methods = ["newton"]
+    # If --all is specified, use all methods
+    elif args.all:
+        args.methods = list(METHOD_MAP.keys())
 
     # Get function and derivative for root finding
     f, df = get_test_function(args.function)
@@ -143,29 +162,80 @@ Examples:
     for method_name in args.methods:
         method_class = METHOD_MAP[method_name]
 
+        # Get appropriate initial points for this method
+        x0, x1 = get_safe_initial_points(
+            f=config.func,
+            x_range=config.x_range,
+            method_name=method_name,
+            x0=args.x0[0] if args.x0 else None,
+        )
+
         if method_name in ["secant", "bisection", "regula_falsi"]:
-            # Methods requiring two points
-            x1 = args.x1[0] if args.x1 else args.x0[0] + 0.5
-            methods.append(method_class(config, args.x0[0], x1))
+            methods.append(method_class(config, x0, x1))
         else:
-            # Methods requiring one point
-            methods.append(method_class(config, args.x0[0]))
+            methods.append(method_class(config, x0))
 
     # Create visualization configuration
     vis_config = VisualizationConfig(
         figsize=(12, 8),
+        animation_interval=500,
         show_convergence=True,
         show_error=True,
+        style="darkgrid",
+        context="notebook",
+        palette="husl",
+        point_size=100,
+        dpi=100,
+        show_legend=True,
+        grid_alpha=0.3,
         title="Root Finding Methods Comparison",
+        background_color="#2E3440",
     )
 
     # Create and run visualizer
     visualizer = RootFindingVisualizer(config, methods, vis_config)
     visualizer.run_comparison()
 
+    # Show iteration tables
+    for method in methods:
+        history = method.get_iteration_history()
+        if not history:
+            continue
+
+        print(f"\n{method.name} Iteration History:")
+        table_data = []
+        for iter_data in history:
+            row = [
+                iter_data.iteration,
+                f"{iter_data.x_old:.8f}",
+                f"{iter_data.f_old:.8e}",
+                f"{iter_data.x_new:.8f}",
+                f"{iter_data.f_new:.8e}",
+                f"{iter_data.error:.2e}",
+            ]
+            # Add method-specific details
+            for key, value in iter_data.details.items():
+                if isinstance(value, float):
+                    row.append(f"{value:.6e}")
+                else:
+                    row.append(str(value))
+            table_data.append(row)
+
+        # Create headers based on method details
+        headers = ["Iter", "x_old", "f(x_old)", "x_new", "f(x_new)", "|error|"]
+        if history[0].details:
+            headers.extend(history[0].details.keys())
+
+        print(tabulate(table_data, headers=headers, floatfmt=".8f"))
+        print()
+
 
 if __name__ == "__main__":
     main()
 
 
-# python find_root.py --methods newton_hessian --function quadratic --x0 1.5
+# # Use all available methods
+# python find_root.py --all --function quadratic --x0 1.5
+
+# # Still works with specific methods
+# python find_root.py --methods newton secant --function quadratic --x0 1.5

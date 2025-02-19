@@ -38,6 +38,7 @@ class VisualizationConfig:
     grid_alpha: float = 0.3  # Default grid transparency
     title: str = "Root Finding Methods Comparison"
     background_color: str = "#2E3440"  # Nord theme dark background
+    verbose: bool = False  # Add this line
 
 
 class RootFindingVisualizer:
@@ -192,26 +193,31 @@ class RootFindingVisualizer:
 
     def run_comparison(self):
         """Run comparison in real-time."""
-        all_converged = False  # Flag to indicate if all methods have converged
-        iteration = 0  # Iteration counter
+        all_converged = False
+        iteration = 0
 
-        # Loop until all methods converge or maximum iterations are reached
         while not all_converged and iteration < self.problem.max_iter:
-            all_converged = True  # Assume convergence; verify for each method below
+            all_converged = True
 
-            # Iterate through each method state to update their progress
             for name, state in self.method_states.items():
                 method = state["method"]
                 if not method.has_converged():
-                    all_converged = False  # At least one method is still iterating
+                    all_converged = False
 
-                    # Perform one step of the method and retrieve the new approximation and error
+                    # Get current x value before step
+                    x_old = method.get_current_x()
+
+                    # Perform one step
                     x_new = method.step()
-                    error = method.get_error()
 
-                    # Append the new values to the method's history
+                    # Get iteration data
+                    iter_data = method.get_last_iteration()
+
+                    # Update visualization
                     self.histories[name].append(x_new)
-                    self.errors[name].append(error)
+                    self.errors[name].append(
+                        iter_data.error if iter_data else abs(self.problem.func(x_new))
+                    )
 
                     # Update the function plot with the latest approximation point
                     state["line"].set_data([x_new], [self.problem.func(x_new)])
@@ -232,13 +238,10 @@ class RootFindingVisualizer:
                         self.ax_error.relim()  # Recompute limits for error plot
                         self.ax_error.autoscale_view()  # Auto-adjust the view
 
-            # Redraw the canvas to reflect the updates in the plots
-            self.fig.canvas.draw()
-            self.fig.canvas.flush_events()
-            # Pause for a short interval based on configuration (converted to seconds)
-            plt.pause(self.config.animation_interval / 1000)
+            if all_converged:
+                break
 
-            iteration += 1  # Increment iteration counter
+            iteration += 1
 
         # Once finished, disable interactive mode and display the final static plot
         plt.ioff()

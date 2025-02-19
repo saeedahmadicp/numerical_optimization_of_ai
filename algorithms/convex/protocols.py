@@ -2,7 +2,16 @@
 
 """Protocols for root-finding methods."""
 
-from typing import Protocol, runtime_checkable, Optional, Callable, Tuple
+from typing import (
+    Protocol,
+    runtime_checkable,
+    Optional,
+    Callable,
+    Tuple,
+    List,
+    Dict,
+    Any,
+)
 from dataclasses import dataclass
 
 
@@ -44,6 +53,19 @@ class RootFinder(Protocol):
 
 
 @dataclass
+class IterationData:
+    """Data structure to store details of each iteration."""
+
+    iteration: int
+    x_old: float
+    x_new: float
+    f_old: float
+    f_new: float
+    error: float
+    details: Dict[str, Any]  # Method-specific details (e.g., derivative for Newton)
+
+
+@dataclass
 class RootFinderConfig:
     """Configuration for root finding methods.
 
@@ -79,6 +101,7 @@ class BaseRootFinder:
         self.derivative = config.derivative
         self._converged = False
         self.iterations = 0
+        self._history: List[IterationData] = []
 
     def has_converged(self) -> bool:
         """Check if method has converged."""
@@ -86,7 +109,38 @@ class BaseRootFinder:
 
     def get_error(self) -> float:
         """Get absolute error at current point."""
-        return abs(self.func(self.x))
+        return abs(self.func(self.get_current_x()))
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        raise NotImplementedError
+
+    def add_iteration(
+        self, x_old: float, x_new: float, details: Dict[str, Any]
+    ) -> None:
+        """Store iteration data."""
+        f_old = self.func(x_old)
+        f_new = self.func(x_new)
+        error = abs(f_new)
+
+        data = IterationData(
+            iteration=self.iterations,
+            x_old=x_old,
+            x_new=x_new,
+            f_old=f_old,
+            f_new=f_new,
+            error=error,
+            details=details,
+        )
+        self._history.append(data)
+
+    def get_iteration_history(self) -> List[IterationData]:
+        """Get complete iteration history."""
+        return self._history
+
+    def get_last_iteration(self) -> Optional[IterationData]:
+        """Get data from last iteration."""
+        return self._history[-1] if self._history else None
 
     @property
     def name(self) -> str:
