@@ -1,6 +1,16 @@
 # algorithms/convex/line_search.py
 
-"""Line search methods for convex optimization."""
+"""Line search methods for convex optimization.
+
+# TODO: Implement the following methods:
+- Backtracking line search
+- Wolfe-Powell line search
+- Goldstein-Armijo line search
+- Damped line search
+- Interpolation line search
+
+THIS FILE IS NOT COMPLETE!
+"""
 
 import numpy as np
 

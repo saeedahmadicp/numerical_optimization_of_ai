@@ -1,19 +1,32 @@
 # algorithms/convex/__init__.py
 
-"""Convex optimization algorithms."""
+"""Root-finding methods for nonlinear equations."""
 
-# TODO: Implement the following algorithms:
-# - Gradient Descent
-# - Interior Point Methods
-# - Barrier Methods
-# - Proximal Methods
-# - ADMM (Alternating Direction Method of Multipliers)
-# - Conjugate Gradient
-# - Quasi-Newton Methods (BFGS, L-BFGS)
-# - Ellipsoid Method
-# - Sequential Quadratic Programming (SQP)
-# - Augmented Lagrangian Methods
-# - Penalty Methods
-# - Merit Functions
-# - Filter Methods
-# - Derivative-Free Optimization
+from .bisection import bisection_search
+from .elimination import elimination_search
+from .fibonacci import fibonacci_search
+from .golden_section import golden_section_search
+from .nelder_mead import nelder_mead_search
+from .newton_hessian import newton_hessian_search
+from .newton import newton_search
+from .powell import powell_search
+from .quasi_newton import bfgs_root_search
+from .regula_falsi import regula_falsi_search
+from .secant import secant_search
+from .steepest_descent import steepest_descent_search
+
+
+__all__ = [
+    "bisection_search",
+    "elimination_search",
+    "fibonacci_search",
+    "golden_section_search",
+    "nelder_mead_search",
+    "newton_hessian_search",
+    "newton_search",
+    "powell_search",
+    "bfgs_root_search",
+    "regula_falsi_search",
+    "secant_search",
+    "steepest_descent_search",
+]

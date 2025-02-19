@@ -1,205 +1,153 @@
 # algorithms/convex/newton.py
 
-"""Newton's method for unconstrained optimization."""
+"""Newton-Raphson method for finding roots of differentiable functions."""
 
-import numpy as np
-from typing import Callable, Tuple, List
-from line_search import backtracking_line_search
+from typing import List, Tuple
+
+from .protocols import BaseRootFinder, RootFinderConfig
 
 
-def newton_method(
-    f: Callable[[np.ndarray], float],
-    grad_f: Callable[[np.ndarray], np.ndarray],
-    hess_f: Callable[[np.ndarray], np.ndarray],
-    x0: np.ndarray,
-    tol: float = 1e-6,
-    max_iter: int = 100,
-    use_line_search: bool = True,
-) -> Tuple[np.ndarray, List[np.ndarray], List[float]]:
-    """
-    Newton's method for unconstrained optimization.
+class NewtonMethod(BaseRootFinder):
+    """Implementation of Newton's method."""
 
-    The method iteratively updates:
-        x_{k+1} = x_k - α_k [∇²f(x_k)]^{-1} ∇f(x_k)
-    where α_k is determined by line search if enabled.
+    def __init__(self, config: RootFinderConfig, x0: float):
+        """
+        Initialize Newton's method.
 
-    Parameters:
-        f: Objective function f(x)
-        grad_f: Gradient function ∇f(x)
-        hess_f: Hessian function ∇²f(x)
-        x0: Initial point
-        tol: Tolerance for gradient norm
-        max_iter: Maximum iterations
-        use_line_search: Whether to use line search for step size
+        Args:
+            config: Configuration including function, derivative, tolerances, etc.
+            x0: Initial guess for the root.
 
-    Returns:
-        Tuple containing:
-        - Final iterate x
-        - History of iterates
-        - History of function values
-    """
-    x = x0.copy()
-    history = [x.copy()]
-    f_history = [f(x)]
+        Raises:
+            ValueError: If derivative function is not provided in config.
+        """
+        # Ensure a derivative is provided, as Newton's method requires it.
+        if config.derivative is None:
+            raise ValueError("Newton's method requires derivative function")
 
-    for k in range(max_iter):
-        # Compute gradient and Hessian
-        grad = grad_f(x)
-        hess = hess_f(x)
+        # Initialize common attributes from the base class.
+        super().__init__(config)
+        self.x = x0  # Set the current approximation to the initial guess.
+
+    def get_current_x(self) -> float:
+        """Get the current x value."""
+        return self.x
+
+    def step(self) -> float:
+        """
+        Perform one iteration of Newton's method.
+
+        Returns:
+            float: The current approximation of the root.
+        """
+        if self._converged:
+            return self.x
+
+        # Store old x value
+        x_old = self.x
+
+        # Evaluate function and derivative
+        fx = self.func(self.x)
+        dfx = self.derivative(self.x)  # type: ignore
+
+        # Avoid division by zero
+        if abs(dfx) < 1e-10:
+            self._converged = True
+            return self.x
+
+        # Calculate step
+        step = -fx / dfx if abs(dfx) > 1e-10 else 0
+
+        # Store iteration details
+        details = {
+            "f(x)": fx,
+            "f'(x)": dfx,
+            "step": step,
+        }
+
+        # Update approximation
+        self.x = self.x + step
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
+        # Increment iteration counter
+        self.iterations += 1
 
         # Check convergence
-        grad_norm = np.linalg.norm(grad)
-        if grad_norm < tol:
-            break
+        if abs(fx) <= self.tol or self.iterations >= self.max_iter:
+            self._converged = True
 
-        try:
-            # Compute Newton direction: -H^{-1}g
-            newton_dir = -np.linalg.solve(hess, grad)
+        return self.x
 
-            # Ensure descent direction
-            if np.dot(grad, newton_dir) > 0:
-                newton_dir = -grad  # Fall back to steepest descent
-
-            # Determine step size
-            if use_line_search:
-                alpha = backtracking_line_search(f, grad_f, x, newton_dir)
-            else:
-                alpha = 1.0
-
-            # Update iterate
-            x = x + alpha * newton_dir
-
-        except np.linalg.LinAlgError:
-            # If Hessian is singular, fall back to gradient descent
-            newton_dir = -grad
-            alpha = backtracking_line_search(f, grad_f, x, newton_dir)
-            x = x + alpha * newton_dir
-
-        # Record history
-        history.append(x.copy())
-        f_history.append(f(x))
-
-    return x, history, f_history
+    @property
+    def name(self) -> str:
+        return "Newton's Method"
 
 
-def damped_newton_method(
-    f: Callable[[np.ndarray], float],
-    grad_f: Callable[[np.ndarray], np.ndarray],
-    hess_f: Callable[[np.ndarray], np.ndarray],
-    x0: np.ndarray,
+def newton_search(
+    f: RootFinderConfig,
+    x0: float,
     tol: float = 1e-6,
     max_iter: int = 100,
-    beta: float = 0.5,  # Damping factor
-    min_step: float = 1e-10,
-) -> Tuple[np.ndarray, List[np.ndarray], List[float]]:
+) -> Tuple[float, List[float], int]:
     """
-    Damped Newton's method for improved robustness.
+    Legacy wrapper for backward compatibility.
 
-    Uses Hessian modification when necessary:
-        H_k = H_k + βI until H_k is sufficiently positive definite
-
-    Parameters:
-        f: Objective function f(x)
-        grad_f: Gradient function ∇f(x)
-        hess_f: Hessian function ∇²f(x)
-        x0: Initial point
-        tol: Tolerance for gradient norm
-        max_iter: Maximum iterations
-        beta: Initial damping factor
-        min_step: Minimum allowed step size
+    Args:
+        f: Function configuration (or callable) for root finding.
+        x0: Initial guess.
+        tol: Error tolerance.
+        max_iter: Maximum number of iterations.
 
     Returns:
-        Tuple containing:
-        - Final iterate x
-        - History of iterates
-        - History of function values
+        Tuple of (root, errors, iterations).
     """
-    x = x0.copy()
-    history = [x.copy()]
-    f_history = [f(x)]
-    n = len(x0)
+    # If f is a callable (old style), create a derivative function using finite differences
+    if callable(f):
 
-    for k in range(max_iter):
-        grad = grad_f(x)
-        hess = hess_f(x)
+        def derivative(x: float, h: float = 1e-7) -> float:
+            return (f(x + h) - f(x)) / h
 
-        if np.linalg.norm(grad) < tol:
-            break
+        config = RootFinderConfig(
+            func=f, derivative=derivative, tol=tol, max_iter=max_iter
+        )
+    else:
+        # f is already a RootFinderConfig
+        config = f
 
-        # Try to compute Newton direction with damping
-        damping = 0.0
-        while True:
-            try:
-                # Add damping to Hessian
-                H = hess + damping * np.eye(n)
-                # Attempt to solve the system
-                newton_dir = -np.linalg.solve(H, grad)
+    method = NewtonMethod(config, x0)
 
-                # Check if descent direction
-                if np.dot(grad, newton_dir) < 0:
-                    break
+    errors = []
+    while not method.has_converged():
+        method.step()
+        errors.append(method.get_error())
 
-                damping = max(2.0 * damping, beta)
-
-            except np.linalg.LinAlgError:
-                damping = max(2.0 * damping, beta)
-
-            # Prevent infinite loop
-            if damping > 1e6:
-                newton_dir = -grad  # Fall back to steepest descent
-                break
-
-        # Line search
-        alpha = backtracking_line_search(f, grad_f, x, newton_dir)
-
-        # Update iterate
-        step = alpha * newton_dir
-        if np.linalg.norm(step) < min_step:
-            break
-
-        x = x + step
-
-        # Record history
-        history.append(x.copy())
-        f_history.append(f(x))
-
-    return x, history, f_history
+    return method.x, errors, method.iterations
 
 
 # if __name__ == "__main__":
-#     # Example usage on Rosenbrock function
-#     def rosenbrock(x):
-#         return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
+#     # Define the function for which to find the root (e.g., x^2 - 2 for sqrt(2))
+#     def f(x):
+#         return x**2 - 2
 
-#     def rosenbrock_grad(x):
-#         return np.array(
-#             [
-#                 -400 * x[0] * (x[1] - x[0] ** 2) - 2 * (1 - x[0]),
-#                 200 * (x[1] - x[0] ** 2),
-#             ]
-#         )
+#     # Define its derivative (2x)
+#     def df(x):
+#         return 2 * x
 
-#     def rosenbrock_hess(x):
-#         return np.array(
-#             [[-400 * (x[1] - 3 * x[0] ** 2) + 2, -400 * x[0]], [-400 * x[0], 200]]
-#         )
+#     # Using the new protocol-based implementation:
+#     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
+#     method = NewtonMethod(config, x0=1.5)
 
-#     # Initial point
-#     x0 = np.array([-1.0, 1.0])
+#     # Run iterations until convergence
+#     while not method.has_converged():
+#         x = method.step()
+#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
 
-#     # Run both methods
-#     print("Standard Newton's Method:")
-#     x_newton, hist_newton, f_hist_newton = newton_method(
-#         rosenbrock, rosenbrock_grad, rosenbrock_hess, x0
-#     )
-#     print(f"Solution: {x_newton}")
-#     print(f"Iterations: {len(hist_newton)-1}")
-#     print(f"Final value: {f_hist_newton[-1]}\n")
+#     print(f"\nFound root: {x}")
+#     print(f"Iterations: {method.iterations}")
+#     print(f"Final error: {method.get_error():.6e}")
 
-#     print("Damped Newton's Method:")
-#     x_damped, hist_damped, f_hist_damped = damped_newton_method(
-#         rosenbrock, rosenbrock_grad, rosenbrock_hess, x0
-#     )
-#     print(f"Solution: {x_damped}")
-#     print(f"Iterations: {len(hist_damped)-1}")
-#     print(f"Final value: {f_hist_damped[-1]}")
+#     # Alternatively, using the legacy wrapper:
+#     root, errors, iters = newton_search(f, 1.5)
+#     print(f"Found root (legacy): {root}")

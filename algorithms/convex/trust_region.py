@@ -1,6 +1,16 @@
 # algorithms/convex/trust_region.py
 
-"""Trust region methods for convex optimization."""
+"""Trust region methods for convex optimization.
+
+TODO: Implement the following methods:
+- Dogleg method
+- Subspace trust region method
+- Conjugate gradient trust region method
+- Preconditioned conjugate gradient trust region method
+- Preconditioned conjugate gradient trust region method
+
+THIS FILE IS NOT COMPLETE!
+"""
 
 import numpy as np
 from typing import Callable, Tuple, List
