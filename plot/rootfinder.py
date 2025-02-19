@@ -227,22 +227,28 @@ class RootFindingVisualizer:
                         self.conv_lines[name].set_data(
                             range(len(self.histories[name])), self.histories[name]
                         )
-                        self.ax_conv.relim()  # Recompute limits based on new data
-                        self.ax_conv.autoscale_view()  # Auto-adjust the view
+                        self.ax_conv.relim()
+                        self.ax_conv.autoscale_view()
 
                     # Update the error plot with the error history
                     if self.ax_error:
                         self.error_lines[name].set_data(
                             range(len(self.errors[name])), self.errors[name]
                         )
-                        self.ax_error.relim()  # Recompute limits for error plot
-                        self.ax_error.autoscale_view()  # Auto-adjust the view
+                        self.ax_error.relim()
+                        self.ax_error.autoscale_view()
 
-            if all_converged:
-                break
+                    # Redraw and pause to show animation
+                    self.fig.canvas.draw()
+                    self.fig.canvas.flush_events()
+                    plt.pause(
+                        self.config.animation_interval / 1000
+                    )  # Convert to seconds
+
+                if all_converged:
+                    break
 
             iteration += 1
 
-        # Once finished, disable interactive mode and display the final static plot
-        plt.ioff()
+        # Once finished, keep the plot visible
         plt.show()

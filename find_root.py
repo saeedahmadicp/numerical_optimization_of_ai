@@ -178,7 +178,7 @@ Examples:
     # Create visualization configuration
     vis_config = VisualizationConfig(
         figsize=(12, 8),
-        animation_interval=500,
+        animation_interval=1000,  # Slow down to 1 second per step
         show_convergence=True,
         show_error=True,
         style="darkgrid",
@@ -237,5 +237,14 @@ if __name__ == "__main__":
 # # Use all available methods
 # python find_root.py --all --function quadratic --x0 1.5
 
-# # Still works with specific methods
-# python find_root.py --methods newton secant --function quadratic --x0 1.5
+# # Test the stiff function
+# python find_root.py --methods newton --function stiff --x0 0.5
+
+# # Test the multiple roots function
+# python find_root.py --methods newton --function multiple_roots --x0 0.9
+
+# # Test the ill-conditioned function
+# python find_root.py --methods newton --function ill_conditioned --x0 0.5
+
+# # Test the trig polynomial
+# python find_root.py --methods newton --function trig_polynomial --x0 1.0
