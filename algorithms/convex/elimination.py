@@ -3,7 +3,6 @@
 """Elimination method for finding roots."""
 
 from typing import List, Tuple
-import random
 
 from .protocols import BaseRootFinder, RootFinderConfig
 
@@ -30,29 +29,20 @@ class EliminationMethod(BaseRootFinder):
     def _elim_step(self, x1: float, x2: float) -> Tuple[float, float]:
         """
         Perform one step of the elimination method.
-
-        Given two randomly generated test points, compare the absolute function values
-        and decide which part of the interval is more promising.
-
-        Args:
-            x1: First test point.
-            x2: Second test point.
-
-        Returns:
-            Tuple containing new interval endpoints (a', b').
+        
+        Compare function values to determine which region likely contains the root.
         """
-        # Evaluate the function at both test points and take their absolute values.
-        f1, f2 = abs(self.func(x1)), abs(self.func(x2))
-
-        # If the function value at x1 is lower, retain the left endpoint and use x2 as the new right.
-        if f1 < f2:
-            return self.a, x2
-        # If the function value at x2 is lower, use x1 as the new left endpoint and retain the right.
-        elif f1 > f2:
-            return x1, self.b
+        # Evaluate the function at both test points
+        f1, f2 = self.func(x1), self.func(x2)
+        
+        # Compare actual values instead of absolute values
+        # This helps determine which side of the root we're on
+        if f1 * f2 <= 0:  # If points straddle the root
+            return (x1, x2) if x1 < x2 else (x2, x1)
+        elif abs(f1) < abs(f2):
+            return (self.a, x2) if x1 < x2 else (x1, self.b)
         else:
-            # If both have equal absolute values, narrow the interval to between x1 and x2.
-            return x1, x2
+            return (x1, self.b) if x1 < x2 else (self.a, x2)
 
     def step(self) -> float:
         """
@@ -65,11 +55,12 @@ class EliminationMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
-        # Randomly generate two test points within the current interval.
-        x1 = random.uniform(self.a, self.b)
-        x2 = random.uniform(self.a, self.b)
-
-        # Use the elimination strategy to update the interval based on the test points.
+        # Generate test points with better distribution
+        interval_third = (self.b - self.a) / 3
+        x1 = self.a + interval_third
+        x2 = self.b - interval_third
+        
+        # Use the elimination strategy to update the interval
         self.a, self.b = self._elim_step(x1, x2)
 
         # Compute the new approximation as the midpoint of the updated interval.
@@ -79,11 +70,8 @@ class EliminationMethod(BaseRootFinder):
         # Increment the iteration counter.
         self.iterations += 1
 
-        # Check convergence by considering either:
-        # - The absolute error is within tolerance,
-        # - The interval width is less than the tolerance,
-        # - Or the maximum number of iterations has been reached.
-        error = self.get_error()
+        # Update convergence check to include function value
+        error = abs(self.func(self.x))
         if (
             error <= self.tol
             or abs(self.b - self.a) < self.tol
@@ -140,19 +128,19 @@ def elimination_search(
 #     # Example function: f(x) = x^2 - 2, looking for sqrt(2)
 #     def f(x):
 #         return x**2 - 2
-#
+
 #     # Using the new protocol-based implementation:
 #     config = RootFinderConfig(func=f, tol=1e-6, max_iter=100)
 #     method = EliminationMethod(config, a=1, b=2)
-#
+
 #     while not method.has_converged():
 #         x = method.step()
 #         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
+
 #     print(f"\nFound root: {x}")
 #     print(f"Iterations: {method.iterations}")
 #     print(f"Final error: {method.get_error():.6e}")
-#
+
 #     # Or using the legacy wrapper for backward compatibility:
 #     x_min, errors, iters = elimination_search(f, 1, 2)
 #     print(f"Found root (legacy): {x_min}")
