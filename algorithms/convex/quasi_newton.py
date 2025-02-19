@@ -3,7 +3,7 @@
 import numpy as np
 from typing import Callable, Tuple, List, Optional
 
-from line_search import backtracking_line_search
+from .line_search import backtracking_line_search
 from .protocols import BaseRootFinder, RootFinderConfig
 
 
