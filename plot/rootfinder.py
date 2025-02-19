@@ -36,6 +36,7 @@ class VisualizationConfig:
     dpi: int = 100  # Default DPI for figure resolution
     show_legend: bool = True  # Default to show legend
     grid_alpha: float = 0.3  # Default grid transparency
+    title: str = "Root Finding Methods Comparison"
     background_color: str = "#2E3440"  # Nord theme dark background
 
 
