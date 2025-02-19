@@ -5,6 +5,7 @@
 import argparse
 from typing import Dict, Type, List
 from tabulate import tabulate
+import matplotlib.pyplot as plt
 
 from algorithms.convex.protocols import BaseRootFinder, RootFinderConfig
 from algorithms.convex.newton import NewtonMethod
@@ -180,15 +181,15 @@ Examples:
         figsize=(12, 8),
         show_convergence=True,
         show_error=True,
-        style="darkgrid",
-        context="notebook",
-        palette="husl",
+        style="white",
+        context="talk",
+        palette="viridis",
         point_size=100,
         dpi=100,
         show_legend=True,
-        grid_alpha=0.3,
+        grid_alpha=0.2,
         title="Root Finding Methods Comparison",
-        background_color="#2E3440",
+        background_color="#FFFFFF",
     )
 
     # Create and run visualizer
@@ -227,6 +228,10 @@ Examples:
 
         print(tabulate(table_data, headers=headers, floatfmt=".8f"))
         print()
+
+    # Keep the plot window open (user can close it manually)
+    plt.ioff()  # Turn off interactive mode after animation
+    plt.show(block=True)  # Block until user closes the window
 
 
 if __name__ == "__main__":

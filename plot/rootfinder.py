@@ -3,9 +3,8 @@
 """
 Visualization utilities for comparing root finding methods.
 
-This module provides interactive and comparative visualizations for various
-root finding algorithms. It is designed to work with any root finding implementation
-that follows the defined protocol.
+This module provides comparative visualizations for various root finding algorithms.
+It is designed to work with any root finding implementation that follows the defined protocol.
 """
 
 from dataclasses import dataclass
@@ -29,16 +28,16 @@ class VisualizationConfig:
     animation_interval: int = 500  # Default animation interval in milliseconds
     show_convergence: bool = True  # Default to show convergence plot
     show_error: bool = True  # Default to show error plot
-    style: str = "darkgrid"  # (darkgrid, whitegrid, dark, white, ticks)
-    context: str = "notebook"  # (paper, notebook, talk, poster)
-    palette: str = "husl"  # (husl, hls, viridis, magma, etc.)
+    style: str = "white"  # Options: darkgrid, whitegrid, dark, white, ticks
+    context: str = "talk"  # Options: paper, notebook, talk, poster
+    palette: str = "viridis"  # Options: viridis, magma, husl, hls, etc.
     point_size: int = 100  # Default point size
     dpi: int = 100  # Default DPI for figure resolution
     show_legend: bool = True  # Default to show legend
-    grid_alpha: float = 0.3  # Default grid transparency
+    grid_alpha: float = 0.2  # Default grid transparency
     title: str = "Root Finding Methods Comparison"
-    background_color: str = "#2E3440"  # Nord theme dark background
-    verbose: bool = False  # Add this line
+    background_color: str = "#FFFFFF"  # Clean white background
+    verbose: bool = False
 
 
 class RootFindingVisualizer:
@@ -144,18 +143,21 @@ class RootFindingVisualizer:
         for ax in [self.ax_func, self.ax_conv, self.ax_error]:
             if ax is not None:
                 ax.set_facecolor(self.config.background_color)
-                ax.tick_params(colors="white")
-                ax.xaxis.label.set_color("white")
-                ax.yaxis.label.set_color("white")
-                ax.title.set_color("white")
+                ax.tick_params(colors="#333333")  # Dark gray for ticks
+                ax.xaxis.label.set_color("#333333")
+                ax.yaxis.label.set_color("#333333")
+                ax.title.set_color("#333333")
+                # Make spines (axis lines) dark gray
+                for spine in ax.spines.values():
+                    spine.set_color("#333333")
 
         # Plot the target function with a gradient line to enhance visualization.
         x = np.linspace(*self.problem.x_range, 1000)
         # Evaluate the function at each x value
         y = [self.problem.func(xi) for xi in x]
 
-        # Create a custom colormap using Nord theme blues
-        colors = ["#81A1C1", "#88C0D0", "#8FBCBB"]
+        # Create a custom colormap using professional blues
+        colors = ["#1f77b4", "#7aafe5", "#2c9dd1"]  # Professional blue gradient
         n_bins = 100
         cmap = LinearSegmentedColormap.from_list("custom", colors, N=n_bins)
 
@@ -168,9 +170,13 @@ class RootFindingVisualizer:
         self.ax_func.add_collection(lc)
 
         # Add a horizontal line at y=0 (the x-axis) to mark the root level.
-        self.ax_func.axhline(y=0, color="#BF616A", linestyle="--", alpha=0.5)
+        self.ax_func.axhline(
+            y=0, color="#ff7f0e", linestyle="--", alpha=0.5
+        )  # Orange line
         # Enable grid lines with the specified transparency
-        self.ax_func.grid(True, alpha=self.config.grid_alpha, color="gray")
+        self.ax_func.grid(
+            True, alpha=self.config.grid_alpha, color="#cccccc"
+        )  # Light gray grid
         self.ax_func.set_title("Root Finding Methods Comparison", pad=20)
 
         # Setup the convergence plot's title, labels, and grid (if it exists)
@@ -178,7 +184,7 @@ class RootFindingVisualizer:
             self.ax_conv.set_title("Convergence Plot")
             self.ax_conv.set_xlabel("Iteration")
             self.ax_conv.set_ylabel("x value")
-            self.ax_conv.grid(True, alpha=self.config.grid_alpha, color="gray")
+            self.ax_conv.grid(True, alpha=self.config.grid_alpha, color="#cccccc")
 
         # Setup the error plot with title, labels, and a logarithmic y-scale for error values.
         if self.ax_error:
@@ -186,7 +192,7 @@ class RootFindingVisualizer:
             self.ax_error.set_xlabel("Iteration")
             self.ax_error.set_ylabel("|f(x)|")
             self.ax_error.set_yscale("log")
-            self.ax_error.grid(True, alpha=self.config.grid_alpha, color="gray")
+            self.ax_error.grid(True, alpha=self.config.grid_alpha, color="#cccccc")
 
         # Set the overall figure background color
         self.fig.patch.set_facecolor(self.config.background_color)
@@ -264,5 +270,3 @@ class RootFindingVisualizer:
                     plt.pause(base_interval / 1000)  # Fixed 20ms delay between frames
 
             iteration += 1
-
-        plt.show()
