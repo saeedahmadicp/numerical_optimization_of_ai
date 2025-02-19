@@ -21,7 +21,6 @@ class NelderMeadMethod(BaseRootFinder):
         # Initialize common attributes from the base class.
         super().__init__(config)
         self.x = x0  # Set the current approximation.
-        self._history: List[float] = []  # Record the history of approximations.
 
         # For the 1D case, create an initial simplex consisting of two points:
         # the initial guess and a second point offset by delta.
@@ -34,6 +33,10 @@ class NelderMeadMethod(BaseRootFinder):
         self.gamma = 2.0  # Expansion coefficient.
         self.rho = 0.5  # Contraction coefficient.
         self.sigma = 0.5  # Shrink coefficient.
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _update_simplex(self) -> None:
         """
@@ -68,6 +71,9 @@ class NelderMeadMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Update (sort) the simplex based on current function values.
         self._update_simplex()
 
@@ -80,41 +86,62 @@ class NelderMeadMethod(BaseRootFinder):
         xr = x0 + self.alpha * (x0 - xn)
         fr = self._try_point(xr)
 
+        # Store details for this iteration
+        details = {
+            "simplex_points": self.simplex.tolist(),
+            "f_values": self.f_values.tolist(),
+            "reflection": xr,
+            "f(reflection)": fr,
+            "best_point": x0,
+            "worst_point": xn,
+        }
+
         if fr < self.f_values[0]:
             # Expansion: if reflection is even better than the best,
             # try expanding further.
             xe = x0 + self.gamma * (xr - x0)
             fe = self._try_point(xe)
+            details.update({"expansion": xe, "f(expansion)": fe})
+
             if fe < fr:
                 # Accept the expansion point if it's better.
                 self.simplex[-1] = xe
                 self.f_values[-1] = fe
+                details["action"] = "expansion"
             else:
                 # Otherwise, accept the reflection.
                 self.simplex[-1] = xr
                 self.f_values[-1] = fr
+                details["action"] = "reflection"
         else:
             if fr < self.f_values[-1]:
                 # If reflection is better than the worst, accept it.
                 self.simplex[-1] = xr
                 self.f_values[-1] = fr
+                details["action"] = "reflection"
             else:
                 # Contraction: if reflection is not better,
                 # contract the simplex towards the best point.
                 xc = x0 + self.rho * (xn - x0)
                 fc = self._try_point(xc)
+                details.update({"contraction": xc, "f(contraction)": fc})
+
                 if fc < self.f_values[-1]:
                     self.simplex[-1] = xc
                     self.f_values[-1] = fc
+                    details["action"] = "contraction"
                 else:
                     # Shrink: if contraction fails, shrink the entire simplex.
                     self.simplex[-1] = x0 + self.sigma * (xn - x0)
                     self.f_values[-1] = self._try_point(self.simplex[-1])
+                    details["action"] = "shrink"
 
         # Update current approximation to the best point of the simplex.
         self.x = self.simplex[0]
-        # Record this approximation.
-        self._history.append(self.x)
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         # Increment iteration count.
         self.iterations += 1
 

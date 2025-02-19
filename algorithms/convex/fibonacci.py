@@ -55,7 +55,6 @@ class FibonacciMethod(BaseRootFinder):
         self.a = a  # Left endpoint of the interval.
         self.b = b  # Right endpoint of the interval.
         self.x = (a + b) / 2  # Initial approximation set as the midpoint.
-        self._history: List[float] = []  # List to record the history of approximations.
 
         # Generate the Fibonacci sequence needed for the search.
         self.fib = fib_generator(n_terms + 1)
@@ -66,6 +65,10 @@ class FibonacciMethod(BaseRootFinder):
         # These ratios determine how the interval is divided.
         self.x1 = a + self.fib[self.n_terms - 2] / self.fib[self.n_terms] * (b - a)
         self.x2 = a + self.fib[self.n_terms - 1] / self.fib[self.n_terms] * (b - a)
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _update_points(self):
         """
@@ -92,8 +95,22 @@ class FibonacciMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Evaluate the function at the two test points.
         f1, f2 = abs(self.func(self.x1)), abs(self.func(self.x2))
+
+        # Store iteration details
+        details = {
+            "a": self.a,
+            "b": self.b,
+            "x1": self.x1,
+            "x2": self.x2,
+            "f(x1)": f1,
+            "f(x2)": f2,
+            "fib_term": self.current_term,
+        }
 
         # Update the search interval based on which test point gives a smaller function value.
         if f1 < f2:
@@ -115,8 +132,10 @@ class FibonacciMethod(BaseRootFinder):
 
         # Update the current approximation to be the midpoint of the new interval.
         self.x = (self.a + self.b) / 2
-        # Record this approximation in history.
-        self._history.append(self.x)
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         # Increment the iteration counter.
         self.iterations += 1
         # Decrement the current Fibonacci term index.

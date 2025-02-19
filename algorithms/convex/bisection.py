@@ -35,8 +35,10 @@ class BisectionMethod(BaseRootFinder):
         self.b = b
         # Set the initial approximation to the midpoint of the interval.
         self.x = (a + b) / 2
-        # Keep a history of approximations.
-        self._history: List[float] = []
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def step(self) -> float:
         """Perform one iteration of the bisection method.
@@ -48,9 +50,21 @@ class BisectionMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Compute the midpoint of the current interval.
         c = (self.a + self.b) / 2
         fc = self.func(c)  # Evaluate the function at the midpoint.
+
+        # Store iteration details
+        details = {
+            "a": self.a,
+            "b": self.b,
+            "f(a)": self.func(self.a),
+            "f(b)": self.func(self.b),
+            "f(c)": fc,
+        }
 
         # Determine in which sub-interval the root lies by checking sign change.
         if self.func(self.a) * fc < 0:
@@ -62,8 +76,10 @@ class BisectionMethod(BaseRootFinder):
 
         # Update the current approximation to the new midpoint.
         self.x = (self.a + self.b) / 2
-        # Record the new approximation in the history.
-        self._history.append(self.x)
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         # Increment the iteration counter.
         self.iterations += 1
 

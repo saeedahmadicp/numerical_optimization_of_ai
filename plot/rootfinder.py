@@ -195,60 +195,74 @@ class RootFindingVisualizer:
         """Run comparison in real-time."""
         all_converged = False
         iteration = 0
+        n_frames = 5  # Fewer frames for faster animation
+        base_interval = 20  # Base animation interval in milliseconds (total time = 20ms * 5 frames = 100ms per step)
 
         while not all_converged and iteration < self.problem.max_iter:
             all_converged = True
+            any_updated = False
 
+            # Store old and new positions for interpolation
+            updates = {}
             for name, state in self.method_states.items():
                 method = state["method"]
                 if not method.has_converged():
                     all_converged = False
+                    any_updated = True
 
-                    # Get current x value before step
                     x_old = method.get_current_x()
-
-                    # Perform one step
                     x_new = method.step()
-
-                    # Get iteration data
                     iter_data = method.get_last_iteration()
 
-                    # Update visualization
                     self.histories[name].append(x_new)
                     self.errors[name].append(
                         iter_data.error if iter_data else abs(self.problem.func(x_new))
                     )
 
-                    # Update the function plot with the latest approximation point
-                    state["line"].set_data([x_new], [self.problem.func(x_new)])
+                    # Store update information for smooth transition
+                    updates[name] = {
+                        "x_old": x_old,
+                        "x_new": x_new,
+                        "y_old": self.problem.func(x_old),
+                        "y_new": self.problem.func(x_new),
+                    }
 
-                    # Update the convergence plot with the full history of approximations
+            # Animate transitions
+            if any_updated:
+                for frame in range(n_frames):
+                    t = frame / (n_frames - 1)  # Interpolation parameter
+                    # Use easing function for smoother motion
+                    t = 0.5 * (1 - np.cos(t * np.pi))  # Cosine easing
+
+                    # Update each method's position
+                    for name, update in updates.items():
+                        # Linear interpolation between old and new positions
+                        x = update["x_old"] * (1 - t) + update["x_new"] * t
+                        y = update["y_old"] * (1 - t) + update["y_new"] * t
+                        self.method_states[name]["line"].set_data([x], [y])
+
+                    # Update convergence and error plots
                     if self.ax_conv:
-                        self.conv_lines[name].set_data(
-                            range(len(self.histories[name])), self.histories[name]
-                        )
+                        for name in self.method_states:
+                            self.conv_lines[name].set_data(
+                                range(len(self.histories[name])), self.histories[name]
+                            )
                         self.ax_conv.relim()
                         self.ax_conv.autoscale_view()
 
-                    # Update the error plot with the error history
                     if self.ax_error:
-                        self.error_lines[name].set_data(
-                            range(len(self.errors[name])), self.errors[name]
-                        )
+                        for name in self.method_states:
+                            self.error_lines[name].set_data(
+                                range(len(self.errors[name])), self.errors[name]
+                            )
                         self.ax_error.relim()
                         self.ax_error.autoscale_view()
 
-                    # Redraw and pause to show animation
+                    # Redraw with shorter pause
                     self.fig.canvas.draw()
                     self.fig.canvas.flush_events()
-                    plt.pause(
-                        self.config.animation_interval / 1000
-                    )  # Convert to seconds
-
-                if all_converged:
-                    break
+                    plt.pause(base_interval / 1000)  # Fixed 20ms delay between frames
 
             iteration += 1
 
-        # Once finished, keep the plot visible
         plt.show()

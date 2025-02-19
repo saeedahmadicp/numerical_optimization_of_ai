@@ -178,7 +178,6 @@ Examples:
     # Create visualization configuration
     vis_config = VisualizationConfig(
         figsize=(12, 8),
-        animation_interval=1000,  # Slow down to 1 second per step
         show_convergence=True,
         show_error=True,
         style="darkgrid",

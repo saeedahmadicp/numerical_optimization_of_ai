@@ -42,6 +42,10 @@ class GoldenSectionMethod(BaseRootFinder):
         self.f1 = abs(self.func(self.x1))
         self.f2 = abs(self.func(self.x2))
 
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
+
     def step(self) -> float:
         """
         Perform one iteration of golden section method.
@@ -53,10 +57,24 @@ class GoldenSectionMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Handle the rare case when the function values are nearly equal (to avoid numerical issues).
         if abs(self.f1 - self.f2) < 1e-10:
             self.x2 += 1e-6  # Small perturbation to break tie.
             self.f2 = abs(self.func(self.x2))
+
+        # Store iteration details
+        details = {
+            "a": self.a,
+            "b": self.b,
+            "x1": self.x1,
+            "x2": self.x2,
+            "f(x1)": self.f1,
+            "f(x2)": self.f2,
+            "tau": self.tau,
+        }
 
         # Update the interval based on comparing function values at test points.
         if self.f1 < self.f2:
@@ -80,8 +98,10 @@ class GoldenSectionMethod(BaseRootFinder):
 
         # Update the current approximation as the midpoint of the updated interval.
         self.x = (self.a + self.b) / 2
-        # Record the new approximation.
-        self._history.append(self.x)
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         # Increment the iteration counter.
         self.iterations += 1
 

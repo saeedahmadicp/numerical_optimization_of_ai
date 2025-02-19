@@ -29,10 +29,13 @@ class NewtonHessianMethod(BaseRootFinder):
         # Initialize common attributes from the base class.
         super().__init__(config)
         self.x = x0  # Current approximation of the root.
-        self._history: List[float] = []  # Record history of approximations.
 
         # Convert the initial guess to a torch tensor for automatic differentiation.
         self.x_tensor = torch.tensor(x0, requires_grad=True, dtype=torch.float64)
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _compute_hessian(self) -> float:
         """
@@ -72,29 +75,38 @@ class NewtonHessianMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
-        # Evaluate function and derivative
+        # Store old x value
+        x_old = self.x
+
+        # Compute function, derivative, and Hessian
         fx = self.func(self.x)
         dfx = self.derivative(self.x)  # type: ignore
-
-        # Compute the Hessian
         hess = self._compute_hessian()
 
-        # Protect against division by very small numbers
+        # Store iteration details
+        details = {
+            "f(x)": fx,
+            "f'(x)": dfx,
+            "hessian": hess,
+            "step": -fx / dfx if abs(dfx) > 1e-10 else 0,
+        }
+
+        # Check for small derivative
         if abs(dfx) < 1e-10:
             self._converged = True
             return self.x
 
-        # Standard Newton update: x = x - f(x)/f'(x)
-        # We're not actually using the Hessian in the update step
+        # Update x
         try:
             self.x = self.x - fx / dfx
-            self._history.append(self.x)
+            # Store iteration data
+            self.add_iteration(x_old, self.x, details)
             self.iterations += 1
         except RuntimeError:
             self._converged = True
             return self.x
 
-        # Check convergence based on function value
+        # Check convergence
         if abs(fx) <= self.tol or self.iterations >= self.max_iter:
             self._converged = True
 

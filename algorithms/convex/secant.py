@@ -30,8 +30,10 @@ class SecantMethod(BaseRootFinder):
 
         # Set current approximation to the second guess.
         self.x = x1
-        # Record history of approximations.
-        self._history: List[float] = []
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def step(self) -> float:
         """
@@ -43,6 +45,9 @@ class SecantMethod(BaseRootFinder):
         # If convergence has been reached, return the current approximation.
         if self._converged:
             return self.x
+
+        # Store old x value
+        x_old = self.x
 
         # Ensure both previous points are available.
         if self.x0 is None or self.x1 is None:
@@ -59,6 +64,17 @@ class SecantMethod(BaseRootFinder):
         x2 = self.x1 - self.f1 * (self.x1 - self.x0) / (self.f1 - self.f0)
         f2 = self.func(x2)
 
+        # Store iteration details
+        details = {
+            "x0": self.x0,
+            "x1": self.x1,
+            "f(x0)": self.f0,
+            "f(x1)": self.f1,
+            "f(x2)": f2,
+            "denominator": self.f1 - self.f0,
+            "step": x2 - self.x1,
+        }
+
         # Update stored values: shift x1->x0 and x2 becomes new x1.
         self.x0 = self.x1
         self.f0 = self.f1
@@ -66,8 +82,9 @@ class SecantMethod(BaseRootFinder):
         self.f1 = f2
         self.x = x2  # Update the current approximation.
 
-        # Record new approximation in history.
-        self._history.append(self.x)
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         self.iterations += 1
 
         # Check convergence based on the function value at new approximation or iteration count.

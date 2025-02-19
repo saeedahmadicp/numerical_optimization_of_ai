@@ -37,8 +37,10 @@ class RegulaFalsiMethod(BaseRootFinder):
 
         # Initialize current approximation as the weighted average (false position).
         self.x = self._weighted_average()
-        # Initialize history of approximations.
-        self._history: List[float] = []
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _weighted_average(self) -> float:
         """
@@ -61,21 +63,38 @@ class RegulaFalsiMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Compute a new approximation using the false position formula.
         self.x = self._weighted_average()
         fx = self.func(self.x)
+
+        # Store iteration details
+        details = {
+            "a": self.a,
+            "b": self.b,
+            "f(a)": self.fa,
+            "f(b)": self.fb,
+            "f(x)": fx,
+            "weighted_avg": self.x,
+        }
 
         # Update the bracketing interval based on the sign of f(x):
         # If the function changes sign between a and x, update b; otherwise update a.
         if self.fa * fx < 0:
             self.b = self.x
             self.fb = fx
+            details["updated_end"] = "b"
         else:
             self.a = self.x
             self.fa = fx
+            details["updated_end"] = "a"
 
-        # Record the new approximation and increment the iteration count.
-        self._history.append(self.x)
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
+        # Increment the iteration count.
         self.iterations += 1
 
         # Check for convergence: if the function value is within tolerance or if max iterations reached.

@@ -206,16 +206,18 @@ class BFGSMethod(BaseRootFinder):
         if config.derivative is None:
             raise ValueError("BFGS method requires derivative function")
 
-        # Initialize common attributes from the base class.
         super().__init__(config)
-        self.x = x0  # Set the current approximation.
-        self.alpha = alpha  # Starting step size.
-        self._history: List[float] = []
+        self.x = x0
+        self.alpha = alpha
 
-        # Initialize inverse Hessian approximation (for scalar case, it's a 1x1 matrix).
+        # Initialize inverse Hessian approximation
         self.H = np.array([[1.0]])
         self.prev_grad: Optional[np.ndarray] = None
         self.prev_x: Optional[float] = None
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _backtracking_line_search(self, p: float) -> float:
         """
@@ -253,6 +255,9 @@ class BFGSMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Compute function value and its gradient (adjusted with sign for scalar problems).
         fx = self.func(self.x)
         grad = np.array([np.sign(fx) * self.derivative(self.x)])  # type: ignore
@@ -269,12 +274,20 @@ class BFGSMethod(BaseRootFinder):
 
         # Update the current approximation.
         self.x += alpha * p
-        self._history.append(self.x)
-        self.iterations += 1
 
         # Compute the new gradient.
         new_fx = self.func(self.x)
         new_grad = np.array([np.sign(new_fx) * self.derivative(self.x)])  # type: ignore
+
+        # Store iteration details
+        details = {
+            "f(x)": fx,
+            "gradient": grad.tolist(),
+            "search_direction": p,
+            "step_size": alpha,
+            "new_gradient": new_grad.tolist(),
+            "H": self.H.tolist(),
+        }
 
         # BFGS update: compute s and y vectors.
         if self.prev_grad is not None:
@@ -287,6 +300,17 @@ class BFGSMethod(BaseRootFinder):
                 self.H = (I - rho * np.outer(s, y)) @ self.H @ (
                     I - rho * np.outer(y, s)
                 ) + rho * np.outer(s, s)
+                details["bfgs_update"] = {
+                    "s": s.tolist(),
+                    "y": y.tolist(),
+                    "rho": rho,
+                }
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
+        # Increment iteration counter
+        self.iterations += 1
 
         # Check convergence: based on function value tolerance or iteration count.
         if abs(fx) <= self.tol or self.iterations >= self.max_iter:

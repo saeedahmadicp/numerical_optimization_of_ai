@@ -28,8 +28,6 @@ class NewtonMethod(BaseRootFinder):
         # Initialize common attributes from the base class.
         super().__init__(config)
         self.x = x0  # Set the current approximation to the initial guess.
-        self._history: List[float] = []  # Record the history of approximations.
-        self._last_details = {}  # Store details for verbose output
 
     def get_current_x(self) -> float:
         """Get the current x value."""
@@ -45,24 +43,35 @@ class NewtonMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
         x_old = self.x
-        fx = self.func(x_old)
-        dfx = self.derivative(x_old)  # type: ignore
 
+        # Evaluate function and derivative
+        fx = self.func(self.x)
+        dfx = self.derivative(self.x)  # type: ignore
+
+        # Avoid division by zero
         if abs(dfx) < 1e-10:
             self._converged = True
-            return x_old
+            return self.x
 
-        # Calculate step and new x
+        # Calculate step
         step = -fx / dfx if abs(dfx) > 1e-10 else 0
-        x_new = x_old + step
 
         # Store iteration details
-        details = {"f(x)": fx, "f'(x)": dfx, "step": step}
-        self.add_iteration(x_old, x_new, details)
+        details = {
+            "f(x)": fx,
+            "f'(x)": dfx,
+            "step": step,
+        }
 
-        # Update state
-        self.x = x_new
+        # Update approximation
+        self.x = self.x + step
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
+        # Increment iteration counter
         self.iterations += 1
 
         # Check convergence
@@ -74,9 +83,6 @@ class NewtonMethod(BaseRootFinder):
     @property
     def name(self) -> str:
         return "Newton's Method"
-
-    def get_iteration_details(self):
-        return self._last_details
 
 
 def newton_search(

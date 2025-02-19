@@ -31,7 +31,10 @@ class SteepestDescentMethod(BaseRootFinder):
         super().__init__(config)
         self.x = x0  # Current approximation of the root.
         self.alpha = alpha  # Base learning rate (initial step size).
-        self._history: List[float] = []  # To record the history of approximations.
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _backtracking_line_search(self, p: float) -> float:
         """
@@ -70,6 +73,9 @@ class SteepestDescentMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Evaluate the function at the current approximation.
         fx = self.func(self.x)
         # Compute the gradient using the derivative and adjust sign for root finding.
@@ -81,9 +87,24 @@ class SteepestDescentMethod(BaseRootFinder):
         # Determine an appropriate step size using backtracking line search.
         alpha = self._backtracking_line_search(p)
 
+        # Store iteration details
+        details = {
+            "f(x)": fx,
+            "gradient": grad,
+            "search_direction": p,
+            "step_size": alpha,
+            "line_search": {
+                "initial_alpha": self.alpha,
+                "final_alpha": alpha,
+            },
+        }
+
         # Update the current approximation using the step size and search direction.
         self.x += alpha * p
-        self._history.append(self.x)  # Record the new approximation.
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         self.iterations += 1  # Increment iteration count.
 
         # Check for convergence:

@@ -22,12 +22,15 @@ class PowellMethod(BaseRootFinder):
         # Initialize common attributes from the base class.
         super().__init__(config)
         self.x = x0  # Set the current approximation to the initial guess.
-        self._history: List[float] = []  # To record the history of approximations.
 
         # For the 1D case, initialize the search direction as 1.0.
         self.direction = 1.0
         # Keep track of the previous point for updating the direction.
         self.prev_x: Optional[float] = None
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _line_search(self, x: float, direction: float) -> float:
         """
@@ -65,28 +68,44 @@ class PowellMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
-        # Store the current point as the previous point.
+        # Store old x value
+        x_old = self.x
+
+        # Store the current point as the previous point
         self.prev_x = self.x
 
-        # Perform a line search along the current direction to determine the step size.
+        # Perform line search
         alpha = self._line_search(self.x, self.direction)
 
-        # Update the current approximation using the step size and direction.
+        # Update current approximation
         self.x += alpha * self.direction
-        # Record the new approximation in the history.
-        self._history.append(self.x)
-        # Increment the iteration count.
+
+        # Update the direction
+        if self.prev_x is not None:
+            new_direction = self.x - self.prev_x
+            if abs(new_direction) > 1e-10:
+                new_direction /= abs(new_direction)
+            self.direction = new_direction
+
+        # Store iteration details
+        details = {
+            "alpha": alpha,
+            "direction": self.direction,
+            "prev_x": self.prev_x,
+            "line_search": {
+                "start": x_old,
+                "step_size": alpha,
+                "direction": self.direction,
+            },
+        }
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
+        # Increment iteration count
         self.iterations += 1
 
-        # Update the direction using the difference between the current and previous points.
-        if self.prev_x is not None:
-            # New direction is the difference (current - previous).
-            self.direction = self.x - self.prev_x
-            # Normalize the direction for consistency.
-            if abs(self.direction) > 1e-10:
-                self.direction /= abs(self.direction)
-
-        # Check for convergence based on the function value, change in x, or iteration count.
+        # Check convergence
         fx = self.func(self.x)
         if (
             abs(fx) <= self.tol

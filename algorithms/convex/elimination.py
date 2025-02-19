@@ -24,7 +24,10 @@ class EliminationMethod(BaseRootFinder):
         self.a = a  # Set the left endpoint of the search interval.
         self.b = b  # Set the right endpoint of the search interval.
         self.x = (a + b) / 2  # Start with the midpoint as the initial approximation.
-        self._history: List[float] = []  # Record the history of approximations.
+
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
 
     def _elim_step(self, x1: float, x2: float) -> Tuple[float, float]:
         """
@@ -55,18 +58,36 @@ class EliminationMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
+        # Store old x value
+        x_old = self.x
+
         # Generate test points with better distribution
         interval_third = (self.b - self.a) / 3
         x1 = self.a + interval_third
         x2 = self.b - interval_third
+
+        # Store function values for details
+        f1, f2 = self.func(x1), self.func(x2)
+
+        # Store iteration details
+        details = {
+            "a": self.a,
+            "b": self.b,
+            "x1": x1,
+            "x2": x2,
+            "f(x1)": f1,
+            "f(x2)": f2,
+        }
 
         # Use the elimination strategy to update the interval
         self.a, self.b = self._elim_step(x1, x2)
 
         # Compute the new approximation as the midpoint of the updated interval.
         self.x = (self.a + self.b) / 2
-        # Record the current approximation in the history.
-        self._history.append(self.x)
+
+        # Store iteration data
+        self.add_iteration(x_old, self.x, details)
+
         # Increment the iteration counter.
         self.iterations += 1
 
