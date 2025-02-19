@@ -79,29 +79,34 @@ def newton_search(
     Legacy wrapper for backward compatibility.
 
     Args:
-        f: Function configuration (or function) for the root finder.
-        x0: Initial guess for the root.
+        f: Function configuration (or callable) for root finding.
+        x0: Initial guess.
         tol: Error tolerance.
         max_iter: Maximum number of iterations.
 
     Returns:
-        Tuple of (root, errors, iterations) where:
-         - root is the final approximation,
-         - errors is a list of error values for each iteration,
-         - iterations is the number of iterations performed.
+        Tuple of (root, errors, iterations).
     """
-    # Create a configuration object with the given function, tolerance, and max iterations.
-    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
-    # Instantiate NewtonMethod with the configuration and initial guess.
+    # If f is a callable (old style), create a derivative function using finite differences
+    if callable(f):
+
+        def derivative(x: float, h: float = 1e-7) -> float:
+            return (f(x + h) - f(x)) / h
+
+        config = RootFinderConfig(
+            func=f, derivative=derivative, tol=tol, max_iter=max_iter
+        )
+    else:
+        # f is already a RootFinderConfig
+        config = f
+
     method = NewtonMethod(config, x0)
 
-    errors = []  # Initialize a list to record error values.
-    # Iterate until the method converges.
+    errors = []
     while not method.has_converged():
         method.step()
         errors.append(method.get_error())
 
-    # Return the final approximation, error history, and the number of iterations.
     return method.x, errors, method.iterations
 
 
@@ -109,24 +114,24 @@ def newton_search(
 #     # Define the function for which to find the root (e.g., x^2 - 2 for sqrt(2))
 #     def f(x):
 #         return x**2 - 2
-#
+
 #     # Define its derivative (2x)
 #     def df(x):
 #         return 2 * x
-#
+
 #     # Using the new protocol-based implementation:
 #     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
 #     method = NewtonMethod(config, x0=1.5)
-#
+
 #     # Run iterations until convergence
 #     while not method.has_converged():
 #         x = method.step()
 #         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
+
 #     print(f"\nFound root: {x}")
 #     print(f"Iterations: {method.iterations}")
 #     print(f"Final error: {method.get_error():.6e}")
-#
+
 #     # Alternatively, using the legacy wrapper:
 #     root, errors, iters = newton_search(f, 1.5)
 #     print(f"Found root (legacy): {root}")

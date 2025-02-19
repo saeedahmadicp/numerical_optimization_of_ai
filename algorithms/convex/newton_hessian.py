@@ -115,7 +115,7 @@ def newton_hessian_search(
     Legacy wrapper for backward compatibility.
 
     Args:
-        f: Function configuration (or function) for root finding.
+        f: Function configuration (or callable) for root finding.
         x0: Initial guess.
         tol: Error tolerance.
         max_iter: Maximum number of iterations.
@@ -126,18 +126,29 @@ def newton_hessian_search(
          - errors is a list of error values per iteration,
          - iterations is the number of iterations performed.
     """
-    # Create a configuration instance with provided function, tolerance, and max iterations.
-    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
-    # Instantiate the Newton-Hessian method with the configuration and initial guess.
+    # If f is a callable (old style), create a derivative function using finite differences
+    if callable(f):
+
+        def derivative(x: float, h: float = 1e-7) -> float:
+            return (f(x + h) - f(x)) / h
+
+        config = RootFinderConfig(
+            func=f, derivative=derivative, tol=tol, max_iter=max_iter
+        )
+    else:
+        # f is already a RootFinderConfig
+        config = f
+
+    # Instantiate the Newton-Hessian method with the configuration and initial guess
     method = NewtonHessianMethod(config, x0)
 
-    errors = []  # List to record error values at each iteration.
-    # Continue iterating until convergence.
+    errors = []  # List to record error values at each iteration
+    # Continue iterating until convergence
     while not method.has_converged():
         method.step()
         errors.append(method.get_error())
 
-    # Return the final approximation, error history, and iteration count.
+    # Return the final approximation, error history, and iteration count
     return method.x, errors, method.iterations
 
 
