@@ -154,6 +154,162 @@ TORCH_FUNCTIONS = {
 }
 
 
+def quadratic_min() -> FuncPair:
+    """f(x) = x², minimum at x = 0."""
+    return (lambda x: x**2, lambda x: 2 * x)
+
+
+def cubic_min() -> FuncPair:
+    """f(x) = x³ + x, minimum at x ≈ -0.577."""
+    return (lambda x: x**3 + x, lambda x: 3 * x**2 + 1)
+
+
+def quartic_min() -> FuncPair:
+    """f(x) = x⁴ - 2x² + 1, minima at x = ±1."""
+    return (lambda x: x**4 - 2 * x**2 + 1, lambda x: 4 * x**3 - 4 * x)
+
+
+def rosenbrock() -> FuncPair:
+    """Rosenbrock function (banana function): f(x,y) = (1-x)² + 100(y-x²)², minimum at (1,1)."""
+    return (
+        lambda x: (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2,
+        lambda x: np.array(
+            [
+                -2 * (1 - x[0]) - 400 * x[0] * (x[1] - x[0] ** 2),
+                200 * (x[1] - x[0] ** 2),
+            ]
+        ),
+    )
+
+
+def himmelblau() -> FuncPair:
+    """Himmelblau's function: f(x,y) = (x²+y-11)² + (x+y²-7)², 4 local minima."""
+    return (
+        lambda x: (x[0] ** 2 + x[1] - 11) ** 2 + (x[0] + x[1] ** 2 - 7) ** 2,
+        lambda x: np.array(
+            [
+                4 * x[0] * (x[0] ** 2 + x[1] - 11) + 2 * (x[0] + x[1] ** 2 - 7),
+                2 * (x[0] ** 2 + x[1] - 11) + 4 * x[1] * (x[0] + x[1] ** 2 - 7),
+            ]
+        ),
+    )
+
+
+def rastrigin() -> FuncPair:
+    """Rastrigin function: f(x) = 10n + Σ(x_i² - 10cos(2πx_i)), global minimum at origin."""
+
+    def f(x):
+        return 10 * len(x) + sum(xi**2 - 10 * np.cos(2 * np.pi * xi) for xi in x)
+
+    def df(x):
+        return np.array([2 * xi + 20 * np.pi * np.sin(2 * np.pi * xi) for xi in x])
+
+    return (f, df)
+
+
+def ackley() -> FuncPair:
+    """Ackley function: Complex multimodal function with global minimum at origin."""
+
+    def f(x):
+        n = len(x)
+        sum_sq = sum(xi**2 for xi in x)
+        sum_cos = sum(np.cos(2 * np.pi * xi) for xi in x)
+        return (
+            -20 * np.exp(-0.2 * np.sqrt(sum_sq / n)) - np.exp(sum_cos / n) + 20 + np.e
+        )
+
+    def df(x):
+        n = len(x)
+        sum_sq = sum(xi**2 for xi in x)
+        term1 = 4 * np.exp(-0.2 * np.sqrt(sum_sq / n)) / np.sqrt(n * sum_sq)
+        return np.array(
+            [
+                term1 * xi
+                + 2
+                * np.pi
+                * np.exp(np.cos(2 * np.pi * xi) / n)
+                * np.sin(2 * np.pi * xi)
+                / n
+                for xi in x
+            ]
+        )
+
+    return (f, df)
+
+
+def beale() -> FuncPair:
+    """Beale function: f(x,y) = (1.5-x+xy)² + (2.25-x+xy²)² + (2.625-x+xy³)², min at (3,0.5)."""
+
+    def f(x):
+        return (
+            (1.5 - x[0] + x[0] * x[1]) ** 2
+            + (2.25 - x[0] + x[0] * x[1] ** 2) ** 2
+            + (2.625 - x[0] + x[0] * x[1] ** 3) ** 2
+        )
+
+    def df(x):
+        t1 = 1.5 - x[0] + x[0] * x[1]
+        t2 = 2.25 - x[0] + x[0] * x[1] ** 2
+        t3 = 2.625 - x[0] + x[0] * x[1] ** 3
+        return np.array(
+            [
+                2 * t1 * (-1 + x[1])
+                + 2 * t2 * (-1 + x[1] ** 2)
+                + 2 * t3 * (-1 + x[1] ** 3),
+                2 * t1 * x[0]
+                + 2 * t2 * 2 * x[0] * x[1]
+                + 2 * t3 * 3 * x[0] * x[1] ** 2,
+            ]
+        )
+
+    return (f, df)
+
+
+def booth() -> FuncPair:
+    """Booth function: f(x,y) = (x+2y-7)² + (2x+y-5)², minimum at (1,3)."""
+    return (
+        lambda x: (x[0] + 2 * x[1] - 7) ** 2 + (2 * x[0] + x[1] - 5) ** 2,
+        lambda x: np.array(
+            [
+                2 * (x[0] + 2 * x[1] - 7) + 4 * (2 * x[0] + x[1] - 5),
+                4 * (x[0] + 2 * x[1] - 7) + 2 * (2 * x[0] + x[1] - 5),
+            ]
+        ),
+    )
+
+
+# Map function names to their minimization implementations
+MINIMIZATION_MAP = {
+    "quadratic": quadratic_min(),
+    "cubic": cubic_min(),
+    "quartic": quartic_min(),
+    "rosenbrock": rosenbrock(),
+    "himmelblau": himmelblau(),
+    "rastrigin": rastrigin(),
+    "ackley": ackley(),
+    "beale": beale(),
+    "booth": booth(),
+}
+
+# Default ranges for minimization functions
+MINIMIZATION_RANGES = {
+    "quadratic": (-3, 3),
+    "cubic": (-2, 2),
+    "quartic": (-2, 2),
+    "rosenbrock": (-2, 2),
+    "himmelblau": (-5, 5),
+    "rastrigin": (-5.12, 5.12),
+    "ackley": (-5, 5),
+    "beale": (-4.5, 4.5),
+    "booth": (-10, 10),
+}
+
+
+def get_minimization_function(name: str) -> FuncPair:
+    """Get a minimization test function and its derivative by name."""
+    return MINIMIZATION_MAP[name]
+
+
 def get_test_function(name: str) -> FuncPair:
     """Get a test function and its derivative by name."""
     return FUNCTION_MAP[name]
