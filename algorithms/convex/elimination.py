@@ -29,12 +29,12 @@ class EliminationMethod(BaseRootFinder):
     def _elim_step(self, x1: float, x2: float) -> Tuple[float, float]:
         """
         Perform one step of the elimination method.
-        
+
         Compare function values to determine which region likely contains the root.
         """
         # Evaluate the function at both test points
         f1, f2 = self.func(x1), self.func(x2)
-        
+
         # Compare actual values instead of absolute values
         # This helps determine which side of the root we're on
         if f1 * f2 <= 0:  # If points straddle the root
@@ -59,7 +59,7 @@ class EliminationMethod(BaseRootFinder):
         interval_third = (self.b - self.a) / 3
         x1 = self.a + interval_third
         x2 = self.b - interval_third
-        
+
         # Use the elimination strategy to update the interval
         self.a, self.b = self._elim_step(x1, x2)
 

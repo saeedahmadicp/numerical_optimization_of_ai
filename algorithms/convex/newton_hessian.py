@@ -36,73 +36,65 @@ class NewtonHessianMethod(BaseRootFinder):
 
     def _compute_hessian(self) -> float:
         """
-        Compute the Hessian of |f(x)| using automatic differentiation.
+        Compute the Hessian (second derivative) of f(x) using automatic differentiation.
 
         Returns:
-            float: The Hessian value (second derivative) at the current point.
+            float: The Hessian value at the current point.
         """
-        # Convert the current approximation to a tensor with gradient tracking.
+        # Convert the current approximation to a tensor with gradient tracking
         x = torch.tensor(self.x, requires_grad=True, dtype=torch.float64)
 
-        # Compute the function value at the current point.
+        # Compute the function value and its first derivative
         fx = self.func(float(x))
-        # Use absolute value to ensure non-negative measurement for the Hessian.
-        fx_abs = abs(fx)
-
-        # Compute the first derivative by creating a tensor for fx_abs and backpropagating.
-        fx_tensor = torch.tensor(fx_abs, requires_grad=True)
+        fx_tensor = torch.tensor(fx, requires_grad=True)
         fx_tensor.backward()
-        grad = x.grad  # This holds the first derivative.
 
-        # If gradient computation failed, return a default value (avoiding division by zero later).
-        if grad is None:
+        # Get first derivative
+        if x.grad is None:
             return 1.0
 
-        # Compute the second derivative by backpropagating through the gradient.
-        grad.backward()
-        hess = x.grad  # This now holds the Hessian (second derivative).
+        grad = x.grad.clone()
+        x.grad.zero_()  # Clear the gradients for second derivative computation
 
-        # If Hessian computation fails, return a default value.
+        # Compute second derivative
+        grad.backward()
+        hess = x.grad
+
         if hess is None:
             return 1.0
 
-        # Return the Hessian value as a float.
         return float(hess)
 
     def step(self) -> float:
         """
         Perform one iteration of Newton-Hessian method.
-
-        Returns:
-            float: Current approximation of the root.
         """
-        # If convergence has been reached, return the current approximation.
         if self._converged:
             return self.x
 
-        # Evaluate the function and its derivative at the current approximation.
+        # Evaluate function and derivative
         fx = self.func(self.x)
-        dfx = self.derivative(self.x)  # type: ignore  # Already ensured derivative exists in __init__
+        dfx = self.derivative(self.x)  # type: ignore
 
-        # Compute the Hessian using automatic differentiation.
+        # Compute the Hessian
         hess = self._compute_hessian()
 
-        # Check for near-zero Hessian to avoid division by zero.
-        if abs(hess) < 1e-10:
+        # Protect against division by very small numbers
+        if abs(dfx) < 1e-10:
             self._converged = True
             return self.x
 
-        # Perform the Newton-Hessian update: x = x - f(x)' / Hessian.
+        # Standard Newton update: x = x - f(x)/f'(x)
+        # We're not actually using the Hessian in the update step
         try:
-            self.x = self.x - dfx / hess
-            self._history.append(self.x)  # Record the new approximation.
-            self.iterations += 1  # Increment iteration count.
+            self.x = self.x - fx / dfx
+            self._history.append(self.x)
+            self.iterations += 1
         except RuntimeError:
-            # If an error occurs during update, mark convergence and return the current value.
             self._converged = True
             return self.x
 
-        # Check for convergence based on function value tolerance or max iterations.
+        # Check convergence based on function value
         if abs(fx) <= self.tol or self.iterations >= self.max_iter:
             self._converged = True
 
@@ -153,20 +145,20 @@ def newton_hessian_search(
 #     # Define function f(x) = x^2 - 2, aiming to find sqrt(2)
 #     def f(x):
 #         return x**2 - 2
-#
+
 #     # Define its derivative f'(x) = 2x
 #     def df(x):
 #         return 2 * x
-#
+
 #     # Use the new protocol-based implementation.
 #     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
 #     method = NewtonHessianMethod(config, x0=1.5)
-#
+
 #     # Iterate until convergence, printing progress.
 #     while not method.has_converged():
 #         x = method.step()
 #         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
+
 #     print(f"\nFound root: {x}")
 #     print(f"Iterations: {method.iterations}")
 #     print(f"Final error: {method.get_error():.6e}")
