@@ -1,82 +1,168 @@
 # algorithms/convex/newton.py
 
-"""Newton-Raphson method for finding roots of differentiable functions."""
+"""Newton's method for both root-finding and optimization."""
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Callable
+import numpy as np
 
-from .protocols import BaseRootFinder, RootFinderConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
-class NewtonMethod(BaseRootFinder):
-    """Implementation of Newton's method."""
+class NewtonMethod(BaseNumericalMethod):
+    """Implementation of Newton's method for both root-finding and optimization."""
 
-    def __init__(self, config: RootFinderConfig, x0: float):
+    def __init__(
+        self,
+        config: NumericalMethodConfig,
+        x0: float,
+        second_derivative: Optional[Callable[[float], float]] = None,
+    ):
         """
         Initialize Newton's method.
 
         Args:
-            config: Configuration including function, derivative, tolerances, etc.
-            x0: Initial guess for the root.
+            config: Configuration including function, derivative, and tolerances
+            x0: Initial guess
+            second_derivative: Required for optimization mode
 
         Raises:
-            ValueError: If derivative function is not provided in config.
+            ValueError: If derivative is missing, or if second_derivative is missing in optimization mode
         """
-        # Ensure a derivative is provided, as Newton's method requires it.
         if config.derivative is None:
             raise ValueError("Newton's method requires derivative function")
 
-        # Initialize common attributes from the base class.
+        if config.method_type == "optimize" and second_derivative is None:
+            raise ValueError(
+                "Newton's method requires second derivative for optimization"
+            )
+
         super().__init__(config)
-        self.x = x0  # Set the current approximation to the initial guess.
+        self.x = x0
+        self.second_derivative = second_derivative
 
     def get_current_x(self) -> float:
-        """Get the current x value."""
+        """Get current x value."""
         return self.x
 
     def step(self) -> float:
         """
         Perform one iteration of Newton's method.
 
+        For root-finding: x_{n+1} = x_n - f(x_n)/f'(x_n)
+        For optimization: x_{n+1} = x_n - f'(x_n)/f''(x_n)
+
         Returns:
-            float: The current approximation of the root.
+            float: Current approximation
         """
         if self._converged:
             return self.x
 
-        # Store old x value
         x_old = self.x
 
-        # Evaluate function and derivative
-        fx = self.func(self.x)
-        dfx = self.derivative(self.x)  # type: ignore
+        if self.method_type == "root":
+            # Root-finding mode
+            fx = self.func(self.x)
+            dfx = self.derivative(self.x)  # type: ignore
 
-        # Avoid division by zero
-        if abs(dfx) < 1e-10:
-            self._converged = True
-            return self.x
+            # Avoid division by zero
+            if abs(dfx) < 1e-10:
+                self._converged = True
+                return self.x
 
-        # Calculate step
-        step = -fx / dfx if abs(dfx) > 1e-10 else 0
+            # Newton step for root-finding
+            step = -fx / dfx
 
-        # Store iteration details
-        details = {
-            "f(x)": fx,
-            "f'(x)": dfx,
-            "step": step,
-        }
+            details = {
+                "f(x)": fx,
+                "f'(x)": dfx,
+                "step": step,
+            }
 
-        # Update approximation
-        self.x = self.x + step
+            # Update approximation
+            self.x = self.x + step
 
-        # Store iteration data
+            # Check convergence for root-finding
+            if abs(fx) <= self.tol or self.iterations >= self.max_iter:
+                self._converged = True
+
+        else:  # optimization mode
+            # Evaluate derivatives
+            dfx = self.derivative(self.x)  # type: ignore
+            d2fx = self.second_derivative(self.x)  # type: ignore
+            fx = self.func(self.x)  # Also evaluate function for monitoring progress
+
+            details = {
+                "f(x)": fx,
+                "f'(x)": dfx,
+                "f''(x)": d2fx,
+            }
+
+            # Compute scale-invariant measures for vectors
+            grad_norm = np.linalg.norm(dfx)
+            x_norm = np.linalg.norm(self.x)
+            x_scale = max(1.0, x_norm)
+            f_scale = max(1.0, abs(fx))
+
+            # Early convergence check with normalized measures
+            if grad_norm <= self.tol * f_scale:
+                self._converged = True
+                return self.x
+
+            # Compute search direction
+            if isinstance(d2fx, np.ndarray):  # Matrix case
+                try:
+                    # Newton direction: H^(-1) * g
+                    direction = -np.linalg.solve(d2fx, dfx)
+
+                    # Ensure descent direction
+                    if np.dot(direction, dfx) > 0:
+                        # If not descent, use negative gradient
+                        direction = -dfx
+                except np.linalg.LinAlgError:
+                    # Fallback to gradient descent if Hessian is singular
+                    direction = -dfx
+            else:  # Scalar case
+                if abs(d2fx) < 1e-10:
+                    direction = -dfx
+                else:
+                    direction = -dfx / d2fx
+
+            # Normalize direction
+            direction_norm = np.linalg.norm(direction)
+            if direction_norm > x_scale:
+                direction = direction * (x_scale / direction_norm)
+
+            # Backtracking line search
+            alpha = 1.0
+            beta = 0.5  # Reduction factor
+            c = 0.1  # Sufficient decrease parameter
+            x_new = self.x + alpha * direction
+            f_new = self.func(x_new)
+
+            # Armijo condition
+            while f_new > fx + c * alpha * np.dot(dfx, direction):
+                alpha *= beta
+                if alpha < 1e-10:
+                    break
+                x_new = self.x + alpha * direction
+                f_new = self.func(x_new)
+
+            step = alpha * direction
+            details["step"] = step
+            self.x = x_new
+
+            # Check convergence using normalized criteria
+            if (
+                grad_norm <= self.tol * f_scale  # Normalized gradient small enough
+                or np.linalg.norm(step)
+                <= self.tol * x_scale  # Relative step size small enough
+                or self.iterations >= self.max_iter
+            ):
+                self._converged = True
+
+        # Store iteration data and increment counter
         self.add_iteration(x_old, self.x, details)
-
-        # Increment iteration counter
         self.iterations += 1
-
-        # Check convergence
-        if abs(fx) <= self.tol or self.iterations >= self.max_iter:
-            self._converged = True
 
         return self.x
 
@@ -86,68 +172,43 @@ class NewtonMethod(BaseRootFinder):
 
 
 def newton_search(
-    f: RootFinderConfig,
+    f: NumericalMethodConfig,
     x0: float,
     tol: float = 1e-6,
     max_iter: int = 100,
+    method_type: str = "root",
 ) -> Tuple[float, List[float], int]:
-    """
-    Legacy wrapper for backward compatibility.
-
-    Args:
-        f: Function configuration (or callable) for root finding.
-        x0: Initial guess.
-        tol: Error tolerance.
-        max_iter: Maximum number of iterations.
-
-    Returns:
-        Tuple of (root, errors, iterations).
-    """
-    # If f is a callable (old style), create a derivative function using finite differences
+    """Legacy wrapper for backward compatibility."""
     if callable(f):
+        h = 1e-7
 
-        def derivative(x: float, h: float = 1e-7) -> float:
+        def derivative(x: float) -> float:
             return (f(x + h) - f(x)) / h
 
-        config = RootFinderConfig(
-            func=f, derivative=derivative, tol=tol, max_iter=max_iter
+        def second_derivative(x: float) -> float:
+            return (f(x + h) + f(x - h) - 2 * f(x)) / (h * h)
+
+        config = NumericalMethodConfig(
+            func=f,
+            method_type=method_type,
+            derivative=derivative,
+            tol=tol,
+            max_iter=max_iter,
+        )
+        method = NewtonMethod(
+            config, x0, second_derivative if method_type == "optimize" else None
         )
     else:
-        # f is already a RootFinderConfig
         config = f
-
-    method = NewtonMethod(config, x0)
+        method = NewtonMethod(config, x0)
 
     errors = []
+    prev_x = x0
+
     while not method.has_converged():
-        method.step()
-        errors.append(method.get_error())
+        x = method.step()
+        if x != prev_x:  # Only record error if x changed
+            errors.append(method.get_error())
+        prev_x = x
 
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Define the function for which to find the root (e.g., x^2 - 2 for sqrt(2))
-#     def f(x):
-#         return x**2 - 2
-
-#     # Define its derivative (2x)
-#     def df(x):
-#         return 2 * x
-
-#     # Using the new protocol-based implementation:
-#     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
-#     method = NewtonMethod(config, x0=1.5)
-
-#     # Run iterations until convergence
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")
-
-#     # Alternatively, using the legacy wrapper:
-#     root, errors, iters = newton_search(f, 1.5)
-#     print(f"Found root (legacy): {root}")
