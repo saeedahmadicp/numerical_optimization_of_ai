@@ -46,16 +46,15 @@ class BisectionMethod(BaseRootFinder):
         Returns:
             float: Current approximation of the root
         """
-        # If the method has already converged, simply return the current approximation.
         if self._converged:
             return self.x
 
         # Store old x value
         x_old = self.x
 
-        # Compute the midpoint of the current interval.
+        # Compute the midpoint
         c = (self.a + self.b) / 2
-        fc = self.func(c)  # Evaluate the function at the midpoint.
+        fc = self.func(c)
 
         # Store iteration details
         details = {
@@ -66,24 +65,22 @@ class BisectionMethod(BaseRootFinder):
             "f(c)": fc,
         }
 
-        # Determine in which sub-interval the root lies by checking sign change.
+        # Update interval based on sign
         if self.func(self.a) * fc < 0:
-            # Root is between self.a and c, so update the right endpoint.
             self.b = c
         else:
-            # Otherwise, root must be between c and self.b, so update the left endpoint.
             self.a = c
 
-        # Update the current approximation to the new midpoint.
-        self.x = (self.a + self.b) / 2
+        # Update current approximation to be the midpoint
+        self.x = c
 
         # Store iteration data
         self.add_iteration(x_old, self.x, details)
 
-        # Increment the iteration counter.
+        # Increment iteration counter
         self.iterations += 1
 
-        # Check convergence: if the function value at c is small enough or max iterations reached.
+        # Check convergence based on function value at current point
         if abs(fc) <= self.tol or self.iterations >= self.max_iter:
             self._converged = True
 
