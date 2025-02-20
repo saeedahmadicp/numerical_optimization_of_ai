@@ -5,12 +5,15 @@
 import os
 import numpy as np
 import torch  # type: ignore
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 # Type aliases for function and derivative pairs
 FuncPair = Tuple[Callable[[float], float], Callable[[float], float]]
+FuncTriple = Tuple[
+    Callable[[float], float], Callable[[float], float], Callable[[float], float]
+]
 
 
 # Basic Polynomial Functions
@@ -305,13 +308,79 @@ MINIMIZATION_RANGES = {
 }
 
 
-def get_minimization_function(name: str) -> FuncPair:
-    """Get a minimization test function and its derivative by name."""
+def get_minimization_function(
+    name: str, with_second_derivative: bool = False
+) -> Union[FuncPair, FuncTriple]:
+    """Get a minimization test function and its derivatives by name.
+
+    Args:
+        name: Name of the minimization function
+        with_second_derivative: If True, also returns second derivative
+
+    Returns:
+        Tuple of (function, gradient) or (function, gradient, hessian)
+    """
+    if with_second_derivative:
+        if name == "quadratic":
+            f, df = MINIMIZATION_MAP[name]
+            d2f = lambda x: 2.0  # Constant second derivative
+            return f, df, d2f
+        elif name == "rosenbrock":
+            f, df = MINIMIZATION_MAP[name]
+
+            def d2f(x):
+                return np.array(
+                    [
+                        [2 - 400 * (x[1] - 3 * x[0] ** 2), -400 * x[0]],
+                        [-400 * x[0], 200],
+                    ]
+                )
+
+            return f, df, d2f
+        elif name == "himmelblau":
+            f, df = MINIMIZATION_MAP[name]
+
+            def d2f(x):
+                return np.array(
+                    [
+                        [12 * x[0] ** 2 + 4 * x[1] - 42, 4 * x[0] + 4 * x[1]],
+                        [4 * x[0] + 4 * x[1], 4 * x[0] + 12 * x[1] ** 2 - 26],
+                    ]
+                )
+
+            return f, df, d2f
+        else:
+            raise ValueError(f"Second derivative not implemented for function: {name}")
     return MINIMIZATION_MAP[name]
 
 
-def get_test_function(name: str) -> FuncPair:
-    """Get a test function and its derivative by name."""
+def get_test_function(
+    name: str, with_second_derivative: bool = False
+) -> Union[FuncPair, FuncTriple]:
+    """Get a test function and its derivatives by name.
+
+    Args:
+        name: Name of the test function
+        with_second_derivative: If True, also returns second derivative
+
+    Returns:
+        Tuple of (function, first derivative) or (function, first derivative, second derivative)
+    """
+    if with_second_derivative:
+        if name == "quadratic":
+            f, df = FUNCTION_MAP[name]
+            d2f = lambda x: 2.0  # Constant second derivative for quadratic
+            return f, df, d2f
+        elif name == "cubic":
+            f, df = FUNCTION_MAP[name]
+            d2f = lambda x: 6 * x  # Second derivative for cubic
+            return f, df, d2f
+        elif name == "quartic":
+            f, df = FUNCTION_MAP[name]
+            d2f = lambda x: 12 * x**2 - 4  # Second derivative for quartic
+            return f, df, d2f
+        else:
+            raise ValueError(f"Second derivative not implemented for function: {name}")
     return FUNCTION_MAP[name]
 
 
