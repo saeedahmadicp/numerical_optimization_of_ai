@@ -83,6 +83,7 @@ class NumericalMethodConfig:
         hessian: Optional hessian function (for second-order methods)
         use_derivative_free: bool = False  # Whether to use derivative-free approach
         finite_diff_step: float = 1e-7  # Step size for finite differences
+        is_2d: bool = False  # Add is_2d flag
     """
 
     func: Callable[[float], float]
@@ -94,6 +95,7 @@ class NumericalMethodConfig:
     hessian: Optional[Callable[[float], float]] = None
     use_derivative_free: bool = False
     finite_diff_step: float = 1e-7
+    is_2d: bool = False
 
 
 class BaseNumericalMethod:

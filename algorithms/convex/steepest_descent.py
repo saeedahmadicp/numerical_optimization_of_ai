@@ -3,100 +3,122 @@
 """Steepest descent method for function minimization."""
 
 from typing import List, Tuple
+import numpy as np
 
 from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
 class SteepestDescentMethod(BaseNumericalMethod):
-    """Implementation of steepest descent method for optimization."""
+    """Steepest descent method with backtracking line search."""
 
-    def __init__(self, config: NumericalMethodConfig, x0: float, alpha: float = 0.1):
-        """
-        Initialize steepest descent method.
+    def __init__(
+        self,
+        config: NumericalMethodConfig,
+        x0: np.ndarray,
+        alpha: float = 0.1,
+        beta: float = 0.8,
+        c: float = 0.0001,
+    ):
+        """Initialize the method.
 
         Args:
-            config: Configuration including function, derivative, and tolerances
-            x0: Initial guess
-            alpha: Learning rate (step size)
-
-        Raises:
-            ValueError: If derivative function is not provided or method_type is not 'optimize'
+            config: Configuration object
+            x0: Initial point
+            alpha: Initial step size for line search
+            beta: Step size reduction factor
+            c: Sufficient decrease parameter
         """
-        if config.method_type != "optimize":
-            raise ValueError(
-                "Steepest descent method can only be used for optimization"
-            )
-
-        if config.derivative is None:
-            raise ValueError("Steepest descent method requires derivative function")
-
         super().__init__(config)
-        self.x = x0
+        self.x = np.array(x0, dtype=float)
         self.alpha = alpha
+        self.beta = beta
+        self.c = c
+        self._converged = False
+        self.iterations = 0
 
-    def get_current_x(self) -> float:
-        """Get current x value."""
-        return self.x
-
-    def _backtracking_line_search(self, p: float) -> float:
-        """
-        Perform backtracking line search to find a suitable step size.
+    def _backtracking_line_search(self, p: np.ndarray) -> float:
+        """Backtracking line search to find step size.
 
         Args:
-            p: Search direction (negative gradient)
+            p: Search direction
 
         Returns:
-            float: Step size that satisfies the Armijo condition
+            float: Step size
         """
-        c = 1e-4  # Armijo condition parameter
-        rho = 0.5  # Step size reduction factor
         alpha = self.alpha
-
         fx = self.func(self.x)
-        grad_fx = self.derivative(self.x)  # type: ignore
+        grad_fx = self.derivative(self.x)
 
-        while self.func(self.x + alpha * p) > fx + c * alpha * grad_fx * p:
-            alpha *= rho
-            if alpha < 1e-10:
+        # For vector case, use dot product for directional derivative
+        directional_derivative = np.dot(grad_fx, p)
+
+        while True:
+            x_new = self.x + alpha * p
+            fx_new = self.func(x_new)
+
+            # Armijo condition
+            if fx_new <= fx + self.c * alpha * directional_derivative:
+                break
+
+            alpha *= self.beta
+
+            if alpha < 1e-10:  # Prevent too small steps
                 break
 
         return alpha
 
-    def step(self) -> float:
-        """
-        Perform one iteration of steepest descent.
+    def step(self) -> np.ndarray:
+        """Perform one iteration of steepest descent.
 
         Returns:
-            float: Current approximation of the minimum
+            np.ndarray: New point
         """
-        if self._converged:
-            return self.x
+        # Get gradient at current point
+        grad = self.derivative(self.x)
 
-        x_old = self.x
-        grad = self.derivative(self.x)  # type: ignore
-        p = -grad  # Search direction is negative gradient
+        # Search direction is negative gradient
+        p = -grad
 
+        # Normalize search direction for better scaling
+        p_norm = np.linalg.norm(p)
+        if p_norm > 1e-10:
+            p = p / p_norm
+
+        # Find step size using line search
         alpha = self._backtracking_line_search(p)
 
-        details = {
-            "gradient": grad,
-            "search_direction": p,
-            "step_size": alpha,
-            "line_search": {
-                "initial_alpha": self.alpha,
-                "final_alpha": alpha,
+        # Store details for visualization
+        self.add_iteration(
+            self.x,
+            self.x + alpha * p,
+            {
+                "gradient": str(grad),
+                "search_direction": str(p),
+                "step_size": alpha,
+                "line_search": {
+                    "initial_alpha": self.alpha,
+                    "final_alpha": alpha,
+                },
             },
-        }
+        )
 
-        self.x += alpha * p
-
-        self.add_iteration(x_old, self.x, details)
+        # Update position
+        self.x = self.x + alpha * p
         self.iterations += 1
 
-        if self.get_error() <= self.tol or self.iterations >= self.max_iter:
-            self._converged = True
+        # Check convergence
+        grad_norm = np.linalg.norm(self.derivative(self.x))
+        self._converged = grad_norm < self.tol or self.iterations >= self.max_iter
 
         return self.x
+
+    def get_current_x(self) -> np.ndarray:
+        """Get current point."""
+        return self.x
+
+    def get_error(self) -> float:
+        """Get error estimate (gradient norm)."""
+        return float(np.linalg.norm(self.derivative(self.x)))
 
     @property
     def name(self) -> str:

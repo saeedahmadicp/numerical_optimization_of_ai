@@ -8,6 +8,8 @@ import numpy as np
 import json
 import yaml
 from pathlib import Path
+import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
@@ -153,10 +155,35 @@ Examples:
     # Get function and derivatives
     f, df, d2f = get_minimization_function(args.function, with_second_derivative=True)
 
+    # Determine if function is 2D based on number of initial coordinates
+    is_2d = len(args.x0) == 2
+
+    # Validate function and dimensions match
+    if is_2d and args.function not in [
+        "rosenbrock",
+        "himmelblau",
+        "rastrigin",
+        "ackley",
+        "beale",
+        "booth",
+    ]:
+        parser.error(f"Function '{args.function}' is not a 2D function")
+    elif not is_2d and args.function in [
+        "rosenbrock",
+        "himmelblau",
+        "rastrigin",
+        "ackley",
+        "beale",
+        "booth",
+    ]:
+        parser.error(
+            f"Function '{args.function}' requires 2D input (--x0 requires two values)"
+        )
+
     # Use appropriate range for the function
     if args.xrange is None:
-        if args.function == "quadratic":
-            args.xrange = (-4, 4)  # Wider range for quadratic
+        if args.function in DEFAULT_RANGES:
+            args.xrange = DEFAULT_RANGES[args.function]
         else:
             args.xrange = (-2, 2)  # Default range
 
@@ -168,13 +195,14 @@ Examples:
         tol=args.tol,
         max_iter=args.max_iter,
         x_range=args.xrange,
+        is_2d=is_2d,
     )
 
     # Initialize methods
     methods: List[BaseNumericalMethod] = []
     for method_name in args.methods:
         method_class = METHOD_MAP[method_name]
-        x0 = np.array(args.x0)
+        x0 = np.array(args.x0, dtype=float)  # Ensure numpy array with float type
 
         if method_name in OPTIMIZATION_ONLY:
             methods.append(method_class(config, x0))
@@ -190,7 +218,7 @@ Examples:
         figsize=(12, 8),
         show_convergence=True,
         show_error=True,
-        show_contour=True,
+        show_contour=True if is_2d else False,
         style="white",
         context="talk",
         palette="viridis",
@@ -199,6 +227,70 @@ Examples:
     # Create and run visualizer
     visualizer = OptimizationVisualizer(config, methods, vis_config)
     visualizer.run_comparison()
+
+    # Show iteration tables
+    for method in methods:
+        history = method.get_iteration_history()
+        if not history:
+            continue
+
+        print(f"\n{method.name} Iteration History:")
+        table_data = []
+        for iter_data in history:
+            # Format x_old and x_new based on dimensionality
+            if len(iter_data.x_old) == 1:
+                x_old_str = f"{iter_data.x_old[0]:.8f}"
+                x_new_str = f"{iter_data.x_new[0]:.8f}"
+            else:
+                x_old_str = f"[{', '.join(f'{x:.8f}' for x in iter_data.x_old)}]"
+                x_new_str = f"[{', '.join(f'{x:.8f}' for x in iter_data.x_new)}]"
+
+            # Convert function values and error to float, handling vector norms
+            f_old = (
+                float(iter_data.f_old)
+                if isinstance(iter_data.f_old, np.ndarray)
+                else iter_data.f_old
+            )
+            f_new = (
+                float(iter_data.f_new)
+                if isinstance(iter_data.f_new, np.ndarray)
+                else iter_data.f_new
+            )
+
+            # For vector-valued errors, use the norm
+            if isinstance(iter_data.error, np.ndarray):
+                error = float(np.linalg.norm(iter_data.error))
+            else:
+                error = float(iter_data.error)
+
+            row = [
+                iter_data.iteration,
+                x_old_str,
+                f"{f_old:.8e}",
+                x_new_str,
+                f"{f_new:.8e}",
+                f"{error:.2e}",
+            ]
+            # Add method-specific details
+            for key, value in iter_data.details.items():
+                if isinstance(value, (float, np.floating)):
+                    row.append(f"{float(value):.6e}")
+                elif isinstance(value, np.ndarray):
+                    row.append(f"{np.array2string(value, precision=6, separator=', ')}")
+                else:
+                    row.append(str(value))
+            table_data.append(row)
+
+        # Create headers based on method details
+        headers = ["Iter", "x_old", "f(x_old)", "x_new", "f(x_new)", "|f'(x)|"]
+        if history[0].details:
+            headers.extend(history[0].details.keys())
+
+        print(tabulate(table_data, headers=headers, floatfmt=".8f"))
+        print()
+
+    plt.ioff()
+    plt.show(block=True)
 
 
 if __name__ == "__main__":

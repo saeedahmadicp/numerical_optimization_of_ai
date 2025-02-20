@@ -159,7 +159,18 @@ TORCH_FUNCTIONS = {
 
 def quadratic_min() -> FuncPair:
     """f(x) = x², minimum at x = 0."""
-    return (lambda x: x**2, lambda x: 2 * x)
+
+    def f(x):
+        if isinstance(x, np.ndarray) and x.size > 1:
+            return np.sum(x**2)
+        return float(x**2)
+
+    def df(x):
+        if isinstance(x, np.ndarray) and x.size > 1:
+            return 2 * x
+        return float(2 * x)
+
+    return (f, df)
 
 
 def cubic_min() -> FuncPair:
@@ -174,28 +185,44 @@ def quartic_min() -> FuncPair:
 
 def rosenbrock() -> FuncPair:
     """Rosenbrock function (banana function): f(x,y) = (1-x)² + 100(y-x²)², minimum at (1,1)."""
-    return (
-        lambda x: (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2,
-        lambda x: np.array(
+
+    def f(x):
+        if not isinstance(x, np.ndarray) or x.size == 1:
+            raise ValueError("Rosenbrock function requires 2D input")
+        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2
+
+    def df(x):
+        if not isinstance(x, np.ndarray) or x.size == 1:
+            raise ValueError("Rosenbrock function requires 2D input")
+        return np.array(
             [
                 -2 * (1 - x[0]) - 400 * x[0] * (x[1] - x[0] ** 2),
                 200 * (x[1] - x[0] ** 2),
             ]
-        ),
-    )
+        )
+
+    return (f, df)
 
 
 def himmelblau() -> FuncPair:
     """Himmelblau's function: f(x,y) = (x²+y-11)² + (x+y²-7)², 4 local minima."""
-    return (
-        lambda x: (x[0] ** 2 + x[1] - 11) ** 2 + (x[0] + x[1] ** 2 - 7) ** 2,
-        lambda x: np.array(
+
+    def f(x):
+        if not isinstance(x, np.ndarray) or x.size == 1:
+            raise ValueError("Himmelblau function requires 2D input")
+        return (x[0] ** 2 + x[1] - 11) ** 2 + (x[0] + x[1] ** 2 - 7) ** 2
+
+    def df(x):
+        if not isinstance(x, np.ndarray) or x.size == 1:
+            raise ValueError("Himmelblau function requires 2D input")
+        return np.array(
             [
                 4 * x[0] * (x[0] ** 2 + x[1] - 11) + 2 * (x[0] + x[1] ** 2 - 7),
                 2 * (x[0] ** 2 + x[1] - 11) + 4 * x[1] * (x[0] + x[1] ** 2 - 7),
             ]
-        ),
-    )
+        )
+
+    return (f, df)
 
 
 def rastrigin() -> FuncPair:

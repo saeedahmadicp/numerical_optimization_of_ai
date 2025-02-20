@@ -111,19 +111,34 @@ class OptimizationVisualizer:
             # Create visualization elements
             if self.is_2d:
                 main_line = self.ax_main.plot(
-                    [], [], [], "o-", color=color, label=name,
-                    linewidth=2, markersize=8, alpha=0.8
+                    [],
+                    [],
+                    [],
+                    "o-",
+                    color=color,
+                    label=name,
+                    linewidth=2,
+                    markersize=8,
+                    alpha=0.8,
+                    zorder=2,
                 )[0]
                 contour_line = (
                     self.ax_contour.plot(
-                        [], [], "o-", color=color, linewidth=2, markersize=8
+                        [], [], "o-", color=color, linewidth=2, markersize=8, zorder=2
                     )[0]
                     if self.config.show_contour
                     else None
                 )
             else:
                 main_line = self.ax_main.plot(
-                    [], [], "o-", color=color, label=name, linewidth=2, markersize=8
+                    [],
+                    [],
+                    "o-",
+                    color=color,
+                    label=name,
+                    linewidth=2,
+                    markersize=8,
+                    zorder=2,
                 )[0]
                 contour_line = None
 
@@ -143,21 +158,16 @@ class OptimizationVisualizer:
 
         # Setup legends and labels
         if self.config.show_legend:
-            self.ax_main.legend()
-            self.ax_error.legend()
-
-        # Configure main plot
-        self.ax_main.grid(True)
-        self.ax_main.ticklabel_format(style='sci', scilimits=(-2,2), axis='both')
+            self.ax_main.legend(loc="upper right")
+            self.ax_error.legend(loc="upper right")
 
         # Configure error plot
         self.ax_error.set_xlabel("Iteration")
         self.ax_error.set_ylabel("Error")
-        self.ax_error.grid(True)
-        self.ax_error.set_yscale("log")
-        # Use LogFormatter for better log scale display
-        from matplotlib.ticker import LogFormatter
-        self.ax_error.yaxis.set_major_formatter(LogFormatter())
+        self.ax_error.grid(True, alpha=0.3)
+        self.ax_error.set_yscale("log")  # Use log scale for error plot
+        self.ax_error.set_xlim(-1, self.problem.max_iter)  # Set x-axis limits
+        self.ax_error.set_ylim(1e-8, 1e2)  # Set reasonable y-axis limits for error
 
         # Plot the objective function
         self.plot_function()
@@ -215,25 +225,28 @@ class OptimizationVisualizer:
         x_plot_min = x_min - 0.2 * x_range
         x_plot_max = x_max + 0.2 * x_range
         x = np.linspace(x_plot_min, x_plot_max, 1000)
-        
+
         # Compute function values
-        y = np.array([self.problem.func(xi) for xi in x])
-        
-        # Plot the function
-        self.ax_main.plot(x, y, "-", color="blue", alpha=0.3)
-        self.ax_main.grid(True)
+        y = np.array([self.problem.func(np.array([xi])) for xi in x])
+
+        # Plot the function as a static line
+        self.function_line = self.ax_main.plot(
+            x, y, "-", color="gray", alpha=0.5, label="f(x)", zorder=1, linewidth=2
+        )[0]
+
+        self.ax_main.grid(True, alpha=0.3)
         self.ax_main.set_xlabel("x")
         self.ax_main.set_ylabel("f(x)")
 
         # Fix scientific notation and scaling
-        self.ax_main.ticklabel_format(style='sci', scilimits=(-2,2), axis='both')
-        
+        self.ax_main.ticklabel_format(style="sci", scilimits=(-2, 2), axis="both")
+
         # Set view limits with padding
         y_min, y_max = np.min(y), np.max(y)
         y_range = max(y_max - y_min, 1e-10)  # Avoid zero range
-        y_plot_min = y_min - 0.2 * y_range
-        y_plot_max = y_max + 0.2 * y_range
-        
+        y_plot_min = y_min - 0.1 * y_range
+        y_plot_max = y_max + 0.1 * y_range
+
         self.ax_main.set_xlim(x_plot_min, x_plot_max)
         self.ax_main.set_ylim(y_plot_min, y_plot_max)
 
@@ -248,15 +261,19 @@ class OptimizationVisualizer:
             ]
         )
 
-        # Surface plot
-        self.ax_main.plot_surface(X, Y, Z, cmap="viridis", alpha=0.8)
+        # Surface plot - store reference to surface
+        self.surface = self.ax_main.plot_surface(
+            X, Y, Z, cmap="viridis", alpha=0.3, zorder=1
+        )
         self.ax_main.set_xlabel("x")
         self.ax_main.set_ylabel("y")
         self.ax_main.set_zlabel("f(x, y)")
 
-        # Contour plot
+        # Contour plot - store reference to contours
         if self.config.show_contour:
-            self.ax_contour.contour(X, Y, Z, levels=20)
+            self.contours = self.ax_contour.contour(
+                X, Y, Z, levels=20, colors="gray", alpha=0.5, zorder=1
+            )
             self.ax_contour.set_xlabel("x")
             self.ax_contour.set_ylabel("y")
 
@@ -264,9 +281,16 @@ class OptimizationVisualizer:
         """Run and visualize the optimization methods."""
         plt.ion()
 
-        # Find global minimum for error calculation
-        x_test = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 1000)
-        f_min = np.min([self.problem.func(x) for x in x_test])
+        # Generate test points and find global minimum
+        if self.problem.is_2d:
+            x = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 100)
+            y = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 100)
+            X, Y = np.meshgrid(x, y)
+            x_test = np.vstack((X.ravel(), Y.ravel())).T
+            f_min = np.min([self.problem.func(x) for x in x_test])
+        else:
+            x_test = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 100)
+            f_min = np.min([self.problem.func(np.array([x])) for x in x_test])
 
         for iteration in range(self.problem.max_iter):
             any_updated = False
@@ -277,30 +301,50 @@ class OptimizationVisualizer:
                     any_updated = True
                     x_new = method.step()
                     f_new = self.problem.func(x_new)
-                    error = abs(f_new - f_min)  # Distance to minimum
+
+                    # Get error as scalar (gradient norm for optimization)
+                    error = float(np.linalg.norm(method.derivative(x_new)))
 
                     state["points"].append(x_new)
-                    state["errors"].append(error)  # Store actual error
+                    state["errors"].append(error)
 
-                    # Update visualization
+                    # Update optimization path
                     points = np.array(state["points"])
                     values = np.array([self.problem.func(p) for p in points])
 
                     if self.is_2d:
+                        # Update 3D path and contour
                         state["line"].set_data(points[:, 0], points[:, 1])
                         state["line"].set_3d_properties(values)
                         if state["contour_line"]:
                             state["contour_line"].set_data(points[:, 0], points[:, 1])
                     else:
+                        # Update 1D path
                         state["line"].set_data(points.ravel(), values)
 
-                    # Update error plot
-                    self.error_lines[method_id].set_data(
-                        range(len(state["errors"])), state["errors"]
-                    )
+                    # Update error plot with iteration numbers
+                    iterations = np.arange(len(state["errors"]))
+                    errors = np.array(state["errors"])
+                    self.error_lines[method_id].set_data(iterations, errors)
 
             if any_updated:
-                self._update_plot_limits()
+                # Update error plot limits
+                if any(
+                    len(state["errors"]) > 0 for state in self.method_states.values()
+                ):
+                    all_errors = np.concatenate(
+                        [
+                            state["errors"]
+                            for state in self.method_states.values()
+                            if len(state["errors"]) > 0
+                        ]
+                    )
+                    error_min, error_max = np.min(all_errors), np.max(all_errors)
+                    self.ax_error.set_ylim(
+                        max(error_min * 0.1, 1e-10),  # Avoid zero on log scale
+                        error_max * 10,
+                    )
+
                 self.fig.canvas.draw()
                 plt.pause(0.01)
 
@@ -336,34 +380,8 @@ class OptimizationVisualizer:
                     np.min(all_points[:, 1]), np.max(all_points[:, 1])
                 )
         else:
-            # Get all points and values
-            all_points = []
-            all_values = []
-            for state in self.method_states.values():
-                if len(state["points"]) > 0:
-                    points = np.array(state["points"]).reshape(-1)
-                    all_points.extend(points)
-                    values = [self.problem.func(p) for p in points]
-                    all_values.extend(values)
-
-            if all_points:
-                x_min, x_max = min(all_points), max(all_points)
-                y_min, y_max = min(all_values), max(all_values)
-                
-                # Add padding (20% of range)
-                x_range = max(x_max - x_min, 1e-10)
-                y_range = max(y_max - y_min, 1e-10)
-                
-                x_plot_min = x_min - 0.2 * x_range
-                x_plot_max = x_max + 0.2 * x_range
-                y_plot_min = y_min - 0.2 * y_range
-                y_plot_max = y_max + 0.2 * y_range
-
-                # Update main plot limits
-                self.ax_main.set_xlim(x_plot_min, x_plot_max)
-                self.ax_main.set_ylim(y_plot_min, y_plot_max)
-
-        # Update error plot
-        if any(len(state["errors"]) > 0 for state in self.method_states.values()):
-            self.ax_error.relim()
-            self.ax_error.autoscale_view()
+            # For 1D case, keep x limits fixed as set in _plot_1d_function
+            # Only update error plot limits
+            if any(len(state["errors"]) > 0 for state in self.method_states.values()):
+                self.ax_error.relim()
+                self.ax_error.autoscale_view()
