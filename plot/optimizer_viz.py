@@ -28,7 +28,7 @@ class VisualizationConfig:
     """Configuration for visualization."""
 
     figsize: Tuple[int, int] = (15, 8)  # Default figure size
-    animation_interval: int = 50  # Faster updates for optimization
+    animation_interval: int = 1  # Reduced from 50 to 1ms
     show_convergence: bool = True  # Default to show convergence plot
     show_error: bool = True  # Default to show error plot
     show_contour: bool = True  # Default to show contour for 2D
@@ -74,31 +74,50 @@ class OptimizationVisualizer:
         self.methods = methods
         self.config = config or VisualizationConfig()
 
-        # Set up the style using seaborn
-        sns.set_style(self.config.style)
-        sns.set_context(self.config.context)
+        # Enhanced styling setup
+        plt.style.use("seaborn-v0_8-white")
+        sns.set_context("notebook", font_scale=1.2)
 
-        # Enable interactive mode for live updating of the plots
-        plt.ion()
-
-        # Create the main figure with the specified size, dpi, and background color
-        self.fig = plt.figure(
-            figsize=self.config.figsize,
-            dpi=self.config.dpi,
-            facecolor=self.config.background_color,
+        # Custom style configurations
+        plt.rcParams.update(
+            {
+                "figure.facecolor": "white",
+                "axes.facecolor": "white",
+                "axes.grid": True,
+                "grid.alpha": 0.2,
+                "axes.linewidth": 1.5,
+                "axes.labelsize": 12,
+                "lines.linewidth": 2.5,
+                "lines.markersize": 8,
+                "xtick.labelsize": 10,
+                "ytick.labelsize": 10,
+                "legend.fontsize": 11,
+                "legend.framealpha": 0.9,
+                "legend.edgecolor": "0.8",
+                "figure.titlesize": 16,
+                "figure.titleweight": "bold",
+            }
         )
 
-        # Create figure and determine if problem is 1D or 2D
+        # Enable interactive mode for live updating
+        plt.ion()
+
+        # Create main figure with enhanced size and DPI
+        self.fig = plt.figure(
+            figsize=self.config.figsize,
+            dpi=120,  # Higher DPI for sharper rendering
+            constrained_layout=True,
+        )  # Better spacing
+
         self.is_2d = self._check_if_2d()
         self.setup_plots()
-
-        # Initialize method states and visualization elements
         self._initialize_visualization()
 
     def _initialize_visualization(self):
-        """Initialize visualization state for all methods."""
+        """Initialize visualization state with enhanced styling."""
+        # Get colors from a more vibrant palette
         n_colors = len(self.methods)
-        self.colors = self._get_colors(n_colors)
+        self.colors = sns.color_palette("husl", n_colors)  # More vibrant colors
 
         self.method_states = {}
         self.error_lines = {}
@@ -108,42 +127,35 @@ class OptimizationVisualizer:
             color = self.colors[i]
             name = method.__class__.__name__
 
-            # Create visualization elements
+            # Enhanced line styling
+            line_style = dict(
+                linewidth=2.5,
+                markersize=8,
+                markeredgewidth=2,
+                markeredgecolor="white",
+                alpha=0.9,
+                zorder=5,
+            )
+
             if self.is_2d:
                 main_line = self.ax_main.plot(
-                    [],
-                    [],
-                    [],
-                    "o-",
-                    color=color,
-                    label=name,
-                    linewidth=2,
-                    markersize=8,
-                    alpha=0.8,
-                    zorder=2,
+                    [], [], [], "o-", color=color, label=name, **line_style
                 )[0]
+
                 contour_line = (
-                    self.ax_contour.plot(
-                        [], [], "o-", color=color, linewidth=2, markersize=8, zorder=2
-                    )[0]
+                    self.ax_contour.plot([], [], "o-", color=color, **line_style)[0]
                     if self.config.show_contour
                     else None
                 )
             else:
                 main_line = self.ax_main.plot(
-                    [],
-                    [],
-                    "o-",
-                    color=color,
-                    label=name,
-                    linewidth=2,
-                    markersize=8,
-                    zorder=2,
+                    [], [], "o-", color=color, label=name, **line_style
                 )[0]
                 contour_line = None
 
+            # Enhanced error line styling
             error_line = self.ax_error.plot(
-                [], [], "-", color=color, label=name, linewidth=2
+                [], [], "-", color=color, label=name, linewidth=2.5, alpha=0.9
             )[0]
 
             self.method_states[method_id] = {
@@ -156,22 +168,25 @@ class OptimizationVisualizer:
             }
             self.error_lines[method_id] = error_line
 
-        # Setup legends and labels
+        # Enhanced legend styling
         if self.config.show_legend:
-            self.ax_main.legend(loc="upper right")
-            self.ax_error.legend(loc="upper right")
+            legend_style = dict(
+                framealpha=0.9, edgecolor="0.8", fancybox=True, shadow=True
+            )
+            self.ax_main.legend(loc="upper right", **legend_style)
+            self.ax_error.legend(loc="upper right", **legend_style)
 
-        # Configure error plot
+        # Enhanced error plot styling
         self.ax_error.set_xlabel("Iteration")
         self.ax_error.set_ylabel("Error")
-        self.ax_error.grid(True, alpha=0.3)
-        self.ax_error.set_yscale("log")  # Use log scale for error plot
-        self.ax_error.set_xlim(-1, self.problem.max_iter)  # Set x-axis limits
-        self.ax_error.set_ylim(1e-8, 1e2)  # Set reasonable y-axis limits for error
+        self.ax_error.grid(True, alpha=0.2)
+        self.ax_error.set_yscale("log")
+        self.ax_error.set_xlim(-1, self.problem.max_iter)
+        self.ax_error.set_ylim(1e-8, 1e2)
 
-        # Plot the objective function
+        # Plot function and adjust layout
         self.plot_function()
-        plt.tight_layout()
+        self.fig.tight_layout()
 
     def _get_colors(self, n_colors: int) -> List:
         """Get color scheme for methods."""
@@ -251,7 +266,7 @@ class OptimizationVisualizer:
         self.ax_main.set_ylim(y_plot_min, y_plot_max)
 
     def _plot_2d_function(self, x: np.ndarray):
-        """Plot 2D objective function with surface and contour plots."""
+        """Plot 2D objective function with enhanced surface and contour plots."""
         y = x
         X, Y = np.meshgrid(x, y)
         Z = np.array(
@@ -261,25 +276,58 @@ class OptimizationVisualizer:
             ]
         )
 
-        # Surface plot - store reference to surface
+        # Enhanced 3D surface plot
         self.surface = self.ax_main.plot_surface(
-            X, Y, Z, cmap="viridis", alpha=0.3, zorder=1
+            X,
+            Y,
+            Z,
+            cmap="viridis",
+            alpha=0.7,
+            antialiased=True,
+            linewidth=0,
+            rcount=100,  # Higher resolution
+            ccount=100,
+            zorder=1,
         )
-        self.ax_main.set_xlabel("x")
-        self.ax_main.set_ylabel("y")
-        self.ax_main.set_zlabel("f(x, y)")
 
-        # Contour plot - store reference to contours
+        # Enhance 3D axes
+        self.ax_main.xaxis.pane.fill = False
+        self.ax_main.yaxis.pane.fill = False
+        self.ax_main.zaxis.pane.fill = False
+        self.ax_main.xaxis.pane.set_edgecolor("white")
+        self.ax_main.yaxis.pane.set_edgecolor("white")
+        self.ax_main.zaxis.pane.set_edgecolor("white")
+        self.ax_main.grid(True, alpha=0.2)
+
+        # Enhanced view angle
+        self.ax_main.view_init(elev=25, azim=45)
+
+        # Contour plot with enhanced styling
         if self.config.show_contour:
             self.contours = self.ax_contour.contour(
-                X, Y, Z, levels=20, colors="gray", alpha=0.5, zorder=1
+                X, Y, Z, levels=20, cmap="viridis", alpha=0.7, linewidths=1.2, zorder=1
             )
-            self.ax_contour.set_xlabel("x")
-            self.ax_contour.set_ylabel("y")
+            self.ax_contour.contourf(
+                X, Y, Z, levels=20, cmap="viridis", alpha=0.1, zorder=0
+            )
 
     def run_comparison(self):
         """Run and visualize the optimization methods."""
         plt.ion()
+
+        # Reduce drawing frequency - only draw every N iterations
+        draw_interval = 5  # Only draw every 5 iterations
+        draw_counter = 0
+
+        # Disable automatic drawing
+        self.fig.canvas.draw_idle()
+        plt.show(block=False)
+
+        # Turn off automatic rendering
+        self.ax_main.set_autoscale_on(False)
+        if self.is_2d and self.config.show_contour:
+            self.ax_contour.set_autoscale_on(False)
+        self.ax_error.set_autoscale_on(False)
 
         # Generate test points and find global minimum
         if self.problem.is_2d:
@@ -328,31 +376,34 @@ class OptimizationVisualizer:
                     self.error_lines[method_id].set_data(iterations, errors)
 
             if any_updated:
-                # Update error plot limits
-                if any(
-                    len(state["errors"]) > 0 for state in self.method_states.values()
-                ):
-                    all_errors = np.concatenate(
-                        [
-                            state["errors"]
-                            for state in self.method_states.values()
-                            if len(state["errors"]) > 0
-                        ]
-                    )
-                    error_min, error_max = np.min(all_errors), np.max(all_errors)
-                    self.ax_error.set_ylim(
-                        max(error_min * 0.1, 1e-10),  # Avoid zero on log scale
-                        error_max * 10,
-                    )
+                draw_counter += 1
+                if draw_counter >= draw_interval:
+                    # Batch update all artists
+                    if self.is_2d:
+                        self.ax_main.draw_artist(self.surface)
+                        for state in self.method_states.values():
+                            self.ax_main.draw_artist(state["line"])
+                            if state["contour_line"]:
+                                self.ax_contour.draw_artist(state["contour_line"])
+                    else:
+                        self.ax_main.draw_artist(self.function_line)
+                        for state in self.method_states.values():
+                            self.ax_main.draw_artist(state["line"])
 
-                self.fig.canvas.draw()
-                plt.pause(0.01)
+                    # Update error lines
+                    for line in self.error_lines.values():
+                        self.ax_error.draw_artist(line)
+
+                    # Fast update of the canvas
+                    self.fig.canvas.flush_events()
+                    draw_counter = 0
 
             if all(method.has_converged() for method in self.methods):
                 break
 
-        plt.ioff()
-        plt.show()
+        # Final update
+        self.fig.canvas.draw()
+        plt.show(block=True)
 
     def _update_plot_limits(self):
         """Update axis limits to show all data."""

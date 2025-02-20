@@ -119,6 +119,9 @@ Examples:
         type=Path,
         help="Path to configuration file (JSON or YAML)",
     )
+    parser.add_argument(
+        "--fast", action="store_true", help="Enable fast animation mode"
+    )
 
     args = parser.parse_args()
 
@@ -222,6 +225,7 @@ Examples:
         style="white",
         context="talk",
         palette="viridis",
+        animation_interval=1 if args.fast else 50,  # Super fast in fast mode
     )
 
     # Create and run visualizer
