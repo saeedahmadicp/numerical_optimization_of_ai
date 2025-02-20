@@ -4,13 +4,13 @@
 
 from typing import List, Tuple
 
-from .protocols import BaseRootFinder, RootFinderConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
-class BisectionMethod(BaseRootFinder):
-    """Implementation of the bisection method."""
+class BisectionMethod(BaseNumericalMethod):
+    """Implementation of the bisection method for root finding."""
 
-    def __init__(self, config: RootFinderConfig, a: float, b: float):
+    def __init__(self, config: NumericalMethodConfig, a: float, b: float):
         """
         Initialize the bisection method.
 
@@ -20,20 +20,21 @@ class BisectionMethod(BaseRootFinder):
             b: Right endpoint of interval
 
         Raises:
-            ValueError: If f(a) and f(b) have same sign, as a root is not guaranteed.
+            ValueError: If f(a) and f(b) have same sign, or if method_type is not 'root'
         """
-        # Call the base class initializer to set up configuration and common attributes.
+        if config.method_type != "root":
+            raise ValueError("Bisection method can only be used for root finding")
+
+        # Call the base class initializer
         super().__init__(config)
 
-        # Evaluate the function at both endpoints to ensure they have opposite signs.
+        # Evaluate the function at both endpoints
         fa, fb = self.func(a), self.func(b)
         if fa * fb >= 0:
             raise ValueError("Function must have opposite signs at interval endpoints")
 
-        # Initialize the interval endpoints.
         self.a = a
         self.b = b
-        # Set the initial approximation to the midpoint of the interval.
         self.x = (a + b) / 2
 
     def get_current_x(self) -> float:
@@ -49,7 +50,6 @@ class BisectionMethod(BaseRootFinder):
         if self._converged:
             return self.x
 
-        # Store old x value
         x_old = self.x
 
         # Compute the midpoint
@@ -71,17 +71,15 @@ class BisectionMethod(BaseRootFinder):
         else:
             self.a = c
 
-        # Update current approximation to be the midpoint
+        # Update current approximation
         self.x = c
 
         # Store iteration data
         self.add_iteration(x_old, self.x, details)
-
-        # Increment iteration counter
         self.iterations += 1
 
-        # Check convergence based on function value at current point
-        if abs(fc) <= self.tol or self.iterations >= self.max_iter:
+        # Check convergence
+        if self.get_error() <= self.tol or self.iterations >= self.max_iter:
             self._converged = True
 
         return self.x
@@ -92,7 +90,7 @@ class BisectionMethod(BaseRootFinder):
 
 
 def bisection_search(
-    f: RootFinderConfig,
+    f: NumericalMethodConfig,
     a: float,
     b: float,
     tol: float = 1e-6,
@@ -111,38 +109,19 @@ def bisection_search(
     Returns:
         Tuple of (root, errors, iterations)
     """
-    # Create a configuration instance using provided function, tolerance, and iteration limit.
-    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
-    # Instantiate the BisectionMethod with the provided interval.
+    # If f is a function rather than a config, create a config
+    if callable(f):
+        config = NumericalMethodConfig(
+            func=f, method_type="root", tol=tol, max_iter=max_iter
+        )
+    else:
+        config = f
+
     method = BisectionMethod(config, a, b)
+    errors = []
 
-    errors = []  # List to store error values over iterations.
-    # Loop until the method converges.
     while not method.has_converged():
-        method.step()  # Take one bisection step.
-        errors.append(method.get_error())  # Record the error after each step.
+        method.step()
+        errors.append(method.get_error())
 
-    # Return the final approximation, the error history, and the number of iterations performed.
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Example usage
-#     def f(x):
-#         return x**2 - 2  # Function for which we want to find the root (sqrt(2))
-#
-#     # Using the new protocol-based implementation
-#     config = RootFinderConfig(func=f, tol=1e-6, max_iter=100)
-#     method = BisectionMethod(config, a=1, b=2)
-#
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")
-#
-#     # Or using the legacy wrapper for backward compatibility
-#     root, errors, iters = bisection_search(f, 1, 2)
-#     assert abs(root - 2**0.5) < 1e-6  # Ensure the computed root is close to sqrt(2)
