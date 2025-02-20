@@ -1,4 +1,4 @@
-# plot/optimizer.py
+# plot/optimizer_viz.py
 
 """
 Visualization utilities for comparing optimization methods.

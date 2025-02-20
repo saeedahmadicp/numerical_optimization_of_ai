@@ -6,25 +6,36 @@ import argparse
 from typing import Dict, Type, List
 from tabulate import tabulate
 import matplotlib.pyplot as plt
+import json
+import yaml
+from pathlib import Path
 
-from algorithms.convex.protocols import BaseRootFinder, RootFinderConfig
+from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
 from algorithms.convex.newton_hessian import NewtonHessianMethod
+from algorithms.convex.quasi_newton import BFGSMethod
 from algorithms.convex.secant import SecantMethod
 from algorithms.convex.bisection import BisectionMethod
 from algorithms.convex.regula_falsi import RegulaFalsiMethod
-from plot.rootfinder import RootFindingVisualizer, VisualizationConfig
+from plot.root_finder_viz import RootFindingVisualizer, VisualizationConfig
 from utils.funcs import get_test_function, FUNCTION_MAP
 from utils.midpoint import get_safe_initial_points
 
-# Map method names to their classes - only root finding methods
-METHOD_MAP: Dict[str, Type[BaseRootFinder]] = {
-    "newton": NewtonMethod,
-    "newton_hessian": NewtonHessianMethod,
-    "secant": SecantMethod,
+# Map method names to their classes
+METHOD_MAP: Dict[str, Type[BaseNumericalMethod]] = {
+    # Root-finding only methods
     "bisection": BisectionMethod,
     "regula_falsi": RegulaFalsiMethod,
+    "secant": SecantMethod,
+    # Methods that can do both root-finding and optimization
+    "newton": NewtonMethod,
+    "newton_hessian": NewtonHessianMethod,
+    "bfgs": BFGSMethod,
 }
+
+# Group methods by capability
+ROOT_FINDING_ONLY = {"bisection", "regula_falsi", "secant"}
+DUAL_METHODS = {"newton", "newton_hessian", "bfgs"}
 
 # Default ranges for different function types
 DEFAULT_RANGES = {
@@ -52,13 +63,13 @@ def main():
         epilog="""
 Examples:
   # Compare all methods
-  python find_root.py --all --function quadratic --x0 1.5
+  python find_roots.py --all --function quadratic --x0 1.5
   
   # Compare specific methods
-  python find_root.py --methods newton secant --function quadratic --x0 1.5
+  python find_roots.py --methods newton secant --function quadratic --x0 1.5
   
   # Test on a challenging function
-  python find_root.py --methods newton --function multiple_roots --x0 0.5
+  python find_roots.py --methods newton bfgs --function multiple_roots --x0 0.5
 """,
     )
 
@@ -125,15 +136,37 @@ Examples:
         help="X-axis range for visualization (default: auto-selected based on function)",
     )
 
-    # Show detailed iteration table at the end
+    # Configuration file
     parser.add_argument(
-        "--show-table",
-        "-t",
-        action="store_true",
-        help="Show detailed iteration table at the end",
+        "--config",
+        type=Path,
+        help="Path to configuration file (JSON or YAML)",
     )
 
     args = parser.parse_args()
+
+    # Load configuration from file if provided
+    if args.config:
+        if not args.config.exists():
+            parser.error(f"Configuration file not found: {args.config}")
+
+        try:
+            with open(args.config) as f:
+                if args.config.suffix.lower() in [".yaml", ".yml"]:
+                    config = yaml.safe_load(f)
+                elif args.config.suffix.lower() == ".json":
+                    config = json.load(f)
+                else:
+                    parser.error("Configuration file must be .yaml, .yml, or .json")
+
+                # Update args with config file values
+                for key, value in config.items():
+                    if hasattr(args, key):
+                        setattr(args, key, value)
+                    else:
+                        parser.error(f"Unknown configuration option: {key}")
+        except Exception as e:
+            parser.error(f"Error reading configuration file: {e}")
 
     # If neither --methods nor --all is specified, default to newton
     if not args.methods and not args.all:
@@ -142,28 +175,30 @@ Examples:
     elif args.all:
         args.methods = list(METHOD_MAP.keys())
 
-    # Get function and derivative for root finding
+    # Get function and derivatives
     f, df = get_test_function(args.function)
+    d2f = None  # Second derivative only needed for some methods
 
     # Use default range if not specified
     if args.xrange is None:
         args.xrange = DEFAULT_RANGES.get(args.function, (-2, 2))
 
     # Create configuration
-    config = RootFinderConfig(
+    config = NumericalMethodConfig(
         func=f,
         derivative=df,
+        method_type="root",  # Always root-finding mode
         tol=args.tol,
         max_iter=args.max_iter,
         x_range=args.xrange,
     )
 
     # Initialize methods
-    methods: List[BaseRootFinder] = []
+    methods: List[BaseNumericalMethod] = []
     for method_name in args.methods:
         method_class = METHOD_MAP[method_name]
 
-        # Get appropriate initial points for this method
+        # Get appropriate initial points
         x0, x1 = get_safe_initial_points(
             f=config.func,
             x_range=config.x_range,
@@ -171,9 +206,14 @@ Examples:
             x0=args.x0[0] if args.x0 else None,
         )
 
-        if method_name in ["secant", "bisection", "regula_falsi"]:
-            methods.append(method_class(config, x0, x1))
+        if method_name in ROOT_FINDING_ONLY:
+            # Methods that need two points
+            if method_name in ["secant", "bisection", "regula_falsi"]:
+                methods.append(method_class(config, x0, x1))
+            else:
+                methods.append(method_class(config, x0))
         else:
+            # Dual-capable methods - don't pass second_derivative since we're in root-finding mode
             methods.append(method_class(config, x0))
 
     # Create visualization configuration
@@ -196,7 +236,7 @@ Examples:
     visualizer = RootFindingVisualizer(config, methods, vis_config)
     visualizer.run_comparison()
 
-    # Show iteration tables
+    # Show iteration tables (always show them)
     for method in methods:
         history = method.get_iteration_history()
         if not history:
@@ -229,26 +269,38 @@ Examples:
         print(tabulate(table_data, headers=headers, floatfmt=".8f"))
         print()
 
-    # Keep the plot window open (user can close it manually)
-    plt.ioff()  # Turn off interactive mode after animation
-    plt.show(block=True)  # Block until user closes the window
+    plt.ioff()
+    plt.show(block=True)
 
 
 if __name__ == "__main__":
     main()
 
 
-# # Use all available methods
-# python find_root.py --all --function quadratic --x0 1.5
+# Example commands:
+# Compare all methods:
+# python find_roots.py --all --function quadratic --x0 1.5
 
-# # Test the stiff function
-# python find_root.py --methods newton --function stiff --x0 0.5
+# Compare root-finding only methods:
+# python find_roots.py --methods bisection secant regula_falsi --function quadratic --x0 1.5
 
-# # Test the multiple roots function
-# python find_root.py --methods newton --function multiple_roots --x0 0.9
+# Compare dual-capable methods:
+# python find_roots.py --methods newton newton_hessian bfgs --function multiple_roots --x0 0.5
 
-# # Test the ill-conditioned function
-# python find_root.py --methods newton --function ill_conditioned --x0 0.5
+# Test challenging functions:
+# python find_roots.py --methods newton bfgs --function stiff --x0 0.5
+# python find_roots.py --methods newton bfgs --function ill_conditioned --x0 0.5
 
-# # Test the trig polynomial
-# python find_root.py --methods newton --function trig_polynomial --x0 1.0
+
+# # Config file examples
+# # Basic example with YAML
+# python find_roots.py --config configs/root_finding.yaml
+
+# # Basic example with JSON
+# python find_roots.py --config configs/root_finding.json
+
+# # Override config file values with command line
+# python find_roots.py --config configs/root_finding.yaml --tol 1.0e-8
+
+# # Note: The test cases in root_finding_tests.yaml would need additional
+# # functionality in find_roots.py to handle multiple test cases

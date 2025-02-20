@@ -1,4 +1,4 @@
-# plot/rootfinder.py
+# plot/root_finder_viz.py
 
 """
 Visualization utilities for comparing root finding methods.
@@ -16,7 +16,7 @@ import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import LineCollection
 
-from algorithms.convex.protocols import RootFinder, RootFinderConfig
+from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
 # Configuration for visualization options like figure size, animation speed, styles, etc.
@@ -45,11 +45,24 @@ class RootFindingVisualizer:
 
     def __init__(
         self,
-        problem: RootFinderConfig,
-        methods: List[RootFinder],
+        problem: NumericalMethodConfig,
+        methods: List[BaseNumericalMethod],
         config: Optional[VisualizationConfig] = None,
     ):
-        # Store the problem, methods, and visualization configuration
+        """
+        Initialize the visualizer.
+
+        Args:
+            problem: Configuration including function, derivative, and tolerances
+            methods: List of root finding methods to compare
+            config: Optional visualization configuration
+
+        Note:
+            Expects problem.method_type to be "root"
+        """
+        if problem.method_type != "root":
+            raise ValueError("RootFindingVisualizer requires method_type='root'")
+
         self.problem = problem
         self.methods = methods
         self.config = config or VisualizationConfig()
@@ -94,7 +107,14 @@ class RootFindingVisualizer:
             color = color_list[i]
             # Plot an initial empty line for each method on the function plot
             (line,) = self.ax_func.plot(
-                [], [], "o-", color=color, label=method.name, linewidth=2, markersize=8
+                [],
+                [],
+                "o-",
+                color=color,
+                label=method.name,
+                linewidth=2,
+                markersize=8,
+                alpha=0.7,  # Add some transparency
             )
             self.method_states[method.name] = {
                 "method": method,
@@ -242,9 +262,10 @@ class RootFindingVisualizer:
 
                     # Update each method's position
                     for name, update in updates.items():
-                        # Linear interpolation between old and new positions
                         x = update["x_old"] * (1 - t) + update["x_new"] * t
                         y = update["y_old"] * (1 - t) + update["y_new"] * t
+                        if name == "Newton's Method":  # Add small offset for one method
+                            y += 0.05
                         self.method_states[name]["line"].set_data([x], [y])
 
                     # Update convergence and error plots
