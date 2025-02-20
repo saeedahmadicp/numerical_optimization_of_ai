@@ -1,36 +1,38 @@
 # algorithms/convex/steepest_descent.py
 
-"""Steepest descent method for root finding."""
+"""Steepest descent method for function minimization."""
 
 from typing import List, Tuple
-import numpy as np
 
-from .protocols import BaseRootFinder, RootFinderConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
-class SteepestDescentMethod(BaseRootFinder):
-    """Implementation of steepest descent method."""
+class SteepestDescentMethod(BaseNumericalMethod):
+    """Implementation of steepest descent method for optimization."""
 
-    def __init__(self, config: RootFinderConfig, x0: float, alpha: float = 0.1):
+    def __init__(self, config: NumericalMethodConfig, x0: float, alpha: float = 0.1):
         """
         Initialize steepest descent method.
 
         Args:
-            config: Configuration including function, derivative, and tolerances.
-            x0: Initial guess.
-            alpha: Learning rate (step size).
+            config: Configuration including function, derivative, and tolerances
+            x0: Initial guess
+            alpha: Learning rate (step size)
 
         Raises:
-            ValueError: If derivative function is not provided in config.
+            ValueError: If derivative function is not provided or method_type is not 'optimize'
         """
-        # Ensure the derivative is provided, as it is needed for the gradient.
+        if config.method_type != "optimize":
+            raise ValueError(
+                "Steepest descent method can only be used for optimization"
+            )
+
         if config.derivative is None:
             raise ValueError("Steepest descent method requires derivative function")
 
-        # Initialize common attributes using the base class.
         super().__init__(config)
-        self.x = x0  # Current approximation of the root.
-        self.alpha = alpha  # Base learning rate (initial step size).
+        self.x = x0
+        self.alpha = alpha
 
     def get_current_x(self) -> float:
         """Get current x value."""
@@ -41,55 +43,42 @@ class SteepestDescentMethod(BaseRootFinder):
         Perform backtracking line search to find a suitable step size.
 
         Args:
-            p: Search direction (typically the negative gradient).
+            p: Search direction (negative gradient)
 
         Returns:
-            A step size that satisfies the Armijo condition.
+            float: Step size that satisfies the Armijo condition
         """
-        c = 1e-4  # Armijo condition parameter.
-        rho = 0.5  # Factor to reduce the step size.
-        alpha = self.alpha  # Start with the initial learning rate.
+        c = 1e-4  # Armijo condition parameter
+        rho = 0.5  # Step size reduction factor
+        alpha = self.alpha
 
-        fx = abs(self.func(self.x))
-        # For scalar problems, adjust the derivative with the sign of f(x).
-        grad_fx = np.sign(self.func(self.x)) * self.derivative(self.x)  # type: ignore
+        fx = self.func(self.x)
+        grad_fx = self.derivative(self.x)  # type: ignore
 
-        # Backtracking: reduce alpha until the Armijo condition is met.
-        while abs(self.func(self.x + alpha * p)) > fx + c * alpha * grad_fx * p:
+        while self.func(self.x + alpha * p) > fx + c * alpha * grad_fx * p:
             alpha *= rho
-            if alpha < 1e-10:  # Prevent alpha from becoming too small.
+            if alpha < 1e-10:
                 break
 
         return alpha
 
     def step(self) -> float:
         """
-        Perform one iteration of the steepest descent method.
+        Perform one iteration of steepest descent.
 
         Returns:
-            float: Current approximation of the root.
+            float: Current approximation of the minimum
         """
-        # If the method has already converged, return the current approximation.
         if self._converged:
             return self.x
 
-        # Store old x value
         x_old = self.x
+        grad = self.derivative(self.x)  # type: ignore
+        p = -grad  # Search direction is negative gradient
 
-        # Evaluate the function at the current approximation.
-        fx = self.func(self.x)
-        # Compute the gradient using the derivative and adjust sign for root finding.
-        grad = np.sign(fx) * self.derivative(self.x)  # type: ignore
-
-        # The search direction is the negative gradient.
-        p = -grad
-
-        # Determine an appropriate step size using backtracking line search.
         alpha = self._backtracking_line_search(p)
 
-        # Store iteration details
         details = {
-            "f(x)": fx,
             "gradient": grad,
             "search_direction": p,
             "step_size": alpha,
@@ -99,17 +88,12 @@ class SteepestDescentMethod(BaseRootFinder):
             },
         }
 
-        # Update the current approximation using the step size and search direction.
         self.x += alpha * p
 
-        # Store iteration data
         self.add_iteration(x_old, self.x, details)
+        self.iterations += 1
 
-        self.iterations += 1  # Increment iteration count.
-
-        # Check for convergence:
-        # If the absolute function value is within tolerance or maximum iterations reached.
-        if abs(fx) <= self.tol or self.iterations >= self.max_iter:
+        if self.get_error() <= self.tol or self.iterations >= self.max_iter:
             self._converged = True
 
         return self.x
@@ -120,7 +104,7 @@ class SteepestDescentMethod(BaseRootFinder):
 
 
 def steepest_descent_search(
-    f: RootFinderConfig,
+    f: NumericalMethodConfig,
     x0: float,
     alpha: float = 0.1,
     tol: float = 1e-6,
@@ -130,52 +114,27 @@ def steepest_descent_search(
     Legacy wrapper for backward compatibility.
 
     Args:
-        f: Function configuration (or function) for the root finder.
-        x0: Initial guess.
-        alpha: Learning rate.
-        tol: Error tolerance.
-        max_iter: Maximum number of iterations.
+        f: Function configuration (or function) for optimization
+        x0: Initial guess
+        alpha: Learning rate
+        tol: Error tolerance
+        max_iter: Maximum number of iterations
 
     Returns:
-        Tuple of (root, errors, iterations), where:
-         - root is the final approximation,
-         - errors is a list of error values for each iteration,
-         - iterations is the number of iterations performed.
+        Tuple of (minimum, errors, iterations)
     """
-    # Create a configuration instance from the provided parameters.
-    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
-    # Instantiate the steepest descent method with the configuration and initial guess.
-    method = SteepestDescentMethod(config, x0, alpha)
+    if callable(f):
+        config = NumericalMethodConfig(
+            func=f, method_type="optimize", tol=tol, max_iter=max_iter
+        )
+    else:
+        config = f
 
-    errors = []  # List to store error values per iteration.
-    # Run iterations until convergence.
+    method = SteepestDescentMethod(config, x0, alpha)
+    errors = []
+
     while not method.has_converged():
         method.step()
         errors.append(method.get_error())
 
-    # Return the final approximation, error history, and iteration count.
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Define the function: f(x) = x^2 - 2, to find sqrt(2)
-#     def f(x):
-#         return x**2 - 2
-#
-#     # Define its derivative: f'(x) = 2x
-#     def df(x):
-#         return 2 * x
-#
-#     # Setup configuration with function, derivative, and tolerance.
-#     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
-#     # Instantiate the method with an initial guess and learning rate.
-#     method = SteepestDescentMethod(config, x0=1.5, alpha=0.1)
-#
-#     # Iterate until convergence.
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")
