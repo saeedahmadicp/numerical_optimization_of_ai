@@ -220,16 +220,16 @@ class OptimizationVisualizer:
         if self.is_2d:
             # Create 2x2 GridSpec with equal sizing
             gs = GridSpec(2, 2, figure=self.fig)
-            
+
             # Top left: 3D surface plot
             self.ax_main = self.fig.add_subplot(gs[0, 0], projection="3d")
-            
+
             # Top right: Path progress plot
             self.ax_progress = self.fig.add_subplot(gs[0, 1])
-            
+
             # Bottom left: Contour plot with gradient field
             self.ax_contour = self.fig.add_subplot(gs[1, 0])
-            
+
             # Bottom right: Error convergence
             self.ax_error = self.fig.add_subplot(gs[1, 1])
         else:

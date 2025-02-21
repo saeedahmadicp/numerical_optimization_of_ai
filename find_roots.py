@@ -4,13 +4,11 @@
 
 import argparse
 from typing import Dict, Type, List
-from tabulate import tabulate
 import matplotlib.pyplot as plt
 import json
 import yaml
 from pathlib import Path
 import pandas as pd
-from openpyxl import Workbook
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
@@ -245,7 +243,7 @@ Examples:
     visualizer = RootFindingVisualizer(config, methods, vis_config)
     visualizer.run_comparison()
 
-    # Show iteration tables or save to Excel
+    # Show final results and save to Excel if requested
     if args.save:
         # Create directory if it doesn't exist
         args.save.mkdir(parents=True, exist_ok=True)
@@ -285,39 +283,23 @@ Examples:
                 df = pd.DataFrame(data)
                 df.to_excel(writer, sheet_name=method.name, index=False)
 
-            print(f"Saved all iteration histories to {filepath}")
-    else:
-        # If --save is not specified, print tables as before
-        for method in methods:
-            history = method.get_iteration_history()
-            if not history:
-                continue
+            print(f"Saved root-finding history to {filepath}")
 
-            # Prepare data for DataFrame
-            data = []
-            for iter_data in history:
-                row = {
-                    "Iteration": iter_data.iteration,
-                    "x_old": f"{iter_data.x_old:.8f}",
-                    "f(x_old)": f"{iter_data.f_old:.8e}",
-                    "x_new": f"{iter_data.x_new:.8f}",
-                    "f(x_new)": f"{iter_data.f_new:.8e}",
-                    "|error|": f"{iter_data.error:.2e}",
-                }
+    # Print final results summary
+    print("\nRoot-Finding Results Summary:")
+    print("-" * 50)
+    for method in methods:
+        x_final = method.get_current_x()
+        f_final = method.func(x_final)
+        iterations = len(method.get_iteration_history())
 
-                # Add method-specific details
-                for key, value in iter_data.details.items():
-                    if isinstance(value, float):
-                        row[key] = f"{value:.6e}"
-                    else:
-                        row[key] = str(value)
-                data.append(row)
-
-            # Create DataFrame and print table
-            df = pd.DataFrame(data)
-            print(f"\n{method.name} Iteration History:")
-            print(tabulate(df.values.tolist(), headers=df.columns, floatfmt=".8f"))
-            print()
+        print(f"\n{method.name}:")
+        print(f"  Iterations: {iterations}")
+        print(f"  Root found: {x_final:.8f}")
+        print(f"  f(root): {f_final:.2e}")
+        print(f"  Converged: {method.has_converged()}")
+        if hasattr(method, "get_convergence_rate"):
+            print(f"  Convergence Rate: {method.get_convergence_rate():.2f}")
 
     plt.ioff()
     plt.show(block=True)
