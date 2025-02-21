@@ -22,7 +22,6 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patheffects as path_effects
 from matplotlib.gridspec import GridSpec
 import matplotlib.ticker as mtick
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 
@@ -454,113 +453,145 @@ class OptimizationVisualizer:
             ax.grid(True, linestyle="--", alpha=0.2)
 
     def run_comparison(self):
-        """Run and visualize the optimization methods."""
-        plt.ion()
+        """Run and visualize the optimization methods with smooth animation."""
+        # Pre-compute ALL data needed for visualization
+        animation_data = {}
+        max_iters = 0
+        for method_id, state in self.method_states.items():
+            history = state["method"].get_iteration_history()
+            points = np.array([iter_data.x_new for iter_data in history])
+            values = np.array([iter_data.f_new for iter_data in history])
+            errors = np.array(
+                [float(np.linalg.norm(iter_data.error)) for iter_data in history]
+            )
 
-        # Reduce drawing frequency - only draw every N iterations
-        draw_interval = 5  # Only draw every 5 iterations
-        draw_counter = 0
+            animation_data[method_id] = {
+                "points": points,
+                "values": values,
+                "errors": errors,
+            }
+            max_iters = max(max_iters, len(points))
 
-        # Disable automatic drawing
-        self.fig.canvas.draw_idle()
-        plt.show(block=False)
+        # Pre-configure progress plot with better scaling
+        if hasattr(self, "ax_progress"):
+            self.ax_progress.clear()
+            self.ax_progress.set_title("Function Value Progress", fontsize=10, pad=5)
+            self.ax_progress.set_xlabel(
+                "Iteration", fontsize=10
+            )  # Changed from Step to Iteration
+            self.ax_progress.set_ylabel("$f(x_k)$", fontsize=10)
+            self.ax_progress.grid(True, linestyle="--", alpha=0.2)
+            self.ax_progress.set_yscale("log")
 
-        # Turn off automatic rendering
-        self.ax_main.set_autoscale_on(False)
-        if self.is_2d and self.config.show_contour:
-            self.ax_contour.set_autoscale_on(False)
-        self.ax_error.set_autoscale_on(False)
+            # Compute better y-limits for progress plot
+            all_values = np.concatenate(
+                [data["values"] for data in animation_data.values()]
+            )
+            min_val = np.min(all_values)
+            max_val = np.max(all_values)
+            if min_val > 0:  # For log scale, ensure positive values
+                self.ax_progress.set_ylim(min_val * 0.1, max_val * 2)
+            else:
+                self.ax_progress.set_ylim(1e-15, max_val * 2)
 
-        # Generate test points and find global minimum
-        if self.problem.is_2d:
-            x = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 100)
-            y = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 100)
-            X, Y = np.meshgrid(x, y)
-            x_test = np.vstack((X.ravel(), Y.ravel())).T
-            f_min = np.min([self.problem.func(x) for x in x_test])
-        else:
-            x_test = np.linspace(self.problem.x_range[0], self.problem.x_range[1], 100)
-            f_min = np.min([self.problem.func(np.array([x])) for x in x_test])
+            # Set x-limits
+            self.ax_progress.set_xlim(-2, max_iters + 2)
 
-        for iteration in range(self.problem.max_iter):
-            any_updated = False
+        # Create line objects for animation
+        lines = {}
+        for method_id, state in self.method_states.items():
+            color = state["color"]
+            label = state["method"].__class__.__name__
 
-            for method_id, state in self.method_states.items():
-                method = state["method"]
-                if not method.has_converged():
-                    any_updated = True
-                    x_new = method.step()
-                    f_new = self.problem.func(x_new)
+            if self.is_2d:
+                lines[method_id] = {
+                    "3d": self.ax_main.plot(
+                        [],
+                        [],
+                        [],
+                        "o-",
+                        color=color,
+                        label=label,
+                        alpha=0.7,
+                        markersize=4,
+                        linewidth=1.5,
+                    )[0],
+                    "contour": self.ax_contour.plot(
+                        [],
+                        [],
+                        "o-",
+                        color=color,
+                        alpha=0.7,
+                        markersize=4,
+                        linewidth=1.5,
+                    )[0],
+                    "error": self.ax_error.plot(
+                        [], [], "-", color=color, linewidth=1.5
+                    )[0],
+                    "progress": self.ax_progress.plot(
+                        [], [], "-", color=color, label=label, linewidth=2
+                    )[
+                        0
+                    ],  # Increased linewidth
+                }
 
-                    # Update progress plot
-                    state["points"].append(x_new)
-                    state["f_values"] = state.get("f_values", []) + [f_new]
-                    iterations = range(len(state["f_values"]))
-                    self.ax_progress.plot(
-                        iterations,
-                        state["f_values"],
-                        color=state["color"],
-                        label=method.__class__.__name__ if iteration == 0 else "",
+        # Add legends with better positioning
+        if self.config.show_legend:
+            self.ax_progress.legend(loc="upper right", bbox_to_anchor=(1, 1))
+            # Only show tolerance line in error plot
+            handles, labels = self.ax_error.get_legend_handles_labels()
+            tolerance_idx = labels.index(f"Tolerance: {self.problem.tol:.0e}")
+            self.ax_error.legend(
+                [handles[tolerance_idx]], [labels[tolerance_idx]], loc="upper right"
+            )
+
+        def update(frame):
+            points_to_show = int((frame / 60) * max_iters)
+
+            for method_id, data in animation_data.items():
+                n_points = min(points_to_show, len(data["points"]))
+                if n_points == 0:
+                    continue
+
+                method_lines = lines[method_id]
+                if self.is_2d:
+                    # Update 3D and contour lines
+                    method_lines["3d"].set_data(
+                        data["points"][:n_points, 0], data["points"][:n_points, 1]
+                    )
+                    method_lines["3d"].set_3d_properties(data["values"][:n_points])
+
+                    method_lines["contour"].set_data(
+                        data["points"][:n_points, 0], data["points"][:n_points, 1]
                     )
 
-                    # Get error as scalar (gradient norm for optimization)
-                    error = float(np.linalg.norm(method.derivative(x_new)))
+                    # Update progress and error lines
+                    method_lines["progress"].set_data(
+                        range(n_points), data["values"][:n_points]
+                    )
 
-                    state["errors"].append(error)
+                    method_lines["error"].set_data(
+                        range(n_points), data["errors"][:n_points]
+                    )
 
-                    # Update optimization path
-                    points = np.array(state["points"])
-                    values = np.array([self.problem.func(p) for p in points])
+            return [
+                line
+                for method_lines in lines.values()
+                for line in method_lines.values()
+            ]
 
-                    if self.is_2d:
-                        # Update 3D path and contour
-                        state["line"].set_data(points[:, 0], points[:, 1])
-                        state["line"].set_3d_properties(values)
-                        if state["contour_line"]:
-                            state["contour_line"].set_data(points[:, 0], points[:, 1])
-                    else:
-                        # Update 1D path
-                        state["line"].set_data(points.ravel(), values)
+        # Create animation with adjusted timing
+        from matplotlib.animation import FuncAnimation
 
-                    # Update error plot with iteration numbers
-                    errors = np.array(state["errors"])
-                    self.error_lines[method_id].set_data(iterations, errors)
+        anim = FuncAnimation(
+            self.fig,
+            update,
+            frames=60,
+            interval=100,  # Increased interval for smoother animation
+            blit=True,
+            repeat=False,
+        )
 
-            if any_updated:
-                draw_counter += 1
-                if draw_counter >= draw_interval:
-                    # Batch update all artists
-                    if self.is_2d:
-                        self.ax_main.draw_artist(self.surface)
-                        for state in self.method_states.values():
-                            self.ax_main.draw_artist(state["line"])
-                            if state["contour_line"]:
-                                self.ax_contour.draw_artist(state["contour_line"])
-                    else:
-                        self.ax_main.draw_artist(self.function_line)
-                        for state in self.method_states.values():
-                            self.ax_main.draw_artist(state["line"])
-
-                    # Update error lines
-                    for line in self.error_lines.values():
-                        self.ax_error.draw_artist(line)
-
-                    # Fast update of the canvas
-                    self.fig.canvas.flush_events()
-                    draw_counter = 0
-
-                # Update progress plot
-                self.ax_progress.relim()
-                self.ax_progress.autoscale_view()
-                # Remove legend from progress plot
-                # if iteration == 0:
-                #     self.ax_progress.legend()
-
-            if all(method.has_converged() for method in self.methods):
-                break
-
-        # Final update
-        self.fig.canvas.draw()
         plt.show(block=True)
 
     def _update_plot_limits(self):

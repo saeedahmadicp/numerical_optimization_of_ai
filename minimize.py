@@ -210,50 +210,61 @@ Examples:
     methods: List[BaseNumericalMethod] = []
     for method_name in args.methods:
         method_class = METHOD_MAP[method_name]
-        x0 = np.array(args.x0, dtype=float)  # Ensure numpy array with float type
+        x0 = np.array(args.x0, dtype=float)
 
         if method_name in OPTIMIZATION_ONLY:
             methods.append(method_class(config, x0))
         else:
-            # Dual-capable methods - pass second_derivative for methods that need it
             if method_name in ["newton", "newton_hessian"]:
                 methods.append(method_class(config, x0, second_derivative=d2f))
             else:
                 methods.append(method_class(config, x0))
 
-    # Create visualization configuration
-    vis_config = VisualizationConfig(
-        figsize=(12, 8),
-        show_convergence=True,
-        show_error=True,
-        show_contour=True if is_2d else False,
-        style="white",
-        context="talk",
-        palette="viridis",
-        animation_interval=1 if args.fast else 50,  # Super fast in fast mode
-    )
+    # First, run all optimizations to completion
+    print("\nRunning optimizations...")
+    for method in methods:
+        while (
+            not method.has_converged()
+            and len(method.get_iteration_history()) < config.max_iter
+        ):
+            method.step()
 
-    # Create and run visualizer
-    visualizer = OptimizationVisualizer(config, methods, vis_config)
-    visualizer.run_comparison()
+        # Print immediate feedback about convergence
+        print(
+            f"{method.name}: {'Converged' if method.has_converged() else 'Did not converge'}"
+        )
 
-    # Show final results and save to Excel if requested
+    # Print final results summary
+    print("\nOptimization Results Summary:")
+    print("-" * 50)
+    for method in methods:
+        x_final = method.get_current_x()
+        f_final = method.func(x_final)
+        grad_final = np.linalg.norm(method.derivative(x_final))
+        iterations = len(method.get_iteration_history())
+
+        print(f"\n{method.name}:")
+        print(f"  Iterations: {iterations}")
+        if len(x_final) == 1:
+            print(f"  Final x: {x_final[0]:.8f}")
+        else:
+            print(f"  Final x: [{', '.join(f'{x:.8f}' for x in x_final)}]")
+        print(f"  Final f(x): {f_final:.8e}")
+        print(f"  Final |∇f(x)|: {grad_final:.2e}")
+        print(f"  Converged: {method.has_converged()}")
+
+    # Save results if requested
     if args.save:
-        # Create directory if it doesn't exist
         args.save.mkdir(parents=True, exist_ok=True)
-
-        # Generate filename based on function
         filename = f"{args.function}_optimization_history.xlsx"
         filepath = args.save / filename
 
-        # Create Excel writer
         with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
             for method in methods:
                 history = method.get_iteration_history()
                 if not history:
                     continue
 
-                # Prepare data for DataFrame
                 data = []
                 for iter_data in history:
                     # Format x_old and x_new based on dimensionality
@@ -303,30 +314,27 @@ Examples:
                             row[key] = str(value)
                     data.append(row)
 
-                # Create DataFrame and save to Excel sheet
                 df = pd.DataFrame(data)
                 df.to_excel(writer, sheet_name=method.name, index=False)
 
-            print(f"Saved optimization history to {filepath}")
+            print(f"\nSaved optimization history to {filepath}")
 
-    # Print final results summary
-    print("\nOptimization Results Summary:")
-    print("-" * 50)
-    for method in methods:
-        x_final = method.get_current_x()
-        f_final = method.func(x_final)
-        grad_final = np.linalg.norm(method.derivative(x_final))
-        iterations = len(method.get_iteration_history())
+    # Create visualization configuration with fast animation
+    vis_config = VisualizationConfig(
+        figsize=(12, 8),
+        show_convergence=True,
+        show_error=True,
+        show_contour=True if is_2d else False,
+        style="white",
+        context="talk",
+        palette="viridis",
+        animation_interval=1,  # Always use fast mode for replay
+    )
 
-        print(f"\n{method.name}:")
-        print(f"  Iterations: {iterations}")
-        if len(x_final) == 1:
-            print(f"  Final x: {x_final[0]:.8f}")
-        else:
-            print(f"  Final x: [{', '.join(f'{x:.8f}' for x in x_final)}]")
-        print(f"  Final f(x): {f_final:.8e}")
-        print(f"  Final |∇f(x)|: {grad_final:.2e}")
-        print(f"  Converged: {method.has_converged()}")
+    # Now create and run visualizer with pre-computed results
+    print("\nGenerating visualization...")
+    visualizer = OptimizationVisualizer(config, methods, vis_config)
+    visualizer.run_comparison()
 
     plt.ioff()
     plt.show(block=True)
