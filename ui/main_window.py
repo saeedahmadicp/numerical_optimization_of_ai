@@ -19,13 +19,17 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QTextEdit,
 )
-from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap, QImage
 import numpy as np
 from sympy import sympify, symbols, diff, lambdify
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import traceback
+import matplotlib.pyplot as plt
+from matplotlib import patheffects
+import re
+from io import BytesIO
 
 from .optimization import METHOD_MAP, run_optimization
 
@@ -35,19 +39,48 @@ class FunctionInput(QGroupBox):
 
     def __init__(self, parent=None):
         super().__init__("Function Definition", parent)
+        self._latex_update_timer = QTimer()
+        self._latex_update_timer.setSingleShot(True)
+        self._latex_update_timer.timeout.connect(self._update_latex_display)
         self.setup_ui()
         self.update_derivative_requirements("Newton's Method")  # Default method
 
     def setup_ui(self):
         layout = QVBoxLayout()
+        layout.setSpacing(15)  # Add spacing between elements
 
-        # Function input
+        # Function input section
+        input_layout = QHBoxLayout()
+        func_label = QLabel("f(x) =")
+        func_label.setStyleSheet("color: #00ffff; font-weight: bold;")
+        input_layout.addWidget(func_label)
+
         self.func_input = QLineEdit()
         # Himmelblau function as default
         self.func_input.setText("(x1**2 + x2 - 11)**2 + (x1 + x2**2 - 7)**2")
-        self.func_input.setPlaceholderText("e.g., x1**2 + x2**2")
-        layout.addWidget(QLabel("f(x) ="))
-        layout.addWidget(self.func_input)
+        self.func_input.setPlaceholderText(
+            "Python-compatible function, e.g., x1**2 + x2**2"
+        )
+        self.func_input.textChanged.connect(self._schedule_latex_update)
+        input_layout.addWidget(self.func_input)
+        layout.addLayout(input_layout)
+
+        # LaTeX display
+        self.latex_display = QLabel()
+        self.latex_display.setStyleSheet(
+            """
+            QLabel {
+                background-color: #242935;
+                border: 2px solid #4a4a4a;
+                border-radius: 6px;
+                padding: 20px;
+                min-height: 120px;
+                margin: 10px 0;
+            }
+        """
+        )
+        self.latex_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.latex_display)
 
         # Variable inputs and initial guess
         var_layout = QHBoxLayout()
@@ -107,6 +140,127 @@ class FunctionInput(QGroupBox):
         layout.addWidget(deriv_group)
 
         self.setLayout(layout)
+
+        # Initial LaTeX render
+        self._update_latex_display()
+
+    def _schedule_latex_update(self):
+        """Schedule a LaTeX update after a short delay to prevent excessive updates."""
+        self._latex_update_timer.start(500)  # 500ms delay
+
+    def _update_latex_display(self):
+        """Update the LaTeX display with the current function."""
+        try:
+            # Get the function text and convert Python notation to LaTeX
+            func_text = self.func_input.text()
+
+            # Basic replacements for common mathematical notation
+            latex_text = func_text
+
+            # Handle parentheses groups first
+            def replace_in_parentheses(match):
+                content = match.group(1)
+                # Handle powers inside parentheses
+                content = re.sub(r"\*\*(\d+)", r"^{\1}", content)
+                return f"({content})"
+
+            # Replace contents in parentheses
+            latex_text = re.sub(r"\(([^()]+)\)", replace_in_parentheses, latex_text)
+
+            # Handle remaining powers
+            latex_text = re.sub(r"\*\*(\d+)", r"^{\1}", latex_text)
+
+            # Handle multiplication
+            latex_text = re.sub(r"(?<=\d)\*", r" \\cdot ", latex_text)  # Number * ...
+            latex_text = re.sub(r"\*(?=\d)", r" \\cdot ", latex_text)  # ... * Number
+            latex_text = re.sub(r"(?<=[x])\*", r" \\cdot ", latex_text)  # x * ...
+            latex_text = re.sub(r"\*(?=[x])", r" \\cdot ", latex_text)  # ... * x
+            latex_text = re.sub(r"\*", r" \\cdot ", latex_text)  # Remaining *
+
+            # Handle variables with subscripts
+            latex_text = re.sub(r"x1", r"x_1", latex_text)
+            latex_text = re.sub(r"x2", r"x_2", latex_text)
+
+            # Remove extra spaces around operators
+            latex_text = re.sub(r"\s*([+\-])\s*", r" \1 ", latex_text)
+            latex_text = re.sub(r"\s*\\cdot\s*", r" \\cdot ", latex_text)
+
+            # Create a figure with fixed size
+            width = self.latex_display.width() / 80  # Adjusted for better scaling
+            height = 2.0  # Increased height
+            fig = Figure(figsize=(width, height))
+            fig.patch.set_facecolor("#242935")
+
+            # Create axes that fill the figure
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.set_axis_off()
+            ax.set_facecolor("#242935")
+
+            # Render the LaTeX equation
+            eq = ax.text(
+                0.5,
+                0.5,
+                f"$f(x) = {latex_text}$",
+                color="#00ffff",
+                fontsize=24,  # Significantly increased font size
+                horizontalalignment="center",
+                verticalalignment="center",
+                fontweight="bold",
+            )  # Made text bold
+
+            # Add a stronger glow effect
+            eq.set_path_effects(
+                [
+                    patheffects.withStroke(linewidth=4, foreground="#242935"),
+                    patheffects.Normal(),
+                    patheffects.withStroke(
+                        linewidth=2, foreground="#00ffff", alpha=0.3
+                    ),  # Added subtle cyan glow
+                ]
+            )
+
+            # Convert matplotlib figure to QPixmap with higher DPI
+            buf = BytesIO()
+            fig.savefig(
+                buf,
+                format="png",
+                facecolor="#242935",
+                transparent=True,
+                bbox_inches="tight",
+                pad_inches=0.3,
+                dpi=200,
+            )  # Increased DPI and padding
+            buf.seek(0)
+
+            # Create QImage from buffer
+            image = QImage.fromData(buf.getvalue())
+            pixmap = QPixmap.fromImage(image)
+
+            # Set a fixed height for the label while maintaining aspect ratio
+            fixed_height = 120  # Increased height
+            scaled_pixmap = pixmap.scaledToHeight(
+                fixed_height, Qt.TransformationMode.SmoothTransformation
+            )
+
+            # Update the label
+            self.latex_display.setPixmap(scaled_pixmap)
+
+            # Clean up
+            plt.close(fig)
+            buf.close()
+
+        except Exception as e:
+            # If there's an error, show a simple message
+            self.latex_display.setText("Invalid expression")
+            print(f"LaTeX rendering error: {str(e)}")
+            traceback.print_exc()
+
+    def resizeEvent(self, event):
+        """Handle resize events to update the LaTeX display size."""
+        super().resizeEvent(event)
+        # Only update if we have a valid pixmap
+        if not self.latex_display.pixmap().isNull():
+            self._update_latex_display()
 
     def update_derivative_requirements(self, method_name):
         """Update derivative checkboxes based on method requirements."""
@@ -224,7 +378,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Numerical Methods Visualizer")
+        self.setWindowTitle(
+            "Numerical Methods Visualizer (use full screen - recommended)"
+        )
         self.optimization_result = None
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self.update_animation)
@@ -242,38 +398,72 @@ class MainWindow(QMainWindow):
         # Left panel for inputs
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
+        left_layout.setSpacing(20)  # Add spacing between major sections
+        left_layout.setContentsMargins(10, 10, 10, 10)  # Add margins around the panel
 
         # Add function input widget
         self.func_input = FunctionInput()
         left_layout.addWidget(self.func_input)
 
+        # Add vertical spacing
+        left_layout.addSpacing(10)
+
         # Add method selector widget
         self.method_selector = MethodSelector()
         left_layout.addWidget(self.method_selector)
+
+        # Add vertical spacing
+        left_layout.addSpacing(10)
 
         # Connect method change to derivative requirements update
         self.method_selector.method_combo.currentTextChanged.connect(
             self.func_input.update_derivative_requirements
         )
 
-        # Add solve button
+        # Add solve button with spacing
         button_layout = QHBoxLayout()
+        button_layout.addSpacing(10)
         self.solve_btn = QPushButton("Solve")
+        self.solve_btn.setFixedHeight(40)  # Make button taller
         button_layout.addWidget(self.solve_btn)
+        button_layout.addSpacing(10)
         left_layout.addLayout(button_layout)
 
-        # Add results text area
+        # Add vertical spacing
+        left_layout.addSpacing(20)
+
+        # Add results section with header
+        results_header = QLabel("Results:")
+        results_header.setStyleSheet(
+            "color: #00ffff; font-weight: bold; font-size: 12px;"
+        )
+        left_layout.addWidget(results_header)
+
         self.results_text = QTextEdit()
         self.results_text.setReadOnly(True)
-        self.results_text.setMaximumHeight(150)
-        left_layout.addWidget(QLabel("Results:"))
+        self.results_text.setMinimumHeight(150)  # Set minimum height
+        self.results_text.setStyleSheet(
+            """
+            QTextEdit {
+                border: 1px solid #4a4a4a;
+                border-radius: 4px;
+                padding: 8px;
+                background-color: #242935;
+                color: #ffffff;
+            }
+        """
+        )
         left_layout.addWidget(self.results_text)
+
+        # Add stretch at the bottom to push everything up
+        left_layout.addStretch()
 
         # Add left panel to main layout
         layout.addWidget(left_panel, stretch=1)
 
         # Right panel for visualization
         right_panel = QTabWidget()
+        layout.addWidget(right_panel, stretch=2)
 
         # Add visualization tabs
         self.surface_plot = FigureCanvasQTAgg(Figure())
@@ -283,9 +473,6 @@ class MainWindow(QMainWindow):
 
         right_panel.addTab(self.surface_plot, "Surface Plot")
         right_panel.addTab(self.convergence_plot, "Convergence")
-
-        # Add right panel to main layout
-        layout.addWidget(right_panel, stretch=2)
 
         # Connect signal
         self.solve_btn.clicked.connect(self.solve)
@@ -588,9 +775,6 @@ class MainWindow(QMainWindow):
                         return np.array(raw_hessian(x[0], x[1]))
                     return np.array(raw_hessian(x[0], x[1]))
 
-            else:
-                hessian = None
-
             # Store raw function for plotting
             self.raw_func = raw_func
             return func, grad, hessian
@@ -628,45 +812,45 @@ class MainWindow(QMainWindow):
         x1_min, x1_max = bounds[0]
         x2_min, x2_max = bounds[1]
 
-        # Create a finer mesh for smoother plotting
-        x1 = np.linspace(x1_min, x1_max, 150)  # Increased resolution
-        x2 = np.linspace(x2_min, x2_max, 150)
+        # Reduce mesh resolution for better performance
+        x1 = np.linspace(x1_min, x1_max, 50)  # Reduced from 150 to 50
+        x2 = np.linspace(x2_min, x2_max, 50)
         X1, X2 = np.meshgrid(x1, x2)
-        Z = plot_func(X1, X2)  # Use raw function for surface plot
+        Z = plot_func(X1, X2)
 
-        # Add contour plot at the bottom with enhanced visibility
-        offset = np.min(Z) - 0.2 * (np.max(Z) - np.min(Z))  # Increased offset
+        # Add simplified contour plot with more vibrant colors
+        offset = np.min(Z) - 0.2 * (np.max(Z) - np.min(Z))
         contours = self.surface_ax.contour(
             X1,
             X2,
             Z,
             zdir="z",
             offset=offset,
-            levels=30,  # Increased number of levels
-            cmap="viridis",
-            alpha=0.7,  # Increased opacity
-            linewidths=2,  # Thicker contour lines
+            levels=15,
+            cmap="plasma",  # Match surface colormap
+            alpha=0.7,  # Increased visibility
+            linewidths=1.5,  # Slightly thicker lines
         )
 
-        # Plot the surface with enhanced styling
+        # Plot surface with optimized parameters
         surf = self.surface_ax.plot_surface(
             X1,
             X2,
             Z,
-            cmap="viridis",
+            cmap="plasma",  # Changed from viridis to plasma for more vibrant colors
             alpha=0.8,
-            linewidth=0.5,
+            linewidth=0,
             antialiased=True,
-            rstride=2,
-            cstride=2,
+            rcount=30,
+            ccount=30,
         )
 
-        # Add color bar with better positioning
-        cbar = self.surface_plot.figure.colorbar(
-            surf, shrink=0.8, aspect=15, pad=0.1  # Adjusted aspect ratio
-        )
-        cbar.ax.tick_params(colors=self.plot_colors["text"])
-        cbar.set_label("Function Value", color=self.plot_colors["text"], fontsize=10)
+        # Enhanced colorbar
+        cbar = self.surface_plot.figure.colorbar(surf, shrink=0.8, aspect=15, pad=0.1)
+        cbar.ax.tick_params(colors=self.plot_colors["text"], labelsize=10)
+        cbar.set_label(
+            "Function Value", color="#00ffff", fontsize=12, weight="bold"
+        )  # Bright cyan
 
         # Initialize empty lists for legend handles and labels
         legend_handles = []
@@ -674,94 +858,129 @@ class MainWindow(QMainWindow):
 
         if self.optimization_result is not None:
             path = np.array(self.optimization_result["path"])
-            z_path = np.array(
-                [opt_func(p) for p in path]
-            )  # Use wrapped function for path
+            z_path = np.array([opt_func(p) for p in path])
 
-            # Plot optimization path with gradient color
+            # Plot optimization path with enhanced visibility
             path_points = self.surface_ax.scatter(
                 path[:, 0],
                 path[:, 1],
                 z_path,
                 c=range(len(path)),
-                cmap="Reds",
-                s=50,
-                alpha=1.0,
+                cmap="magma",  # Changed to magma for better contrast
+                s=60,  # Increased point size
+                alpha=1.0,  # Full opacity
+                zorder=100,  # Ensure points are drawn on top
             )
             legend_handles.append(path_points)
             legend_labels.append("Optimization path")
 
-            # Add lines connecting the points
+            # Add path lines with gradient color
             for i in range(len(path) - 1):
-                self.surface_ax.plot(
+                # Calculate color based on progress
+                progress = i / (len(path) - 1)
+                color = plt.cm.magma(progress)
+                self.surface_ax.plot3D(
                     [path[i, 0], path[i + 1, 0]],
                     [path[i, 1], path[i + 1, 1]],
                     [z_path[i], z_path[i + 1]],
-                    color="red",
-                    alpha=0.3,
-                    linewidth=1,
+                    color=color,
+                    linewidth=3,  # Thicker lines
+                    alpha=0.9,  # More visible
+                    zorder=99,  # Draw lines below points but above surface
                 )
 
-            # Highlight start and end points
+            # Highlight start and end points with more prominent markers
             start_point = self.surface_ax.scatter(
                 path[0, 0],
                 path[0, 1],
                 z_path[0],
-                color="green",
-                s=150,  # Increased size
+                color="#00ff00",  # Bright green
+                s=200,  # Larger marker
                 marker="^",
+                linewidth=2,
+                edgecolor="white",
+                zorder=101,  # Ensure start point is on top
+                label="Start",
             )
             end_point = self.surface_ax.scatter(
                 path[-1, 0],
                 path[-1, 1],
                 z_path[-1],
-                color="red",
-                s=150,  # Increased size
+                color="#ff0000",  # Bright red
+                s=200,  # Larger marker
                 marker="*",
+                linewidth=2,
+                edgecolor="white",
+                zorder=101,  # Ensure end point is on top
+                label="End",
             )
             legend_handles.extend([start_point, end_point])
             legend_labels.extend(["Start", "End"])
 
-        # Enhance the appearance
-        self.surface_ax.set_xlabel("x1", labelpad=10, color=self.plot_colors["text"])
-        self.surface_ax.set_ylabel("x2", labelpad=10, color=self.plot_colors["text"])
+        # Enhanced axis labels
+        self.surface_ax.set_xlabel(
+            "x1", labelpad=10, color="#00ffff", fontsize=12, weight="bold"
+        )  # Bright cyan
+        self.surface_ax.set_ylabel(
+            "x2", labelpad=10, color="#00ffff", fontsize=12, weight="bold"
+        )  # Bright cyan
         self.surface_ax.set_zlabel(
-            "f(x1, x2)", labelpad=10, color=self.plot_colors["text"]
-        )
+            "f(x1, x2)", labelpad=10, color="#00ffff", fontsize=12, weight="bold"
+        )  # Bright cyan
 
-        # Set better viewing angle
-        self.surface_ax.view_init(elev=25, azim=45)  # Adjusted viewing angle
+        # Enhanced tick labels
+        self.surface_ax.tick_params(colors="#00ffff", labelsize=10)  # Bright cyan
 
-        # Add grid with custom styling
+        # Enhanced grid
         self.surface_ax.grid(
-            True, linestyle="--", alpha=0.3, color=self.plot_colors["grid"]
-        )
+            True, linestyle="--", alpha=0.3, color="#4a4a4a"
+        )  # Brighter grid
 
-        # Customize axis appearance
+        # Enhanced axis panes
         for axis in [
             self.surface_ax.xaxis,
             self.surface_ax.yaxis,
             self.surface_ax.zaxis,
         ]:
             axis.pane.fill = False
-            axis.pane.set_edgecolor(self.plot_colors["grid"])
+            axis.pane.set_edgecolor("#4a4a4a")  # Brighter pane edges
             axis.pane.set_alpha(0.3)
-            axis.label.set_color(self.plot_colors["text"])
+            axis.label.set_color("#00ffff")  # Bright cyan
 
-        # Add legend only once with custom styling
+        # Enhanced legend with better visibility
         if legend_handles:
-            self.surface_ax.legend(
+            legend = self.surface_ax.legend(
                 legend_handles,
                 legend_labels,
-                loc="upper right",
-                bbox_to_anchor=(0.98, 0.98),
+                loc="upper center",  # Position at the top center
+                bbox_to_anchor=(0.5, 1.15),  # Move above the plot
                 facecolor=self.plot_colors["surface"],
-                edgecolor=self.plot_colors["grid"],
-                labelcolor=self.plot_colors["text"],
+                edgecolor="#4a4a4a",  # Brighter edge
+                labelcolor="#00ffff",  # Bright cyan
+                fontsize=12,  # Larger font
+                framealpha=0.8,  # More opaque background
+                borderpad=2,  # More padding
+                handletextpad=2,  # More space between handles and text
+                markerscale=1.5,  # Larger legend markers
+                ncol=3,  # Display items in 3 columns for better horizontal layout
             )
+            # Add a bright border around legend text
+            for text in legend.get_texts():
+                text.set_path_effects(
+                    [
+                        patheffects.withStroke(
+                            linewidth=3, foreground=self.plot_colors["background"]
+                        )
+                    ]
+                )
 
-        # Adjust layout to prevent clipping
-        self.surface_plot.figure.tight_layout()
+        # Adjust layout to accommodate legend at the top
+        self.surface_plot.figure.subplots_adjust(
+            top=0.85
+        )  # Make room for legend at top
+
+        # Enable mouse rotation with instant feedback
+        self.surface_plot.figure.canvas.draw_idle()
         self.surface_plot.draw()
 
     def update_convergence_plot(self):
