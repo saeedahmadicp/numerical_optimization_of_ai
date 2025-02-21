@@ -66,7 +66,3 @@ except ValueError as e:
 
 1. Burden, R. L., & Faires, J. D. (2011). Numerical Analysis (9th ed.)
 2. Press, W. H., et al. (2007). Numerical Recipes (3rd ed.)
-
-## License
-
-MIT License - See repository root for details

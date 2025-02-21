@@ -112,27 +112,3 @@ def trust_region_method(
             history.append(x.copy())
 
     return x, history
-
-
-# if __name__ == "__main__":
-#     # Example usage
-#     A = np.array([[3, 0.5], [0.5, 1]])
-#     b = np.array([1, 2])
-
-#     def f(x):
-#         return 0.5 * np.dot(x, A @ x) - np.dot(b, x)
-
-#     def grad_f(x):
-#         return A @ x - b
-
-#     def hess_f(x):
-#         return A
-
-#     x0 = np.array([0.0, 0.0])
-#     x_final, history = trust_region_method(f, grad_f, hess_f, x0)
-
-#     print("Trust Region Example:")
-#     print(f"Initial point: {x0}")
-#     print(f"Final point: {x_final}")
-#     print(f"Function value decreased from {f(x0):.6f} to {f(x_final):.6f}")
-#     print(f"Number of iterations: {len(history)-1}")

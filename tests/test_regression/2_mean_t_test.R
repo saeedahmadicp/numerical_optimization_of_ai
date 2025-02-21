@@ -1,3 +1,5 @@
+# tests/test_regression/2_mean_t_test.R
+
 # Function to check normality assumption using QQ plot and Shapiro-Wilk test
 check_normality <- function(data) {
   tryCatch({

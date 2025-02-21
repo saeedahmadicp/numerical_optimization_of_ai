@@ -45,27 +45,3 @@ def backtracking_line_search(
         alpha *= rho
 
     return alpha
-
-
-# if __name__ == "__main__":
-#     # Example usage
-#     A = np.array([[3, 0.5], [0.5, 1]])
-#     b = np.array([1, 2])
-
-#     def f(x):
-#         return 0.5 * np.dot(x, A @ x) - np.dot(b, x)
-
-#     def grad_f(x):
-#         return A @ x - b
-
-#     x0 = np.array([0.0, 0.0])
-#     pk = -grad_f(x0)  # Steepest descent direction
-
-#     alpha = backtracking_line_search(f, grad_f, x0, pk)
-#     x_new = x0 + alpha * pk
-
-#     print("Line Search Example:")
-#     print(f"Initial point: {x0}")
-#     print(f"Step size alpha: {alpha}")
-#     print(f"New point: {x_new}")
-#     print(f"Function value decreased from {f(x0):.6f} to {f(x_new):.6f}")
