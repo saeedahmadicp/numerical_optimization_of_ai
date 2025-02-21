@@ -99,7 +99,7 @@ Examples:
     parser.add_argument(
         "--tol",
         type=float,
-        default=1e-6,
+        default=1e-5,
         help="Convergence tolerance",
     )
     parser.add_argument(

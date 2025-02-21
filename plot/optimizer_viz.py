@@ -158,9 +158,24 @@ class OptimizationVisualizer:
                 )[0]
                 contour_line = None
 
-            # Enhanced error line styling
-            error_line = self.ax_error.plot(
-                [], [], "-", color=color, label=name, linewidth=2.5, alpha=0.9
+            # Enhanced convergence metrics styling
+            grad_norm_line = self.ax_convergence.plot(
+                [],
+                [],
+                "-",
+                color=color,
+                label=f"{name} (Grad Norm)",
+                linewidth=2.5,
+                alpha=0.9,
+            )[0]
+            differences_line = self.ax_convergence.plot(
+                [],
+                [],
+                "--",
+                color=color,
+                label=f"{name} (Step Size)",
+                linewidth=2.5,
+                alpha=0.7,
             )[0]
 
             self.method_states[method_id] = {
@@ -171,24 +186,34 @@ class OptimizationVisualizer:
                 "points": [],
                 "errors": [],
             }
-            self.error_lines[method_id] = error_line
+            self.error_lines[method_id] = {
+                "grad_norm": grad_norm_line,
+                "differences": differences_line,
+            }
 
-        # Enhanced legend styling - only show in error plot
+        # Enhanced legend styling
         if self.config.show_legend:
             legend_style = dict(
                 framealpha=0.9, edgecolor="0.8", fancybox=True, shadow=True
             )
-            # Remove legend from main plot
-            # self.ax_main.legend(loc="upper right", **legend_style)
-            self.ax_error.legend(loc="upper right", **legend_style)
+            self.ax_convergence.legend(loc="upper right", **legend_style)
 
-        # Enhanced error plot styling
-        self.ax_error.set_xlabel("Iteration")
-        self.ax_error.set_ylabel("Error")
-        self.ax_error.grid(True, alpha=0.2)
-        self.ax_error.set_yscale("log")
-        self.ax_error.set_xlim(-1, self.problem.max_iter)
-        self.ax_error.set_ylim(1e-8, 1e2)
+        # Enhanced convergence plot styling
+        self.ax_convergence.set_xlabel("Iteration")
+        self.ax_convergence.set_ylabel("Convergence Metrics")
+        self.ax_convergence.grid(True, alpha=0.2)
+        self.ax_convergence.set_yscale("log")
+        self.ax_convergence.set_xlim(-1, self.problem.max_iter)
+        self.ax_convergence.set_ylim(1e-8, 1e2)
+
+        # Add tolerance line
+        self.ax_convergence.axhline(
+            y=self.problem.tol,
+            color="g",
+            linestyle="--",
+            alpha=0.5,
+            label=f"Tolerance: {self.problem.tol:.0e}",
+        )
 
         # Plot function
         self.plot_function()
@@ -229,12 +254,12 @@ class OptimizationVisualizer:
             # Bottom left: Contour plot with gradient field
             self.ax_contour = self.fig.add_subplot(gs[1, 0])
 
-            # Bottom right: Error convergence
-            self.ax_error = self.fig.add_subplot(gs[1, 1])
+            # Bottom right: Combined convergence metrics
+            self.ax_convergence = self.fig.add_subplot(gs[1, 1])
         else:
             gs = GridSpec(2, 1, height_ratios=[2, 1], figure=self.fig)
             self.ax_main = self.fig.add_subplot(gs[0])
-            self.ax_error = self.fig.add_subplot(gs[1])
+            self.ax_convergence = self.fig.add_subplot(gs[1])
 
         # Remove the main title
         # self.fig.suptitle(self.config.title, y=0.95)
@@ -431,16 +456,16 @@ class OptimizationVisualizer:
             quiver_cbar.set_label("Gradient Magnitude", fontsize=8)
 
         # 4. Error plot (bottom right)
-        self.ax_error.set_title("Gradient Norm Convergence", fontsize=10, pad=5)
-        self.ax_error.set_xlabel("Iteration", fontsize=10)
-        self.ax_error.set_ylabel(
+        self.ax_convergence.set_title("Gradient Norm Convergence", fontsize=10, pad=5)
+        self.ax_convergence.set_xlabel("Iteration", fontsize=10)
+        self.ax_convergence.set_ylabel(
             "$\\| \\nabla f(x_k) \\|$", fontsize=10
         )  # Gradient norm notation
-        self.ax_error.grid(True, linestyle="--", alpha=0.2)
-        self.ax_error.set_yscale("log")
+        self.ax_convergence.grid(True, linestyle="--", alpha=0.2)
+        self.ax_convergence.set_yscale("log")
 
         # Add reference line for tolerance
-        self.ax_error.axhline(
+        self.ax_convergence.axhline(
             y=self.problem.tol,
             color="g",
             linestyle="--",
@@ -465,37 +490,69 @@ class OptimizationVisualizer:
                 [float(np.linalg.norm(iter_data.error)) for iter_data in history]
             )
 
+            # Calculate consecutive iterate differences
+            differences = np.array(
+                [
+                    np.linalg.norm(points[i] - points[i - 1])
+                    for i in range(1, len(points))
+                ]
+            )
+
             animation_data[method_id] = {
                 "points": points,
                 "values": values,
                 "errors": errors,
+                "differences": differences,
             }
             max_iters = max(max_iters, len(points))
 
-        # Pre-configure progress plot with better scaling
-        if hasattr(self, "ax_progress"):
-            self.ax_progress.clear()
-            self.ax_progress.set_title("Function Value Progress", fontsize=10, pad=5)
-            self.ax_progress.set_xlabel(
-                "Iteration", fontsize=10
-            )  # Changed from Step to Iteration
-            self.ax_progress.set_ylabel("$f(x_k)$", fontsize=10)
-            self.ax_progress.grid(True, linestyle="--", alpha=0.2)
-            self.ax_progress.set_yscale("log")
+        # Configure function value progress plot
+        self.ax_progress.clear()
+        self.ax_progress.set_title("Function Value Progress", fontsize=10, pad=5)
+        self.ax_progress.set_xlabel("Iteration", fontsize=10)
+        self.ax_progress.set_ylabel("$f(x_k)$", fontsize=10)
+        self.ax_progress.grid(True, linestyle="--", alpha=0.2)
+        self.ax_progress.set_yscale("log")
 
-            # Compute better y-limits for progress plot
-            all_values = np.concatenate(
-                [data["values"] for data in animation_data.values()]
-            )
-            min_val = np.min(all_values)
-            max_val = np.max(all_values)
-            if min_val > 0:  # For log scale, ensure positive values
-                self.ax_progress.set_ylim(min_val * 0.1, max_val * 2)
-            else:
-                self.ax_progress.set_ylim(1e-15, max_val * 2)
+        # Compute better y-limits for progress plot
+        all_values = np.concatenate(
+            [data["values"] for data in animation_data.values()]
+        )
+        min_val = np.min(all_values)
+        max_val = np.max(all_values)
+        if min_val > 0:  # For log scale, ensure positive values
+            self.ax_progress.set_ylim(min_val * 0.1, max_val * 2)
+        else:
+            self.ax_progress.set_ylim(1e-15, max_val * 2)
+        self.ax_progress.set_xlim(-2, max_iters + 2)
 
-            # Set x-limits
-            self.ax_progress.set_xlim(-2, max_iters + 2)
+        # Configure combined convergence plot
+        self.ax_convergence.clear()
+        self.ax_convergence.set_title("Convergence Metrics", fontsize=10, pad=5)
+        self.ax_convergence.set_xlabel("Iteration", fontsize=10)
+        self.ax_convergence.grid(True, linestyle="--", alpha=0.2)
+        self.ax_convergence.set_yscale("log")
+
+        # Add tolerance line
+        self.ax_convergence.axhline(
+            y=self.problem.tol,
+            color="g",
+            linestyle="--",
+            alpha=0.5,
+            label=f"Tolerance: {self.problem.tol:.0e}",
+        )
+
+        # Set y-axis limits for convergence plot
+        all_errors = np.concatenate(
+            [data["errors"] for data in animation_data.values()]
+        )
+        all_differences = np.concatenate(
+            [data["differences"] for data in animation_data.values()]
+        )
+        min_val = min(np.min(all_errors), np.min(all_differences))
+        max_val = max(np.max(all_errors), np.max(all_differences))
+        self.ax_convergence.set_ylim(min_val * 0.1, max_val * 2)
+        self.ax_convergence.set_xlim(-2, max_iters + 2)
 
         # Create line objects for animation
         lines = {}
@@ -525,25 +582,32 @@ class OptimizationVisualizer:
                         markersize=4,
                         linewidth=1.5,
                     )[0],
-                    "error": self.ax_error.plot(
-                        [], [], "-", color=color, linewidth=1.5
-                    )[0],
                     "progress": self.ax_progress.plot(
                         [], [], "-", color=color, label=label, linewidth=2
-                    )[
-                        0
-                    ],  # Increased linewidth
+                    )[0],
+                    "grad_norm": self.ax_convergence.plot(
+                        [],
+                        [],
+                        "-",
+                        color=color,
+                        label=f"{label} (Grad Norm)",
+                        linewidth=2,
+                    )[0],
+                    "differences": self.ax_convergence.plot(
+                        [],
+                        [],
+                        "--",
+                        color=color,
+                        label=f"{label} (Step Size)",
+                        linewidth=2,
+                        alpha=0.7,
+                    )[0],
                 }
 
         # Add legends with better positioning
         if self.config.show_legend:
             self.ax_progress.legend(loc="upper right", bbox_to_anchor=(1, 1))
-            # Only show tolerance line in error plot
-            handles, labels = self.ax_error.get_legend_handles_labels()
-            tolerance_idx = labels.index(f"Tolerance: {self.problem.tol:.0e}")
-            self.ax_error.legend(
-                [handles[tolerance_idx]], [labels[tolerance_idx]], loc="upper right"
-            )
+            self.ax_convergence.legend(loc="upper right", bbox_to_anchor=(1, 1))
 
         def update(frame):
             points_to_show = int((frame / 60) * max_iters)
@@ -565,14 +629,19 @@ class OptimizationVisualizer:
                         data["points"][:n_points, 0], data["points"][:n_points, 1]
                     )
 
-                    # Update progress and error lines
+                    # Update progress line
                     method_lines["progress"].set_data(
                         range(n_points), data["values"][:n_points]
                     )
 
-                    method_lines["error"].set_data(
+                    # Update convergence metrics
+                    method_lines["grad_norm"].set_data(
                         range(n_points), data["errors"][:n_points]
                     )
+                    if n_points > 1:  # Need at least 2 points for differences
+                        method_lines["differences"].set_data(
+                            range(1, n_points), data["differences"][: n_points - 1]
+                        )
 
             return [
                 line
@@ -623,5 +692,5 @@ class OptimizationVisualizer:
             # For 1D case, keep x limits fixed as set in _plot_1d_function
             # Only update error plot limits
             if any(len(state["errors"]) > 0 for state in self.method_states.values()):
-                self.ax_error.relim()
-                self.ax_error.autoscale_view()
+                self.ax_convergence.relim()
+                self.ax_convergence.autoscale_view()
