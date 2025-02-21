@@ -1,3 +1,5 @@
+# configs/optimization.yaml
+
 # Example configuration for optimization methods
 # This can be used with: python minimize.py --config configs/optimization.yaml
 

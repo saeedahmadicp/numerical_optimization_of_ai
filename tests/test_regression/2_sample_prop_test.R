@@ -1,3 +1,5 @@
+# tests/test_regression/2_sample_prop_test.R
+
 # Function to count the number of successes in a dataset
 count_success <- function(data) {
   tryCatch({

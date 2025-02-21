@@ -100,7 +100,3 @@ x_iter, conv, iters = gauss_seidel(A, b, x0, tol=1e-8)
 1. Golub, G. H., & Van Loan, C. F. (2013). Matrix Computations (4th ed.)
 2. Saad, Y. (2003). Iterative Methods for Sparse Linear Systems (2nd ed.)
 3. Trefethen, L. N., & Bau III, D. (1997). Numerical Linear Algebra
-
-## License
-
-MIT License - See repository root for details

@@ -1,3 +1,5 @@
+# algorithms/regression/conf_int.R
+
 # Function to plot data and regression line
 plot_data_with_regression <- function(x, y) {
   tryCatch({

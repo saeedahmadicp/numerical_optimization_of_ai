@@ -152,25 +152,3 @@ def golden_section_search(
 
     # Return the final approximation, error history, and the number of iterations.
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Example usage:
-#     def f(x):
-#         return x**2 - 2  # Function: f(x) = x^2 - 2, finding sqrt(2)
-#
-#     # Using the new protocol-based implementation.
-#     config = RootFinderConfig(func=f, tol=1e-6)
-#     method = GoldenSectionMethod(config, a=1.0, b=2.0)
-#
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")
-#
-#     # Or using the legacy wrapper.
-#     root, errors, iters = golden_section_search(f, 1.0, 2.0)
-#     print(f"Found root (legacy): {root}")

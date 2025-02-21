@@ -1,3 +1,5 @@
+# algorithms/regression/normality_test_linear_regression.R
+
 # Function to plot data and regression line
 plot_data_with_regression <- function(x, y) {
   tryCatch({
