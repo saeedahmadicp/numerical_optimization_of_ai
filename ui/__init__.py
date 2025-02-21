@@ -1,5 +1,5 @@
 # ui/__init__.py
 
-# TODO: Add UI for numerical methods visualization
-# input: function, initial point, method, max iterations, tolerance
-# output: plot of the function, the optimization path, and the convergence
+from .main_window import MainWindow
+
+__all__ = ["MainWindow"]
