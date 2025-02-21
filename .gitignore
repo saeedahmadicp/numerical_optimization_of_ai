@@ -133,6 +133,5 @@ dmypy.json
 ### ignore custom files
 *.ini
 *.docx
-*.png
 *.jpeg
 *.jpg
