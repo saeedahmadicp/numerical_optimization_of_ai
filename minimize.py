@@ -11,8 +11,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 import pandas as pd
-import os
-from openpyxl import Workbook
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
