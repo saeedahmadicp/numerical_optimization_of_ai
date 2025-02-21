@@ -22,37 +22,13 @@ python find_roots.py --methods newton secant --function quadratic --x0 1.5
 
 ```
 numerical_optimization/
-├── algorithms/     # Implementation of numerical methods
+├── algorithms/    # Implementation of numerical methods
 ├── configs/       # Configuration files for custom runs
 ├── plot/          # Visualization utilities
 ├── tests/         # Unit tests
-├── ui/            # UI components (future)
+├── ui/            # UI components (in-progress)
 └── utils/         # Helper functions and utilities
 ```
-
-## Features
-
-- **Optimization Methods**
-  - Gradient Descent
-  - Newton's Method
-  - BFGS
-  - Nelder-Mead
-  - Powell's Method
-
-- **Root Finding Methods**
-  - Newton's Method
-  - Secant Method
-  - Bisection Method
-  - Regula Falsi
-
-- **Test Functions**
-  - Rosenbrock
-  - Himmelblau
-  - Quadratic
-  - Rastrigin
-  - And more...
-
-## Usage Examples
 
 ### Optimization
 
@@ -108,6 +84,20 @@ Steepest Descent Method:
   Final |∇f(x)|: 6.72e-07
   Converged: True
 ```
+
+Optimization UI:
+
+![Optimization UI](assets/optimization_ui.png)
+
+To run the UI, use the following command:
+
+```bash
+python ui.py
+```
+
+> [!WARNING]
+> The UI is currently in-progress and may not work as expected.
+
 
 ### Root Finding
 

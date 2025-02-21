@@ -3,6 +3,7 @@
 """Powell's conjugate direction method for derivative-free optimization."""
 
 from typing import List, Tuple, Optional
+import numpy as np
 from scipy.optimize import minimize_scalar
 
 from .protocols import BaseNumericalMethod, NumericalMethodConfig
@@ -11,13 +12,13 @@ from .protocols import BaseNumericalMethod, NumericalMethodConfig
 class PowellMethod(BaseNumericalMethod):
     """Implementation of Powell's method for derivative-free optimization."""
 
-    def __init__(self, config: NumericalMethodConfig, x0: float):
+    def __init__(self, config: NumericalMethodConfig, x0: np.ndarray):
         """
         Initialize Powell's method.
 
         Args:
             config: Configuration including function and tolerances
-            x0: Initial guess
+            x0: Initial guess (numpy array)
 
         Raises:
             ValueError: If method_type is not 'optimize'
@@ -28,22 +29,23 @@ class PowellMethod(BaseNumericalMethod):
         config.use_derivative_free = True  # Ensure derivative-free mode
         super().__init__(config)
 
-        self.x = x0
-        self.direction = 1.0
-        self.prev_x: Optional[float] = None
+        self.x = np.array(x0, dtype=float)
+        # Initialize direction as unit vector for each dimension
+        self.direction = np.eye(len(x0))[0]  # Start with first basis vector
+        self.prev_x: Optional[np.ndarray] = None
         self.prev_fx: Optional[float] = None
 
-    def get_current_x(self) -> float:
+    def get_current_x(self) -> np.ndarray:
         """Get current x value."""
         return self.x
 
-    def _line_search(self, x: float, direction: float) -> float:
+    def _line_search(self, x: np.ndarray, direction: np.ndarray) -> float:
         """
         Perform line search along the given direction.
 
         Args:
-            x: Current point
-            direction: Search direction
+            x: Current point (numpy array)
+            direction: Search direction (numpy array)
 
         Returns:
             float: Optimal step size (alpha)
@@ -56,59 +58,86 @@ class PowellMethod(BaseNumericalMethod):
         result = minimize_scalar(objective)
         return result.x if result.success else 0.0
 
-    def step(self) -> float:
+    def step(self) -> np.ndarray:
         """
         Perform one iteration of Powell's method.
 
         Returns:
-            float: Current approximation of the minimum
+            np.ndarray: Current approximation of the minimum
         """
         if self._converged:
             return self.x
 
-        x_old = self.x
+        n = len(self.x)
+        x_old = self.x.copy()
         fx_old = self.func(x_old)
 
-        # Store current point and function value
-        self.prev_x = self.x
-        self.prev_fx = fx_old
+        # Store best point
+        x_best = self.x.copy()
+        f_best = fx_old
 
-        # Perform line search
-        alpha = self._line_search(self.x, self.direction)
+        # Initialize set of directions as the basis vectors
+        directions = np.eye(n)
 
-        # Update current approximation
-        self.x += alpha * self.direction
+        # Perform line minimization in each direction
+        for i in range(n):
+            self.direction = directions[i]
+            alpha = self._line_search(self.x, self.direction)
+            self.x = self.x + alpha * self.direction
 
-        # Update the direction
-        if self.prev_x is not None:
-            new_direction = self.x - self.prev_x
-            if abs(new_direction) > 1e-10:
-                new_direction /= abs(new_direction)
-            self.direction = new_direction
+            # Update best point if we found a better one
+            f_new = self.func(self.x)
+            if f_new < f_best:
+                x_best = self.x.copy()
+                f_best = f_new
 
+        # Compute new direction as x_new - x_old
+        new_direction = self.x - x_old
+        direction_norm = np.linalg.norm(new_direction)
+
+        # If the new direction is significant, try line search in this direction
+        if direction_norm > 1e-10:
+            self.direction = new_direction / direction_norm
+            alpha = self._line_search(self.x, self.direction)
+            self.x = self.x + alpha * self.direction
+            f_new = self.func(self.x)
+
+            if f_new < f_best:
+                x_best = self.x.copy()
+                f_best = f_new
+
+        # Update to best point found
+        self.x = x_best
+
+        # Store iteration details
         details = {
-            "alpha": alpha,
-            "direction": self.direction,
-            "prev_x": self.prev_x,
-            "prev_fx": self.prev_fx,
-            "line_search": {
-                "start": x_old,
-                "step_size": alpha,
-                "direction": self.direction,
-            },
+            "x_old": str(x_old),
+            "x_new": str(self.x),
+            "f_old": fx_old,
+            "f_new": f_best,
+            "improvement": fx_old - f_best,
         }
 
         self.add_iteration(x_old, self.x, details)
         self.iterations += 1
 
-        # Check convergence using relative improvement
-        fx_new = self.func(self.x)
-        rel_improvement = abs(fx_new - fx_old) / (abs(fx_old) + 1e-10)
+        # Check convergence using relative improvement and gradient (if available)
+        rel_improvement = abs(f_best - fx_old) / (abs(fx_old) + 1e-10)
 
+        # Use gradient for convergence check if available
+        if not self.use_derivative_free and self.derivative is not None:
+            grad_norm = np.linalg.norm(self.derivative(self.x))
+            grad_converged = grad_norm < self.tol
+        else:
+            grad_converged = False
+
+        # Check various convergence criteria
         if (
-            rel_improvement < self.tol
-            or (self.prev_x is not None and abs(self.x - self.prev_x) < self.tol)
-            or self.iterations >= self.max_iter
+            rel_improvement < self.tol  # Function value not improving
+            or np.linalg.norm(self.x - x_old)
+            < self.tol * (1 + np.linalg.norm(self.x))  # Small step
+            or grad_converged  # Gradient small (if available)
+            or self.iterations >= self.max_iter  # Max iterations reached
         ):
             self._converged = True
 
