@@ -197,141 +197,141 @@ class BFGSMethod(BaseNumericalMethod):
     def __init__(
         self,
         config: NumericalMethodConfig,
-        x0: float,
-        second_derivative: Optional[Callable[[float], float]] = None,
+        x0: np.ndarray,
+        second_derivative: Optional[Callable[[np.ndarray], np.ndarray]] = None,
     ):
         """
         Initialize BFGS method.
 
         Args:
             config: Configuration including function, derivative, and tolerances
-            x0: Initial guess
+            x0: Initial guess (numpy array)
             second_derivative: Optional, not used but included for protocol compatibility
         """
         if config.derivative is None:
             raise ValueError("BFGS method requires derivative function")
 
         super().__init__(config)
-        self.x = x0
+        self.x = np.array(x0, dtype=float)
 
-        # Initialize inverse Hessian approximation as identity
-        self.H = 1.0
-        self.prev_grad = None
-        self.prev_x = None
+        # Initialize inverse Hessian approximation as identity matrix
+        n = len(x0)
+        self.H = np.eye(n, dtype=float)
+
+        # Remove unused attributes
+        # self.prev_grad = None
+        # self.prev_x = None
 
     def get_current_x(self) -> float:
         """Get current x value."""
         return self.x
 
-    def _backtracking_line_search(self, direction: float) -> float:
-        """
-        Perform backtracking line search with Armijo condition.
+    def _backtracking_line_search(self, direction: np.ndarray) -> float:
+        """Backtracking line search to find step size.
 
         Args:
-            direction: Search direction
+            direction: Search direction (numpy array)
 
         Returns:
-            Step size alpha
+            float: Step size
         """
         alpha = 1.0
         beta = 0.5  # Reduction factor
-        c = 1e-4  # Armijo condition parameter
+        c = 1e-4  # Sufficient decrease parameter
 
         fx = self.func(self.x)
-        dfx = self.derivative(self.x)  # type: ignore
-
-        # For root-finding, use |f(x)| as objective
-        if self.method_type == "root":
-            fx = abs(fx)
-            dfx = np.sign(fx) * dfx
+        dfx = self.derivative(self.x)
+        directional_derivative = np.dot(dfx, direction)
 
         while True:
             x_new = self.x + alpha * direction
             f_new = self.func(x_new)
-            if self.method_type == "root":
-                f_new = abs(f_new)
 
-            # Check Armijo condition
-            if f_new <= fx + c * alpha * dfx * direction:
+            # Armijo condition
+            if f_new <= fx + c * alpha * directional_derivative:
                 break
 
             alpha *= beta
-            if alpha < 1e-10:
+
+            if alpha < 1e-10:  # Prevent too small steps
                 break
 
         return alpha
 
-    def step(self) -> float:
-        """
-        Perform one iteration of BFGS method.
-
-        Returns:
-            float: Current approximation
-        """
+    def step(self) -> np.ndarray:
+        """Perform one iteration of BFGS method."""
         if self._converged:
             return self.x
 
-        x_old = self.x
-        fx = self.func(self.x)
-        dfx = self.derivative(self.x)  # type: ignore
+        x_old = self.x.copy()
+        fx_old = self.func(x_old)
+        dfx_old = self.derivative(x_old)
 
-        # For root-finding, treat |f(x)| as objective function
-        if self.method_type == "root":
-            grad = np.sign(fx) * dfx
-        else:
-            grad = dfx
+        # Compute search direction: H * g
+        direction = -self.H @ dfx_old
 
-        details = {
-            "f(x)": fx,
-            "f'(x)": dfx,
-            "H": self.H,
-        }
+        # Normalize direction if too large
+        direction_norm = np.linalg.norm(direction)
+        if direction_norm > 1:
+            direction = direction / direction_norm
 
-        # Compute search direction
-        direction = -self.H * grad
-
-        # Perform line search
+        # Line search with better parameters
         alpha = self._backtracking_line_search(direction)
         step = alpha * direction
 
         # Update position
-        self.x += step
-
-        # Compute new gradient
+        self.x = x_old + step
         fx_new = self.func(self.x)
-        dfx_new = self.derivative(self.x)  # type: ignore
+        dfx_new = self.derivative(self.x)
 
-        if self.method_type == "root":
-            grad_new = np.sign(fx_new) * dfx_new
-        else:
-            grad_new = dfx_new
+        # Compute difference vectors
+        s = self.x - x_old  # Position difference
+        y = dfx_new - dfx_old  # Gradient difference
 
-        # BFGS update
-        if self.prev_grad is not None:
-            s = step  # x_new - x_old
-            y = grad_new - grad  # grad_new - grad_old
+        # BFGS update with safeguards
+        sy = np.dot(s, y)
+        if sy > 0:  # Only update if curvature condition is satisfied
+            rho = 1.0 / sy
+            I = np.eye(len(self.x))
 
-            # Only update if curvature condition is satisfied
-            rho = 1.0 / (y * s)
-            if rho > 0:
-                self.H = (1.0 + rho * y * y) * self.H
+            # Update Hessian approximation using BFGS formula
+            self.H = (I - rho * np.outer(s, y)) @ self.H @ (
+                I - rho * np.outer(y, s)
+            ) + rho * np.outer(s, s)
 
-        # Store current values for next iteration
-        self.prev_grad = grad_new
-        self.prev_x = self.x
+            # Add regularization if needed
+            eigvals = np.linalg.eigvals(self.H)
+            if np.any(eigvals <= 0):
+                self.H += 1e-6 * I
 
-        details["step"] = step
+        # Store iteration details
+        details = {
+            "direction": str(direction),
+            "step_size": alpha,
+            "f_old": fx_old,
+            "f_new": fx_new,
+            "gradient_old": str(dfx_old),
+            "gradient_new": str(dfx_new),
+            "hessian": str(self.H),
+        }
         self.add_iteration(x_old, self.x, details)
         self.iterations += 1
 
-        # Check convergence
-        if self.method_type == "root":
-            if abs(fx) <= self.tol or self.iterations >= self.max_iter:
-                self._converged = True
-        else:
-            grad_norm = abs(dfx_new)
-            if grad_norm <= self.tol or self.iterations >= self.max_iter:
-                self._converged = True
+        # Check convergence with better criteria
+        grad_norm = np.linalg.norm(dfx_new)
+        x_scale = max(1.0, np.linalg.norm(self.x))
+        f_scale = max(1.0, abs(fx_new))
+        rel_step = np.linalg.norm(step) / (np.linalg.norm(x_old) + 1e-10)
+        rel_improvement = abs(fx_new - fx_old) / (abs(fx_old) + 1e-10)
+
+        if self.iterations >= 5 and (  # Minimum iterations requirement
+            (grad_norm <= self.tol * f_scale)  # Gradient norm small enough
+            or (
+                rel_step <= self.tol and rel_improvement <= self.tol
+            )  # Step and improvement small
+            or self.iterations >= self.max_iter  # Max iterations reached
+        ):
+            self._converged = True
 
         return self.x
 

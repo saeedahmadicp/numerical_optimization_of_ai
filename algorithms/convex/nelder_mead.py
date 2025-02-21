@@ -11,13 +11,15 @@ from .protocols import BaseNumericalMethod, NumericalMethodConfig
 class NelderMeadMethod(BaseNumericalMethod):
     """Implementation of Nelder-Mead method for derivative-free optimization."""
 
-    def __init__(self, config: NumericalMethodConfig, x0: float, delta: float = 0.1):
+    def __init__(
+        self, config: NumericalMethodConfig, x0: np.ndarray, delta: float = 0.1
+    ):
         """
         Initialize Nelder-Mead method.
 
         Args:
             config: Configuration including function and tolerances
-            x0: Initial guess
+            x0: Initial guess (numpy array)
             delta: Initial simplex size
 
         Raises:
@@ -29,9 +31,15 @@ class NelderMeadMethod(BaseNumericalMethod):
         config.use_derivative_free = True  # Ensure derivative-free mode
         super().__init__(config)
 
-        self.x = x0
-        # Create initial simplex
-        self.simplex = np.array([x0, x0 + delta])
+        self.x = np.array(x0, dtype=float)
+        # Create initial simplex for n-dimensional case
+        n = len(x0)
+        self.simplex = np.zeros((n + 1, n))
+        self.simplex[0] = x0
+        for i in range(n):
+            vertex = x0.copy()
+            vertex[i] += delta
+            self.simplex[i + 1] = vertex
         self.f_values = np.array([self.func(x) for x in self.simplex])
 
         # Standard Nelder-Mead parameters
@@ -53,45 +61,43 @@ class NelderMeadMethod(BaseNumericalMethod):
         self.simplex = self.simplex[order]
         self.f_values = self.f_values[order]
 
-    def step(self) -> float:
-        """
-        Perform one iteration of Nelder-Mead method.
-
-        Returns:
-            float: Current approximation of the minimum
-        """
+    def step(self) -> np.ndarray:
+        """Perform one iteration of Nelder-Mead method."""
         if self._converged:
             return self.x
 
-        x_old = self.x
+        x_old = self.x.copy()
         f_old = self.func(x_old)
 
         # Sort simplex
         self._update_simplex()
 
+        # Get best and worst points
         x0 = self.simplex[0]  # Best point
         xn = self.simplex[-1]  # Worst point
         f0 = self.f_values[0]  # Best value
         fn = self.f_values[-1]  # Worst value
 
+        # Calculate centroid of all points except worst
+        xc = np.mean(self.simplex[:-1], axis=0)
+
         # Reflection
-        xr = x0 + self.alpha * (x0 - xn)
+        xr = xc + self.alpha * (xc - xn)
         fr = self.func(xr)
 
         details = {
             "simplex_points": self.simplex.tolist(),
             "f_values": self.f_values.tolist(),
-            "reflection": xr,
+            "centroid": xc.tolist(),
+            "reflection": xr.tolist(),
             "f(reflection)": fr,
-            "best_point": x0,
-            "worst_point": xn,
         }
 
         if fr < f0:
             # Expansion
-            xe = x0 + self.gamma * (xr - x0)
+            xe = xc + self.gamma * (xr - xc)
             fe = self.func(xe)
-            details.update({"expansion": xe, "f(expansion)": fe})
+            details.update({"expansion": xe.tolist(), "f(expansion)": fe})
 
             if fe < fr:
                 self.simplex[-1] = xe
@@ -102,45 +108,51 @@ class NelderMeadMethod(BaseNumericalMethod):
                 self.f_values[-1] = fr
                 details["action"] = "reflection"
         else:
-            if fr < fn:
+            if fr < self.f_values[-2]:  # Better than second worst
                 self.simplex[-1] = xr
                 self.f_values[-1] = fr
                 details["action"] = "reflection"
             else:
                 # Contraction
-                xc = x0 + self.rho * (xn - x0)
-                fc = self.func(xc)
-                details.update({"contraction": xc, "f(contraction)": fc})
+                if fr < fn:  # Outside contraction
+                    xk = xc + self.rho * (xr - xc)
+                    fk = self.func(xk)
+                else:  # Inside contraction
+                    xk = xc - self.rho * (xr - xc)
+                    fk = self.func(xk)
 
-                if fc < fn:
-                    self.simplex[-1] = xc
-                    self.f_values[-1] = fc
+                details.update({"contraction": xk.tolist(), "f(contraction)": fk})
+
+                if fk < min(fr, fn):
+                    self.simplex[-1] = xk
+                    self.f_values[-1] = fk
                     details["action"] = "contraction"
                 else:
-                    # Shrink
-                    self.simplex[-1] = x0 + self.sigma * (xn - x0)
-                    self.f_values[-1] = self.func(self.simplex[-1])
+                    # Shrink: update all points except best
                     details["action"] = "shrink"
+                    for i in range(1, len(self.simplex)):
+                        self.simplex[i] = x0 + self.sigma * (self.simplex[i] - x0)
+                        self.f_values[i] = self.func(self.simplex[i])
 
         # Update current best point
-        self.x = self.simplex[0]
+        self.x = self.simplex[0].copy()
 
         self.add_iteration(x_old, self.x, details)
         self.iterations += 1
 
-        # Update convergence checks
-        spread = np.std(self.f_values)
-        x_spread = np.std(self.simplex)
+        # Update convergence checks with better criteria
+        f_spread = np.max(self.f_values) - np.min(self.f_values)
+        x_spread = np.max(
+            [np.linalg.norm(x - self.simplex[0]) for x in self.simplex[1:]]
+        )
 
         # Scale-invariant convergence criteria
-        rel_f_spread = spread / (abs(self.f_values[0]) + 1e-10)
-        rel_x_spread = x_spread / (abs(self.simplex[0]) + 1e-10)
+        rel_f_spread = f_spread / (abs(self.f_values[0]) + 1e-10)
+        rel_x_spread = x_spread / (np.linalg.norm(self.simplex[0]) + 1e-10)
 
-        if self.iterations >= self.min_iterations and (  # Ensure minimum iterations
-            (
-                rel_f_spread < self.tol and rel_x_spread < self.tol
-            )  # Relative convergence
-            or self.iterations >= self.max_iter  # Max iterations
+        if self.iterations >= self.min_iterations and (
+            (rel_f_spread < self.tol and rel_x_spread < self.tol)
+            or self.iterations >= self.max_iter
         ):
             self._converged = True
 
