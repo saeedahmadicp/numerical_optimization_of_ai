@@ -4,7 +4,7 @@ import numpy as np
 from typing import Callable, Tuple, List, Optional
 
 from .line_search import backtracking_line_search
-from .protocols import BaseRootFinder, RootFinderConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
 def bfgs_method(
@@ -191,55 +191,71 @@ def lbfgs_method(
     return x, history, f_history
 
 
-class BFGSMethod(BaseRootFinder):
-    """Implementation of BFGS method for root finding using quasi-Newton updates."""
+class BFGSMethod(BaseNumericalMethod):
+    """Implementation of BFGS method for both root-finding and optimization."""
 
-    def __init__(self, config: RootFinderConfig, x0: float, alpha: float = 0.1):
+    def __init__(
+        self,
+        config: NumericalMethodConfig,
+        x0: float,
+        second_derivative: Optional[Callable[[float], float]] = None,
+    ):
         """
         Initialize BFGS method.
 
         Args:
-            config: Configuration including function, derivative, and tolerances.
-            x0: Initial guess.
-            alpha: Initial step size for line search.
+            config: Configuration including function, derivative, and tolerances
+            x0: Initial guess
+            second_derivative: Optional, not used but included for protocol compatibility
         """
         if config.derivative is None:
             raise ValueError("BFGS method requires derivative function")
 
         super().__init__(config)
         self.x = x0
-        self.alpha = alpha
 
-        # Initialize inverse Hessian approximation
-        self.H = np.array([[1.0]])
-        self.prev_grad: Optional[np.ndarray] = None
-        self.prev_x: Optional[float] = None
+        # Initialize inverse Hessian approximation as identity
+        self.H = 1.0
+        self.prev_grad = None
+        self.prev_x = None
 
     def get_current_x(self) -> float:
         """Get current x value."""
         return self.x
 
-    def _backtracking_line_search(self, p: float) -> float:
+    def _backtracking_line_search(self, direction: float) -> float:
         """
-        Perform backtracking line search to determine an acceptable step size.
+        Perform backtracking line search with Armijo condition.
 
         Args:
-            p: Search direction.
+            direction: Search direction
 
         Returns:
-            A step size alpha that satisfies the Armijo condition.
+            Step size alpha
         """
-        c = 1e-4  # Armijo condition constant.
-        rho = 0.5  # Reduction factor.
-        alpha = self.alpha
+        alpha = 1.0
+        beta = 0.5  # Reduction factor
+        c = 1e-4  # Armijo condition parameter
 
-        fx = abs(self.func(self.x))
-        # Compute a directional derivative approximation using sign for scalar case.
-        grad_fx = np.sign(self.func(self.x)) * self.derivative(self.x)  # type: ignore
+        fx = self.func(self.x)
+        dfx = self.derivative(self.x)  # type: ignore
 
-        # Reduce alpha until the Armijo condition is satisfied.
-        while abs(self.func(self.x + alpha * p)) > fx + c * alpha * grad_fx * p:
-            alpha *= rho
+        # For root-finding, use |f(x)| as objective
+        if self.method_type == "root":
+            fx = abs(fx)
+            dfx = np.sign(fx) * dfx
+
+        while True:
+            x_new = self.x + alpha * direction
+            f_new = self.func(x_new)
+            if self.method_type == "root":
+                f_new = abs(f_new)
+
+            # Check Armijo condition
+            if f_new <= fx + c * alpha * dfx * direction:
+                break
+
+            alpha *= beta
             if alpha < 1e-10:
                 break
 
@@ -247,74 +263,75 @@ class BFGSMethod(BaseRootFinder):
 
     def step(self) -> float:
         """
-        Perform one iteration of the BFGS method.
+        Perform one iteration of BFGS method.
 
         Returns:
-            float: The current approximation of the root.
+            float: Current approximation
         """
         if self._converged:
             return self.x
 
-        # Store old x value
         x_old = self.x
-
-        # Compute function value and its gradient (adjusted with sign for scalar problems).
         fx = self.func(self.x)
-        grad = np.array([np.sign(fx) * self.derivative(self.x)])  # type: ignore
+        dfx = self.derivative(self.x)  # type: ignore
 
-        # Compute search direction: p = -H * grad.
-        p = -float(self.H @ grad)
+        # For root-finding, treat |f(x)| as objective function
+        if self.method_type == "root":
+            grad = np.sign(fx) * dfx
+        else:
+            grad = dfx
 
-        # Determine step size using backtracking line search.
-        alpha = self._backtracking_line_search(p)
-
-        # Save the previous state.
-        self.prev_x = self.x
-        self.prev_grad = grad
-
-        # Update the current approximation.
-        self.x += alpha * p
-
-        # Compute the new gradient.
-        new_fx = self.func(self.x)
-        new_grad = np.array([np.sign(new_fx) * self.derivative(self.x)])  # type: ignore
-
-        # Store iteration details
         details = {
             "f(x)": fx,
-            "gradient": grad.tolist(),
-            "search_direction": p,
-            "step_size": alpha,
-            "new_gradient": new_grad.tolist(),
-            "H": self.H.tolist(),
+            "f'(x)": dfx,
+            "H": self.H,
         }
 
-        # BFGS update: compute s and y vectors.
+        # Compute search direction
+        direction = -self.H * grad
+
+        # Perform line search
+        alpha = self._backtracking_line_search(direction)
+        step = alpha * direction
+
+        # Update position
+        self.x += step
+
+        # Compute new gradient
+        fx_new = self.func(self.x)
+        dfx_new = self.derivative(self.x)  # type: ignore
+
+        if self.method_type == "root":
+            grad_new = np.sign(fx_new) * dfx_new
+        else:
+            grad_new = dfx_new
+
+        # BFGS update
         if self.prev_grad is not None:
-            s = np.array([self.x - self.prev_x])
-            y = new_grad - self.prev_grad
+            s = step  # x_new - x_old
+            y = grad_new - grad  # grad_new - grad_old
 
-            rho = 1.0 / float(y @ s)
-            if rho > 0:  # Only update if curvature condition holds.
-                I = np.eye(1)
-                self.H = (I - rho * np.outer(s, y)) @ self.H @ (
-                    I - rho * np.outer(y, s)
-                ) + rho * np.outer(s, s)
-                details["bfgs_update"] = {
-                    "s": s.tolist(),
-                    "y": y.tolist(),
-                    "rho": rho,
-                }
+            # Only update if curvature condition is satisfied
+            rho = 1.0 / (y * s)
+            if rho > 0:
+                self.H = (1.0 + rho * y * y) * self.H
 
-        # Store iteration data
+        # Store current values for next iteration
+        self.prev_grad = grad_new
+        self.prev_x = self.x
+
+        details["step"] = step
         self.add_iteration(x_old, self.x, details)
-
-        # Increment iteration counter
         self.iterations += 1
 
-        # Check convergence: based on function value tolerance or iteration count.
-        if abs(fx) <= self.tol or self.iterations >= self.max_iter:
-            self._converged = True
+        # Check convergence
+        if self.method_type == "root":
+            if abs(fx) <= self.tol or self.iterations >= self.max_iter:
+                self._converged = True
+        else:
+            grad_norm = abs(dfx_new)
+            if grad_norm <= self.tol or self.iterations >= self.max_iter:
+                self._converged = True
 
         return self.x
 
@@ -323,57 +340,38 @@ class BFGSMethod(BaseRootFinder):
         return "BFGS Method"
 
 
-def bfgs_root_search(
-    f: RootFinderConfig,
+def bfgs_search(
+    f: NumericalMethodConfig,
     x0: float,
     tol: float = 1e-6,
     max_iter: int = 100,
+    method_type: str = "root",
 ) -> Tuple[float, List[float], int]:
-    """
-    Legacy wrapper for backward compatibility.
+    """Legacy wrapper for backward compatibility."""
+    if callable(f):
+        h = 1e-7
 
-    Args:
-        f: Function configuration (or function) for the root finder.
-        x0: Initial guess.
-        tol: Error tolerance.
-        max_iter: Maximum number of iterations.
+        def derivative(x: float) -> float:
+            return (f(x + h) - f(x)) / h
 
-    Returns:
-        Tuple of (root, errors, iterations) where:
-         - root is the final approximation,
-         - errors is a list of error values per iteration,
-         - iterations is the number of iterations performed.
-    """
-    # Create configuration instance.
-    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
-    # Instantiate the BFGSMethod.
+        config = NumericalMethodConfig(
+            func=f,
+            method_type=method_type,
+            derivative=derivative,
+            tol=tol,
+            max_iter=max_iter,
+        )
+    else:
+        config = f
+
     method = BFGSMethod(config, x0)
-
     errors = []
-    # Iterate until convergence.
+    prev_x = x0
+
     while not method.has_converged():
-        method.step()
-        errors.append(method.get_error())
+        x = method.step()
+        if x != prev_x:  # Only record error if x changed
+            errors.append(method.get_error())
+        prev_x = x
 
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Example function: f(x) = x^2 - 2, aiming to find sqrt(2)
-#     def f(x):
-#         return x**2 - 2
-#
-#     def df(x):
-#         return 2 * x
-#
-#     # Using the new protocol-based implementation for BFGS:
-#     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
-#     method = BFGSMethod(config, x0=1.5)
-#
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")

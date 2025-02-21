@@ -1,118 +1,124 @@
 # algorithms/convex/steepest_descent.py
 
-"""Steepest descent method for root finding."""
+"""Steepest descent method for function minimization."""
 
 from typing import List, Tuple
 import numpy as np
 
-from .protocols import BaseRootFinder, RootFinderConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
-class SteepestDescentMethod(BaseRootFinder):
-    """Implementation of steepest descent method."""
+class SteepestDescentMethod(BaseNumericalMethod):
+    """Steepest descent method with backtracking line search."""
 
-    def __init__(self, config: RootFinderConfig, x0: float, alpha: float = 0.1):
-        """
-        Initialize steepest descent method.
+    def __init__(
+        self,
+        config: NumericalMethodConfig,
+        x0: np.ndarray,
+        alpha: float = 0.1,
+        beta: float = 0.8,
+        c: float = 0.0001,
+    ):
+        """Initialize the method.
 
         Args:
-            config: Configuration including function, derivative, and tolerances.
-            x0: Initial guess.
-            alpha: Learning rate (step size).
-
-        Raises:
-            ValueError: If derivative function is not provided in config.
+            config: Configuration object
+            x0: Initial point
+            alpha: Initial step size for line search
+            beta: Step size reduction factor
+            c: Sufficient decrease parameter
         """
-        # Ensure the derivative is provided, as it is needed for the gradient.
-        if config.derivative is None:
-            raise ValueError("Steepest descent method requires derivative function")
-
-        # Initialize common attributes using the base class.
         super().__init__(config)
-        self.x = x0  # Current approximation of the root.
-        self.alpha = alpha  # Base learning rate (initial step size).
+        self.x = np.array(x0, dtype=float)
+        self.alpha = alpha
+        self.beta = beta
+        self.c = c
+        self._converged = False
+        self.iterations = 0
 
-    def get_current_x(self) -> float:
-        """Get current x value."""
-        return self.x
-
-    def _backtracking_line_search(self, p: float) -> float:
-        """
-        Perform backtracking line search to find a suitable step size.
+    def _backtracking_line_search(self, p: np.ndarray) -> float:
+        """Backtracking line search to find step size.
 
         Args:
-            p: Search direction (typically the negative gradient).
+            p: Search direction
 
         Returns:
-            A step size that satisfies the Armijo condition.
+            float: Step size
         """
-        c = 1e-4  # Armijo condition parameter.
-        rho = 0.5  # Factor to reduce the step size.
-        alpha = self.alpha  # Start with the initial learning rate.
+        alpha = self.alpha
+        fx = self.func(self.x)
+        grad_fx = self.derivative(self.x)
 
-        fx = abs(self.func(self.x))
-        # For scalar problems, adjust the derivative with the sign of f(x).
-        grad_fx = np.sign(self.func(self.x)) * self.derivative(self.x)  # type: ignore
+        # For vector case, use dot product for directional derivative
+        directional_derivative = np.dot(grad_fx, p)
 
-        # Backtracking: reduce alpha until the Armijo condition is met.
-        while abs(self.func(self.x + alpha * p)) > fx + c * alpha * grad_fx * p:
-            alpha *= rho
-            if alpha < 1e-10:  # Prevent alpha from becoming too small.
+        while True:
+            x_new = self.x + alpha * p
+            fx_new = self.func(x_new)
+
+            # Armijo condition
+            if fx_new <= fx + self.c * alpha * directional_derivative:
+                break
+
+            alpha *= self.beta
+
+            if alpha < 1e-10:  # Prevent too small steps
                 break
 
         return alpha
 
-    def step(self) -> float:
-        """
-        Perform one iteration of the steepest descent method.
+    def step(self) -> np.ndarray:
+        """Perform one iteration of steepest descent.
 
         Returns:
-            float: Current approximation of the root.
+            np.ndarray: New point
         """
-        # If the method has already converged, return the current approximation.
-        if self._converged:
-            return self.x
+        # Get gradient at current point
+        grad = self.derivative(self.x)
 
-        # Store old x value
-        x_old = self.x
-
-        # Evaluate the function at the current approximation.
-        fx = self.func(self.x)
-        # Compute the gradient using the derivative and adjust sign for root finding.
-        grad = np.sign(fx) * self.derivative(self.x)  # type: ignore
-
-        # The search direction is the negative gradient.
+        # Search direction is negative gradient
         p = -grad
 
-        # Determine an appropriate step size using backtracking line search.
+        # Normalize search direction for better scaling
+        p_norm = np.linalg.norm(p)
+        if p_norm > 1e-10:
+            p = p / p_norm
+
+        # Find step size using line search
         alpha = self._backtracking_line_search(p)
 
-        # Store iteration details
-        details = {
-            "f(x)": fx,
-            "gradient": grad,
-            "search_direction": p,
-            "step_size": alpha,
-            "line_search": {
-                "initial_alpha": self.alpha,
-                "final_alpha": alpha,
+        # Store details for visualization
+        self.add_iteration(
+            self.x,
+            self.x + alpha * p,
+            {
+                "gradient": str(grad),
+                "search_direction": str(p),
+                "step_size": alpha,
+                "line_search": {
+                    "initial_alpha": self.alpha,
+                    "final_alpha": alpha,
+                },
             },
-        }
+        )
 
-        # Update the current approximation using the step size and search direction.
-        self.x += alpha * p
+        # Update position
+        self.x = self.x + alpha * p
+        self.iterations += 1
 
-        # Store iteration data
-        self.add_iteration(x_old, self.x, details)
-
-        self.iterations += 1  # Increment iteration count.
-
-        # Check for convergence:
-        # If the absolute function value is within tolerance or maximum iterations reached.
-        if abs(fx) <= self.tol or self.iterations >= self.max_iter:
-            self._converged = True
+        # Check convergence
+        grad_norm = np.linalg.norm(self.derivative(self.x))
+        self._converged = grad_norm < self.tol or self.iterations >= self.max_iter
 
         return self.x
+
+    def get_current_x(self) -> np.ndarray:
+        """Get current point."""
+        return self.x
+
+    def get_error(self) -> float:
+        """Get error estimate (gradient norm)."""
+        return float(np.linalg.norm(self.derivative(self.x)))
 
     @property
     def name(self) -> str:
@@ -120,7 +126,7 @@ class SteepestDescentMethod(BaseRootFinder):
 
 
 def steepest_descent_search(
-    f: RootFinderConfig,
+    f: NumericalMethodConfig,
     x0: float,
     alpha: float = 0.1,
     tol: float = 1e-6,
@@ -130,52 +136,27 @@ def steepest_descent_search(
     Legacy wrapper for backward compatibility.
 
     Args:
-        f: Function configuration (or function) for the root finder.
-        x0: Initial guess.
-        alpha: Learning rate.
-        tol: Error tolerance.
-        max_iter: Maximum number of iterations.
+        f: Function configuration (or function) for optimization
+        x0: Initial guess
+        alpha: Learning rate
+        tol: Error tolerance
+        max_iter: Maximum number of iterations
 
     Returns:
-        Tuple of (root, errors, iterations), where:
-         - root is the final approximation,
-         - errors is a list of error values for each iteration,
-         - iterations is the number of iterations performed.
+        Tuple of (minimum, errors, iterations)
     """
-    # Create a configuration instance from the provided parameters.
-    config = RootFinderConfig(func=f, tol=tol, max_iter=max_iter)
-    # Instantiate the steepest descent method with the configuration and initial guess.
-    method = SteepestDescentMethod(config, x0, alpha)
+    if callable(f):
+        config = NumericalMethodConfig(
+            func=f, method_type="optimize", tol=tol, max_iter=max_iter
+        )
+    else:
+        config = f
 
-    errors = []  # List to store error values per iteration.
-    # Run iterations until convergence.
+    method = SteepestDescentMethod(config, x0, alpha)
+    errors = []
+
     while not method.has_converged():
         method.step()
         errors.append(method.get_error())
 
-    # Return the final approximation, error history, and iteration count.
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Define the function: f(x) = x^2 - 2, to find sqrt(2)
-#     def f(x):
-#         return x**2 - 2
-#
-#     # Define its derivative: f'(x) = 2x
-#     def df(x):
-#         return 2 * x
-#
-#     # Setup configuration with function, derivative, and tolerance.
-#     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
-#     # Instantiate the method with an initial guess and learning rate.
-#     method = SteepestDescentMethod(config, x0=1.5, alpha=0.1)
-#
-#     # Iterate until convergence.
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-#
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")

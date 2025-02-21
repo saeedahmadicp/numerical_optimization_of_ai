@@ -1,114 +1,170 @@
 # algorithms/convex/newton_hessian.py
 
-"""Newton-Hessian method for root finding."""
+"""Newton-Hessian method for both root-finding and optimization."""
 
-from typing import List, Tuple
-import torch  # Used for automatic differentiation
+from typing import List, Tuple, Optional, Callable
+import torch
 
-from .protocols import BaseRootFinder, RootFinderConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
-class NewtonHessianMethod(BaseRootFinder):
-    """Implementation of Newton-Hessian method."""
+class NewtonHessianMethod(BaseNumericalMethod):
+    """Implementation of Newton-Hessian method using automatic differentiation."""
 
-    def __init__(self, config: RootFinderConfig, x0: float):
+    def __init__(
+        self,
+        config: NumericalMethodConfig,
+        x0: float,
+        second_derivative: Optional[Callable[[float], float]] = None,
+    ):
         """
         Initialize Newton-Hessian method.
 
         Args:
-            config: Configuration including function, derivative, and tolerances.
-            x0: Initial guess for the root.
+            config: Configuration including function, derivative, and tolerances
+            x0: Initial guess
+            second_derivative: Optional for optimization (will use auto-diff if not provided)
 
         Raises:
-            ValueError: If derivative function is not provided in config.
+            ValueError: If derivative is missing
         """
-        # Ensure that a derivative is provided, as this method requires it.
         if config.derivative is None:
             raise ValueError("Newton-Hessian method requires derivative function")
 
-        # Initialize common attributes from the base class.
         super().__init__(config)
-        self.x = x0  # Current approximation of the root.
-
-        # Convert the initial guess to a torch tensor for automatic differentiation.
-        self.x_tensor = torch.tensor(x0, requires_grad=True, dtype=torch.float64)
+        self.x = x0
+        self.second_derivative = second_derivative
 
     def get_current_x(self) -> float:
         """Get current x value."""
         return self.x
 
-    def _compute_hessian(self) -> float:
+    def _compute_hessian(self, x: float) -> float:
         """
-        Compute the Hessian (second derivative) of f(x) using automatic differentiation.
+        Compute the Hessian using automatic differentiation.
+
+        Args:
+            x: Point at which to compute the Hessian
 
         Returns:
-            float: The Hessian value at the current point.
+            float: The Hessian value
         """
-        # Convert the current approximation to a tensor with gradient tracking
-        x = torch.tensor(self.x, requires_grad=True, dtype=torch.float64)
+        x_tensor = torch.tensor(x, requires_grad=True, dtype=torch.float64)
 
-        # Compute the function value and its first derivative
-        fx = self.func(float(x))
-        fx_tensor = torch.tensor(fx, requires_grad=True)
-        fx_tensor.backward()
+        # For optimization, compute Hessian of function
+        if self.method_type == "optimize":
+            fx = self.func(float(x_tensor))
+            fx_tensor = torch.tensor(fx, requires_grad=True)
+            fx_tensor.backward()
 
-        # Get first derivative
-        if x.grad is None:
-            return 1.0
+            if x_tensor.grad is None:
+                return 1.0
 
-        grad = x.grad.clone()
-        x.grad.zero_()  # Clear the gradients for second derivative computation
+            grad = x_tensor.grad.clone()
+            x_tensor.grad.zero_()
 
-        # Compute second derivative
-        grad.backward()
-        hess = x.grad
+            grad.backward()
+            hess = x_tensor.grad
 
-        if hess is None:
-            return 1.0
+            return float(hess) if hess is not None else 1.0
 
-        return float(hess)
+        # For root-finding, compute Hessian of derivative
+        else:
+            dfx = self.derivative(float(x_tensor))  # type: ignore
+            dfx_tensor = torch.tensor(dfx, requires_grad=True)
+            dfx_tensor.backward()
+
+            if x_tensor.grad is None:
+                return 1.0
+
+            return float(x_tensor.grad) if x_tensor.grad is not None else 1.0
 
     def step(self) -> float:
         """
         Perform one iteration of Newton-Hessian method.
+
+        Returns:
+            float: Current approximation
         """
         if self._converged:
             return self.x
 
-        # Store old x value
         x_old = self.x
-
-        # Compute function, derivative, and Hessian
         fx = self.func(self.x)
         dfx = self.derivative(self.x)  # type: ignore
-        hess = self._compute_hessian()
 
-        # Store iteration details
+        # Use provided second derivative or compute via auto-diff
+        if self.second_derivative is not None:
+            d2fx = self.second_derivative(self.x)
+        else:
+            d2fx = self._compute_hessian(self.x)
+
         details = {
             "f(x)": fx,
             "f'(x)": dfx,
-            "hessian": hess,
-            "step": -fx / dfx if abs(dfx) > 1e-10 else 0,
+            "f''(x)": d2fx,
         }
 
-        # Check for small derivative
-        if abs(dfx) < 1e-10:
-            self._converged = True
-            return self.x
+        if self.method_type == "root":
+            # Root-finding mode
+            if abs(dfx) < 1e-10:
+                self._converged = True
+                return self.x
 
-        # Update x
-        try:
-            self.x = self.x - fx / dfx
-            # Store iteration data
-            self.add_iteration(x_old, self.x, details)
-            self.iterations += 1
-        except RuntimeError:
-            self._converged = True
-            return self.x
+            step = -fx / dfx
+            self.x = self.x + step
 
-        # Check convergence
-        if abs(fx) <= self.tol or self.iterations >= self.max_iter:
-            self._converged = True
+            if abs(fx) <= self.tol or self.iterations >= self.max_iter:
+                self._converged = True
+
+        else:  # optimization mode
+            # Compute scale-invariant measures
+            grad_norm = abs(dfx)
+            x_scale = max(1.0, abs(self.x))
+            f_scale = max(1.0, abs(fx))
+
+            # Early convergence check
+            if grad_norm <= self.tol * f_scale:
+                self._converged = True
+                return self.x
+
+            # Compute search direction
+            if abs(d2fx) < 1e-10:
+                direction = -dfx
+            else:
+                direction = -dfx / d2fx
+
+            # Normalize direction
+            if abs(direction) > x_scale:
+                direction = direction * (x_scale / abs(direction))
+
+            # Backtracking line search
+            alpha = 1.0
+            beta = 0.5
+            c = 0.1
+            x_new = self.x + alpha * direction
+            f_new = self.func(x_new)
+
+            while f_new > fx + c * alpha * dfx * direction:
+                alpha *= beta
+                if alpha < 1e-10:
+                    break
+                x_new = self.x + alpha * direction
+                f_new = self.func(x_new)
+
+            step = alpha * direction
+            self.x = x_new
+
+            if (
+                grad_norm <= self.tol * f_scale
+                or abs(step) <= self.tol * x_scale
+                or self.iterations >= self.max_iter
+            ):
+                self._converged = True
+
+        details["step"] = step
+        self.add_iteration(x_old, self.x, details)
+        self.iterations += 1
 
         return self.x
 
@@ -118,70 +174,37 @@ class NewtonHessianMethod(BaseRootFinder):
 
 
 def newton_hessian_search(
-    f: RootFinderConfig,
+    f: NumericalMethodConfig,
     x0: float,
     tol: float = 1e-6,
     max_iter: int = 100,
+    method_type: str = "root",
 ) -> Tuple[float, List[float], int]:
-    """
-    Legacy wrapper for backward compatibility.
-
-    Args:
-        f: Function configuration (or callable) for root finding.
-        x0: Initial guess.
-        tol: Error tolerance.
-        max_iter: Maximum number of iterations.
-
-    Returns:
-        Tuple of (root, errors, iterations) where:
-         - root is the final approximation,
-         - errors is a list of error values per iteration,
-         - iterations is the number of iterations performed.
-    """
-    # If f is a callable (old style), create a derivative function using finite differences
+    """Legacy wrapper for backward compatibility."""
     if callable(f):
+        h = 1e-7
 
-        def derivative(x: float, h: float = 1e-7) -> float:
+        def derivative(x: float) -> float:
             return (f(x + h) - f(x)) / h
 
-        config = RootFinderConfig(
-            func=f, derivative=derivative, tol=tol, max_iter=max_iter
+        config = NumericalMethodConfig(
+            func=f,
+            method_type=method_type,
+            derivative=derivative,
+            tol=tol,
+            max_iter=max_iter,
         )
     else:
-        # f is already a RootFinderConfig
         config = f
 
-    # Instantiate the Newton-Hessian method with the configuration and initial guess
     method = NewtonHessianMethod(config, x0)
+    errors = []
+    prev_x = x0
 
-    errors = []  # List to record error values at each iteration
-    # Continue iterating until convergence
     while not method.has_converged():
-        method.step()
-        errors.append(method.get_error())
+        x = method.step()
+        if x != prev_x:  # Only record error if x changed
+            errors.append(method.get_error())
+        prev_x = x
 
-    # Return the final approximation, error history, and iteration count
     return method.x, errors, method.iterations
-
-
-# if __name__ == "__main__":
-#     # Define function f(x) = x^2 - 2, aiming to find sqrt(2)
-#     def f(x):
-#         return x**2 - 2
-
-#     # Define its derivative f'(x) = 2x
-#     def df(x):
-#         return 2 * x
-
-#     # Use the new protocol-based implementation.
-#     config = RootFinderConfig(func=f, derivative=df, tol=1e-6)
-#     method = NewtonHessianMethod(config, x0=1.5)
-
-#     # Iterate until convergence, printing progress.
-#     while not method.has_converged():
-#         x = method.step()
-#         print(f"x = {x:.6f}, error = {method.get_error():.6f}")
-
-#     print(f"\nFound root: {x}")
-#     print(f"Iterations: {method.iterations}")
-#     print(f"Final error: {method.get_error():.6e}")

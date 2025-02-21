@@ -1,80 +1,136 @@
-# Numerical Optimization Methods for AI
+# Numerical Optimization Methods
 
-A collection of numerical optimization algorithms implemented in Python (and some in R), focusing on educational understanding and practical applications in AI/ML. This repository aims to help students and practitioners learn about optimization techniques through clear implementations and detailed explanations.
+A Python implementation of numerical optimization and root-finding algorithms with interactive visualizations.
 
-## 🎯 Purpose
+![Rosenbrock Optimization Example](assets/min_rosenbrock.png)
+![Himmelblau Optimization Example](assets/min_himmelblau.png)
 
-This repository serves as:
-- A learning resource for understanding optimization algorithms
-- A practical reference for implementing numerical methods
-- A platform for experimenting with different optimization techniques
-- A collaborative space for sharing knowledge and improvements
+## Quick Start
 
-## 📦 Implemented Algorithms
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-- **Gradient-Based Methods**
-  - First-Order Methods (Gradient Descent and variants)
-  - Second-Order Methods (Newton and Quasi-Newton)
-  - Stochastic Methods
-  
+# Run optimization example
+python minimize.py --methods newton steepest --function himmelblau --x0 -1.0 -1.0
+
+# Run root finding example
+python find_roots.py --methods newton secant --function quadratic --x0 1.5
+```
+
+## Project Structure
+
+```
+numerical_optimization/
+├── algorithms/     # Implementation of numerical methods
+├── configs/       # Configuration files for custom runs
+├── plot/          # Visualization utilities
+├── tests/         # Unit tests
+├── ui/            # UI components (future)
+└── utils/         # Helper functions and utilities
+```
+
+## Features
+
+- **Optimization Methods**
+  - Gradient Descent
+  - Newton's Method
+  - BFGS
+  - Nelder-Mead
+  - Powell's Method
+
 - **Root Finding Methods**
-  - Newton-Type Methods
-  - Fixed-Point Iteration Methods
-  - Bracketing Methods
+  - Newton's Method
+  - Secant Method
+  - Bisection Method
+  - Regula Falsi
 
-- **Linear Programming**
-  - Simplex Method
-  - Interior Point Methods
-  
-- **Convex Optimization**
-  - Unconstrained Optimization
-  - Constrained Optimization
-  - Convex Programming Methods
+- **Test Functions**
+  - Rosenbrock
+  - Himmelblau
+  - Quadratic
+  - Rastrigin
+  - And more...
 
-- **Global Optimization**
-  - Direct Search Methods
-  - Population-Based Methods
-  - Trust Region Methods
+## Usage Examples
 
-Each implementation includes:
-- Detailed mathematical explanations
-- Step-by-step implementation notes
-- Usage examples
-- Visualization helpers
+### Optimization
 
-## 📚 Learning Resources
+```bash
+# Compare multiple methods
+python minimize.py --methods newton bfgs steepest --function rosenbrock --x0 -1.0 -1.0
 
-Curated list of resources we found helpful:
+# Use configuration file
+python minimize.py --config configs/optimization.yaml
 
-| Resource | Description | Level |
-|----------|-------------|--------|
-| [Convex Optimization (Stanford)](https://www.youtube.com/watch?v=McLq1hEq3UY&list=PL3940DD956CDF0622) | Comprehensive course by Stephen Boyd | Advanced |
-| [Numerical Optimization (Nocedal & Wright)](https://link.springer.com/book/10.1007/978-0-387-40065-5) | Standard reference text | Advanced |
-| [Root Finding Algorithms](https://www.youtube.com/watch?v=MlP_W-obuNg&list=PLb0Tx2oJWuYIpNE23qYHGQD42TIR3ThNz) | Practical implementations by Oscar Veliz | Intermediate |
+# Save results to Excel
+python minimize.py --methods newton steepest --function himmelblau --x0 -1.0 -1.0 --save results/
+```
 
-## 🤝 Contributing
+Example output for Rosenbrock function:
+```
+Optimization Results Summary:
+--------------------------------------------------
+Newton's Method:
+  Iterations: 21
+  Final x: [1.00000000, 1.00000000]
+  Final f(x): 2.67616120e-23
+  Final |∇f(x)|: 1.75e-11
+  Converged: True
 
-We welcome contributions! Whether you want to:
-- Fix bugs
-- Add new algorithms
-- Improve documentation
-- Share insights or use cases
+Steepest Descent Method:
+  Iterations: 100
+  Final x: [0.52740776, 0.26087755]
+  Final f(x): 2.53208078e-01
+  Final |∇f(x)|: 4.39e+00
+  Converged: True
+```
 
-Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
+Example output for Himmelblau function:
+```
+Running optimizations...
+Newton's Method: Converged
+Steepest Descent Method: Converged
 
-## 👥 Contributors
+Optimization Results Summary:
+--------------------------------------------------
+Newton's Method:
+  Iterations: 7
+  Final x: [-3.77931025, -3.28318599]
+  Final f(x): 3.95260010e-18
+  Final |∇f(x)|: 2.54e-08
+  Converged: True
 
-| Name | Role | GitHub |
-|------|------|--------|
-| Saeed Ahmad | Maintainer | [@saeedahmadicp](https://github.com/saeedahmadicp) |
-| Izhar Ali | Maintainer | [@ali-izhar](https://github.com/ali-izhar) |
+Steepest Descent Method:
+  Iterations: 82
+  Final x: [-3.77931025, -3.28318599]
+  Final f(x): 1.69009245e-15
+  Final |∇f(x)|: 6.72e-07
+  Converged: True
+```
 
-## 📄 License
+### Root Finding
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```bash
+# Compare root finding methods
+python find_roots.py --methods newton secant --function quadratic --x0 1.5
 
----
+# Use all available methods
+python find_roots.py --all --function cubic --x0 1.0
+```
 
-<p align="center">
-  Built for learning and experimentation 📚
-</p>
+## Visualization
+
+The package provides interactive visualizations for both optimization and root-finding:
+- Function surface/contour plots
+- Optimization paths
+- Convergence analysis
+- Error tracking
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.

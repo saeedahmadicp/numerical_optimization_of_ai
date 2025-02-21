@@ -1,0 +1,50 @@
+# Comprehensive test configuration for root finding methods
+# Run different test cases with different settings
+
+# Test case 1: Simple quadratic
+quadratic_test:
+  function: quadratic
+  methods:
+    - newton
+    - newton_hessian
+    - bfgs
+  x0: [1.5]
+  tol: 1.0e-6
+  xrange: [-3, 3]
+
+# Test case 2: Multiple roots with challenging initial point
+multiple_roots_test:
+  function: multiple_roots
+  methods:
+    - newton
+    - newton_hessian
+    - bfgs
+  x0: [0.5]
+  tol: 1.0e-8
+  xrange: [-3, 2]
+
+# Test case 3: Compare all methods on a simple function
+all_methods_test:
+  function: quadratic
+  methods:
+    - newton
+    - newton_hessian
+    - bfgs
+    - secant
+    - bisection
+    - regula_falsi
+  x0: [1.5]
+  x1: [2.0]  # For methods that need two points
+  tol: 1.0e-6
+  xrange: [-3, 3]
+
+# Test case 4: Stiff function test
+stiff_test:
+  function: stiff
+  methods:
+    - newton
+    - bfgs
+  x0: [0.5]
+  tol: 1.0e-10
+  max_iter: 200
+  xrange: [0, 1] 

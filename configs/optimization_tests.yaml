@@ -1,0 +1,49 @@
+# Comprehensive test configuration for optimization methods
+# Run different test cases with different settings
+
+# Test case 1: Simple quadratic (1D)
+quadratic_test:
+  function: quadratic
+  methods:
+    - bfgs
+    - newton
+    - steepest
+  x0: [1.5]
+  tol: 1.0e-6
+  xrange: [-3, 3]
+
+# Test case 2: Rosenbrock function (2D)
+rosenbrock_test:
+  function: rosenbrock
+  methods:
+    - bfgs
+    - newton_hessian
+    - nelder_mead
+  x0: [-1.0, -1.0]
+  tol: 1.0e-8
+  xrange: [-2, 2]
+
+# Test case 3: Compare all methods
+all_methods_test:
+  function: himmelblau
+  methods:
+    - bfgs
+    - newton
+    - newton_hessian
+    - steepest
+    - powell
+    - nelder_mead
+  x0: [1.0, 1.0]
+  tol: 1.0e-6
+  xrange: [-5, 5]
+
+# Test case 4: Challenging function
+rastrigin_test:
+  function: rastrigin
+  methods:
+    - bfgs
+    - nelder_mead
+  x0: [0.5, 0.5]
+  tol: 1.0e-10
+  max_iter: 200
+  xrange: [-5.12, 5.12] 
