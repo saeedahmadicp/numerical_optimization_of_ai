@@ -865,8 +865,7 @@ class MainWindow(QMainWindow):
                 path[:, 0],
                 path[:, 1],
                 z_path,
-                c=range(len(path)),
-                cmap="magma",  # Changed to magma for better contrast
+                color="#ffffff",  # Fixed white color instead of colormap
                 s=60,  # Increased point size
                 alpha=1.0,  # Full opacity
                 zorder=100,  # Ensure points are drawn on top
@@ -883,7 +882,7 @@ class MainWindow(QMainWindow):
                     [path[i, 0], path[i + 1, 0]],
                     [path[i, 1], path[i + 1, 1]],
                     [z_path[i], z_path[i + 1]],
-                    color=color,
+                    color="#ffffff",  # White color for path lines
                     linewidth=3,  # Thicker lines
                     alpha=0.9,  # More visible
                     zorder=99,  # Draw lines below points but above surface
@@ -894,7 +893,7 @@ class MainWindow(QMainWindow):
                 path[0, 0],
                 path[0, 1],
                 z_path[0],
-                color="#00ff00",  # Bright green
+                color="#ffff00",  # Bright yellow
                 s=200,  # Larger marker
                 marker="^",
                 linewidth=2,
@@ -906,11 +905,11 @@ class MainWindow(QMainWindow):
                 path[-1, 0],
                 path[-1, 1],
                 z_path[-1],
-                color="#ff0000",  # Bright red
+                color="#ffffff",  # Bright white
                 s=200,  # Larger marker
                 marker="*",
                 linewidth=2,
-                edgecolor="white",
+                edgecolor="#ffff00",  # Yellow edge for contrast
                 zorder=101,  # Ensure end point is on top
                 label="End",
             )
@@ -956,7 +955,7 @@ class MainWindow(QMainWindow):
                 bbox_to_anchor=(0.5, 1.15),  # Move above the plot
                 facecolor=self.plot_colors["surface"],
                 edgecolor="#4a4a4a",  # Brighter edge
-                labelcolor="#00ffff",  # Bright cyan
+                labelcolor="#ffffff",  # Changed to bright white for better visibility
                 fontsize=12,  # Larger font
                 framealpha=0.8,  # More opaque background
                 borderpad=2,  # More padding
