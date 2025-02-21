@@ -10,6 +10,9 @@ import yaml
 from pathlib import Path
 import matplotlib.pyplot as plt
 from tabulate import tabulate
+import pandas as pd
+import os
+from openpyxl import Workbook
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
@@ -122,6 +125,11 @@ Examples:
     parser.add_argument(
         "--fast", action="store_true", help="Enable fast animation mode"
     )
+    parser.add_argument(
+        "--save",
+        type=Path,
+        help="Directory to save iteration history CSV files",
+    )
 
     args = parser.parse_args()
 
@@ -232,66 +240,143 @@ Examples:
     visualizer = OptimizationVisualizer(config, methods, vis_config)
     visualizer.run_comparison()
 
-    # Show iteration tables
-    for method in methods:
-        history = method.get_iteration_history()
-        if not history:
-            continue
+    # Show iteration tables or save to Excel
+    if args.save:
+        # Create directory if it doesn't exist
+        args.save.mkdir(parents=True, exist_ok=True)
 
-        print(f"\n{method.name} Iteration History:")
-        table_data = []
-        for iter_data in history:
-            # Format x_old and x_new based on dimensionality
-            if len(iter_data.x_old) == 1:
-                x_old_str = f"{iter_data.x_old[0]:.8f}"
-                x_new_str = f"{iter_data.x_new[0]:.8f}"
-            else:
-                x_old_str = f"[{', '.join(f'{x:.8f}' for x in iter_data.x_old)}]"
-                x_new_str = f"[{', '.join(f'{x:.8f}' for x in iter_data.x_new)}]"
+        # Generate filename based on function
+        filename = f"{args.function}_optimization_history.xlsx"
+        filepath = args.save / filename
 
-            # Convert function values and error to float, handling vector norms
-            f_old = (
-                float(iter_data.f_old)
-                if isinstance(iter_data.f_old, np.ndarray)
-                else iter_data.f_old
-            )
-            f_new = (
-                float(iter_data.f_new)
-                if isinstance(iter_data.f_new, np.ndarray)
-                else iter_data.f_new
-            )
+        # Create Excel writer
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            for method in methods:
+                history = method.get_iteration_history()
+                if not history:
+                    continue
 
-            # For vector-valued errors, use the norm
-            if isinstance(iter_data.error, np.ndarray):
-                error = float(np.linalg.norm(iter_data.error))
-            else:
-                error = float(iter_data.error)
+                # Prepare data for DataFrame
+                data = []
+                for iter_data in history:
+                    # Format x_old and x_new based on dimensionality
+                    if len(iter_data.x_old) == 1:
+                        x_old_str = f"{iter_data.x_old[0]:.8f}"
+                        x_new_str = f"{iter_data.x_new[0]:.8f}"
+                    else:
+                        x_old_str = (
+                            f"[{', '.join(f'{x:.8f}' for x in iter_data.x_old)}]"
+                        )
+                        x_new_str = (
+                            f"[{', '.join(f'{x:.8f}' for x in iter_data.x_new)}]"
+                        )
 
-            row = [
-                iter_data.iteration,
-                x_old_str,
-                f"{f_old:.8e}",
-                x_new_str,
-                f"{f_new:.8e}",
-                f"{error:.2e}",
-            ]
-            # Add method-specific details
-            for key, value in iter_data.details.items():
-                if isinstance(value, (float, np.floating)):
-                    row.append(f"{float(value):.6e}")
-                elif isinstance(value, np.ndarray):
-                    row.append(f"{np.array2string(value, precision=6, separator=', ')}")
+                    # Convert function values and error to float, handling vector norms
+                    f_old = (
+                        float(iter_data.f_old)
+                        if isinstance(iter_data.f_old, np.ndarray)
+                        else iter_data.f_old
+                    )
+                    f_new = (
+                        float(iter_data.f_new)
+                        if isinstance(iter_data.f_new, np.ndarray)
+                        else iter_data.f_new
+                    )
+
+                    # For vector-valued errors, use the norm
+                    if isinstance(iter_data.error, np.ndarray):
+                        error = float(np.linalg.norm(iter_data.error))
+                    else:
+                        error = float(iter_data.error)
+
+                    row = {
+                        "Iteration": iter_data.iteration,
+                        "x_old": x_old_str,
+                        "f(x_old)": f"{f_old:.8e}",
+                        "x_new": x_new_str,
+                        "f(x_new)": f"{f_new:.8e}",
+                        "|f'(x)|": f"{error:.2e}",
+                    }
+
+                    # Add method-specific details
+                    for key, value in iter_data.details.items():
+                        if isinstance(value, (float, np.floating)):
+                            row[key] = f"{float(value):.6e}"
+                        elif isinstance(value, np.ndarray):
+                            row[key] = (
+                                f"{np.array2string(value, precision=6, separator=', ')}"
+                            )
+                        else:
+                            row[key] = str(value)
+                    data.append(row)
+
+                # Create DataFrame and save to Excel sheet
+                df = pd.DataFrame(data)
+                df.to_excel(writer, sheet_name=method.name, index=False)
+
+            print(f"Saved all iteration histories to {filepath}")
+    else:
+        # If --save is not specified, print tables as before
+        for method in methods:
+            history = method.get_iteration_history()
+            if not history:
+                continue
+
+            # Prepare data for DataFrame
+            data = []
+            for iter_data in history:
+                # Format x_old and x_new based on dimensionality
+                if len(iter_data.x_old) == 1:
+                    x_old_str = f"{iter_data.x_old[0]:.8f}"
+                    x_new_str = f"{iter_data.x_new[0]:.8f}"
                 else:
-                    row.append(str(value))
-            table_data.append(row)
+                    x_old_str = f"[{', '.join(f'{x:.8f}' for x in iter_data.x_old)}]"
+                    x_new_str = f"[{', '.join(f'{x:.8f}' for x in iter_data.x_new)}]"
 
-        # Create headers based on method details
-        headers = ["Iter", "x_old", "f(x_old)", "x_new", "f(x_new)", "|f'(x)|"]
-        if history[0].details:
-            headers.extend(history[0].details.keys())
+                # Convert function values and error to float, handling vector norms
+                f_old = (
+                    float(iter_data.f_old)
+                    if isinstance(iter_data.f_old, np.ndarray)
+                    else iter_data.f_old
+                )
+                f_new = (
+                    float(iter_data.f_new)
+                    if isinstance(iter_data.f_new, np.ndarray)
+                    else iter_data.f_new
+                )
 
-        print(tabulate(table_data, headers=headers, floatfmt=".8f"))
-        print()
+                # For vector-valued errors, use the norm
+                if isinstance(iter_data.error, np.ndarray):
+                    error = float(np.linalg.norm(iter_data.error))
+                else:
+                    error = float(iter_data.error)
+
+                row = {
+                    "Iteration": iter_data.iteration,
+                    "x_old": x_old_str,
+                    "f(x_old)": f"{f_old:.8e}",
+                    "x_new": x_new_str,
+                    "f(x_new)": f"{f_new:.8e}",
+                    "|f'(x)|": f"{error:.2e}",
+                }
+
+                # Add method-specific details
+                for key, value in iter_data.details.items():
+                    if isinstance(value, (float, np.floating)):
+                        row[key] = f"{float(value):.6e}"
+                    elif isinstance(value, np.ndarray):
+                        row[key] = (
+                            f"{np.array2string(value, precision=6, separator=', ')}"
+                        )
+                    else:
+                        row[key] = str(value)
+                data.append(row)
+
+            # Create DataFrame and print table
+            df = pd.DataFrame(data)
+            print(f"\n{method.name} Iteration History:")
+            print(tabulate(df.values.tolist(), headers=df.columns, floatfmt=".8f"))
+            print()
 
     plt.ioff()
     plt.show(block=True)
@@ -303,14 +388,14 @@ if __name__ == "__main__":
 
 # Example commands:
 # Compare all methods:
-# python minimize.py --all --function quadratic --x0 1.5
+# python minimize.py --all --function quadratic --x0 1.5 --save results/
 
 # Compare gradient-based methods:
-# python minimize.py --methods steepest bfgs newton --function quadratic --x0 1.5
+# python minimize.py --methods steepest bfgs newton --function quadratic --x0 1.5 --save output/
 
 # Test on 2D functions:
-# python minimize.py --methods bfgs newton --function rosenbrock --x0 -1.0 -1.0
-# python minimize.py --methods bfgs nelder_mead --function himmelblau --x0 1.0 1.0
+# python minimize.py --methods bfgs newton --function rosenbrock --x0 -1.0 -1.0 --save data/
+# python minimize.py --methods bfgs nelder_mead --function himmelblau --x0 1.0 1.0 --save data/
 
 # Using config files:
 # python minimize.py --config configs/optimization.yaml

@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import json
 import yaml
 from pathlib import Path
+import pandas as pd
+from openpyxl import Workbook
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
@@ -143,6 +145,13 @@ Examples:
         help="Path to configuration file (JSON or YAML)",
     )
 
+    # Add the save argument
+    parser.add_argument(
+        "--save",
+        type=Path,
+        help="Directory to save iteration history CSV files",
+    )
+
     args = parser.parse_args()
 
     # Load configuration from file if provided
@@ -236,38 +245,79 @@ Examples:
     visualizer = RootFindingVisualizer(config, methods, vis_config)
     visualizer.run_comparison()
 
-    # Show iteration tables (always show them)
-    for method in methods:
-        history = method.get_iteration_history()
-        if not history:
-            continue
+    # Show iteration tables or save to Excel
+    if args.save:
+        # Create directory if it doesn't exist
+        args.save.mkdir(parents=True, exist_ok=True)
 
-        print(f"\n{method.name} Iteration History:")
-        table_data = []
-        for iter_data in history:
-            row = [
-                iter_data.iteration,
-                f"{iter_data.x_old:.8f}",
-                f"{iter_data.f_old:.8e}",
-                f"{iter_data.x_new:.8f}",
-                f"{iter_data.f_new:.8e}",
-                f"{iter_data.error:.2e}",
-            ]
-            # Add method-specific details
-            for key, value in iter_data.details.items():
-                if isinstance(value, float):
-                    row.append(f"{value:.6e}")
-                else:
-                    row.append(str(value))
-            table_data.append(row)
+        # Generate filename based on function
+        filename = f"{args.function}_root_finding_history.xlsx"
+        filepath = args.save / filename
 
-        # Create headers based on method details
-        headers = ["Iter", "x_old", "f(x_old)", "x_new", "f(x_new)", "|error|"]
-        if history[0].details:
-            headers.extend(history[0].details.keys())
+        # Create Excel writer
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            for method in methods:
+                history = method.get_iteration_history()
+                if not history:
+                    continue
 
-        print(tabulate(table_data, headers=headers, floatfmt=".8f"))
-        print()
+                # Prepare data for DataFrame
+                data = []
+                for iter_data in history:
+                    row = {
+                        "Iteration": iter_data.iteration,
+                        "x_old": f"{iter_data.x_old:.8f}",
+                        "f(x_old)": f"{iter_data.f_old:.8e}",
+                        "x_new": f"{iter_data.x_new:.8f}",
+                        "f(x_new)": f"{iter_data.f_new:.8e}",
+                        "|error|": f"{iter_data.error:.2e}",
+                    }
+
+                    # Add method-specific details
+                    for key, value in iter_data.details.items():
+                        if isinstance(value, float):
+                            row[key] = f"{value:.6e}"
+                        else:
+                            row[key] = str(value)
+                    data.append(row)
+
+                # Create DataFrame and save to Excel sheet
+                df = pd.DataFrame(data)
+                df.to_excel(writer, sheet_name=method.name, index=False)
+
+            print(f"Saved all iteration histories to {filepath}")
+    else:
+        # If --save is not specified, print tables as before
+        for method in methods:
+            history = method.get_iteration_history()
+            if not history:
+                continue
+
+            # Prepare data for DataFrame
+            data = []
+            for iter_data in history:
+                row = {
+                    "Iteration": iter_data.iteration,
+                    "x_old": f"{iter_data.x_old:.8f}",
+                    "f(x_old)": f"{iter_data.f_old:.8e}",
+                    "x_new": f"{iter_data.x_new:.8f}",
+                    "f(x_new)": f"{iter_data.f_new:.8e}",
+                    "|error|": f"{iter_data.error:.2e}",
+                }
+
+                # Add method-specific details
+                for key, value in iter_data.details.items():
+                    if isinstance(value, float):
+                        row[key] = f"{value:.6e}"
+                    else:
+                        row[key] = str(value)
+                data.append(row)
+
+            # Create DataFrame and print table
+            df = pd.DataFrame(data)
+            print(f"\n{method.name} Iteration History:")
+            print(tabulate(df.values.tolist(), headers=df.columns, floatfmt=".8f"))
+            print()
 
     plt.ioff()
     plt.show(block=True)
@@ -279,17 +329,13 @@ if __name__ == "__main__":
 
 # Example commands:
 # Compare all methods:
-# python find_roots.py --all --function quadratic --x0 1.5
+# python find_roots.py --all --function quadratic --x0 1.5 --save results/
 
 # Compare root-finding only methods:
-# python find_roots.py --methods bisection secant regula_falsi --function quadratic --x0 1.5
+# python find_roots.py --methods bisection secant regula_falsi --function quadratic --x0 1.5 --save output/
 
 # Compare dual-capable methods:
-# python find_roots.py --methods newton newton_hessian bfgs --function multiple_roots --x0 0.5
-
-# Test challenging functions:
-# python find_roots.py --methods newton bfgs --function stiff --x0 0.5
-# python find_roots.py --methods newton bfgs --function ill_conditioned --x0 0.5
+# python find_roots.py --methods newton newton_hessian bfgs --function multiple_roots --x0 0.5 --save data/
 
 
 # # Config file examples
