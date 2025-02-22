@@ -308,6 +308,135 @@ def booth() -> FuncPair:
     )
 
 
+def drug_effectiveness() -> FuncPair:
+    """Drug effectiveness function given by the following formula:
+
+    A pharmaceutical company is analyzing the relationship between drug dosage and its effectiveness
+    in treating patient symptoms. The effectiveness E(d) (measured as a percentage reduction in symptoms)
+    is believed to follow a sigmoid-shaped curve described by the following nonlinear model:
+
+    E(d) = (E_max * d^n) / (K^n + d^n)
+
+    where:
+    - E(d) is the effectiveness at dosage d
+    - E_max is the maximum possible effectiveness
+    - K is the dosage at which effectiveness is half of E_max
+    - n is the Hill coefficient
+
+    The objective function F(E_max, K, n) is:
+    F = sum_{i=1}^7 [E(d_i) - (E_max * d_i^n)/(K^n + d_i^n)]^2
+
+    The gradient ∇F has components:
+    ∂F/∂E_max = -2∑r_i * (d_i^n)/(K^n + d_i^n)
+    ∂F/∂K = 2∑r_i * (E_max * n * K^(n-1) * d_i^n)/(K^n + d_i^n)^2
+    ∂F/∂n = -2∑r_i * E_max * [(d_i^n * K^n * ln(d_i/K))/(K^n + d_i^n)^2]
+
+    where r_i = E(d_i) - (E_max * d_i^n)/(K^n + d_i^n)
+    """
+    # Observed data points (d_i, E(d_i))
+    data = np.array(
+        [
+            [5.0, 10.2],
+            [10.0, 22.8],
+            [20.0, 40.5],
+            [30.0, 55.3],
+            [50.0, 75.1],
+            [80.0, 88.2],
+            [100.0, 93.4],
+        ]
+    )
+
+    # Convert numpy arrays to torch tensors
+    dosages = torch.tensor(data[:, 0], dtype=torch.float64)
+    observed_effects = torch.tensor(data[:, 1], dtype=torch.float64)
+
+    def objective(x: np.ndarray) -> float:
+        """Compute the objective function F(E_max, K, n)."""
+        if len(x) != 3:
+            raise ValueError(
+                "Drug effectiveness function requires 3 parameters: E_max, K, n"
+            )
+
+        # Convert numpy array to torch tensor
+        x_torch = torch.tensor(x, dtype=torch.float64, requires_grad=True)
+        E_max, K, n = x_torch
+
+        # Compute predicted effects for each dosage
+        predicted = (E_max * dosages**n) / (K**n + dosages**n)
+
+        # Compute residuals and sum of squares
+        residuals = observed_effects - predicted
+        loss = torch.sum(residuals**2)
+
+        return float(loss.detach().numpy())
+
+    def gradient(x: np.ndarray) -> np.ndarray:
+        """Compute the gradient ∇F using autograd."""
+        if len(x) != 3:
+            raise ValueError(
+                "Drug effectiveness function requires 3 parameters: E_max, K, n"
+            )
+
+        x_torch = torch.tensor(x, dtype=torch.float64, requires_grad=True)
+        E_max, K, n = x_torch
+
+        # Forward pass
+        predicted = (E_max * dosages**n) / (K**n + dosages**n)
+        residuals = observed_effects - predicted
+        loss = torch.sum(residuals**2)
+
+        # Backward pass
+        loss.backward()
+
+        return x_torch.grad.numpy()
+
+    def hessian(x: np.ndarray) -> np.ndarray:
+        """Compute the Hessian using autograd."""
+        if len(x) != 3:
+            raise ValueError(
+                "Drug effectiveness function requires 3 parameters: E_max, K, n"
+            )
+
+        x_torch = torch.tensor(x, dtype=torch.float64, requires_grad=True)
+
+        def compute_grad(x_t):
+            E_max, K, n = x_t
+            predicted = (E_max * dosages**n) / (K**n + dosages**n)
+            residuals = observed_effects - predicted
+            loss = torch.sum(residuals**2)
+            return torch.autograd.grad(loss, x_t, create_graph=True)[0]
+
+        grad = compute_grad(x_torch)
+        hess = torch.zeros((3, 3), dtype=torch.float64)
+
+        for i in range(3):
+            grad_i = grad[i]
+            for j in range(3):
+                hess[i, j] = torch.autograd.grad(grad_i, x_torch, retain_graph=True)[0][
+                    j
+                ]
+
+        return hess.detach().numpy()
+
+    def get_fit(params):
+        """Generate fit curve points for visualization."""
+        E_max, K, n = params
+        x_fit = np.logspace(
+            np.log10(1), np.log10(150), 100
+        )  # Generate points on log scale
+        y_fit = (E_max * x_fit**n) / (K**n + x_fit**n)
+        return x_fit, y_fit
+
+    # Add is_3d flag and data attribute to indicate this is a 3D optimization problem
+    objective.is_3d = True
+    objective.data = data
+    objective.get_fit = get_fit
+    gradient.is_3d = True
+    hessian.is_3d = True
+
+    return objective, gradient, hessian
+
+
 # Map function names to their minimization implementations
 MINIMIZATION_MAP = {
     "quadratic": quadratic_min(),
@@ -319,6 +448,7 @@ MINIMIZATION_MAP = {
     "ackley": ackley(),
     "beale": beale(),
     "booth": booth(),
+    "drug_effectiveness": drug_effectiveness(),
 }
 
 # Default ranges for minimization functions
@@ -332,6 +462,11 @@ MINIMIZATION_RANGES = {
     "ackley": (-5, 5),
     "beale": (-4.5, 4.5),
     "booth": (-10, 10),
+    "drug_effectiveness": {  # Dictionary for 3D parameter ranges
+        "E_max": (0, 200),  # Range for maximum effectiveness
+        "K": (0, 100),  # Range for half-maximal concentration
+        "n": (0, 5),  # Range for Hill coefficient
+    },
 }
 
 
@@ -348,7 +483,10 @@ def get_minimization_function(
         Tuple of (function, gradient) or (function, gradient, hessian)
     """
     if with_second_derivative:
-        if name == "quadratic":
+        if name == "drug_effectiveness":
+            f, df, d2f = drug_effectiveness()
+            return f, df, d2f
+        elif name == "quadratic":
             f, df = MINIMIZATION_MAP[name]
             d2f = lambda x: 2.0  # Constant second derivative
             return f, df, d2f
