@@ -418,8 +418,19 @@ def drug_effectiveness() -> FuncPair:
 
         return hess.detach().numpy()
 
-    # Add is_3d flag to indicate this is a 3D optimization problem
+    def get_fit(params):
+        """Generate fit curve points for visualization."""
+        E_max, K, n = params
+        x_fit = np.logspace(
+            np.log10(1), np.log10(150), 100
+        )  # Generate points on log scale
+        y_fit = (E_max * x_fit**n) / (K**n + x_fit**n)
+        return x_fit, y_fit
+
+    # Add is_3d flag and data attribute to indicate this is a 3D optimization problem
     objective.is_3d = True
+    objective.data = data
+    objective.get_fit = get_fit
     gradient.is_3d = True
     hessian.is_3d = True
 
