@@ -48,6 +48,7 @@ DEFAULT_RANGES = {
     "booth": (-10, 10),
     "beale": (-4.5, 4.5),
     "matyas": (-10, 10),
+    "drug_effectiveness": (0, 200),
 }
 
 
