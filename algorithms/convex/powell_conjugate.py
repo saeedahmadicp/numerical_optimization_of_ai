@@ -1,10 +1,10 @@
-# algorithms/convex/power_conjugate.py
+# algorithms/convex/powell_conjugate.py
 
 """
-Power Conjugate method for optimization and root-finding.
+Powell Conjugate method for optimization and root-finding.
 
-The Power Conjugate method combines aspects of conjugate gradient methods with
-power iteration techniques. It uses an iterative approach to generate search
+The Powell Conjugate method combines aspects of conjugate gradient methods with
+powell iteration techniques. It uses an iterative approach to generate search
 directions that approximate the eigenvectors of the Hessian, which helps to
 navigate narrow valleys in the objective function more efficiently.
 
@@ -13,13 +13,13 @@ Mathematical Basis:
 For optimization of a function f over a domain:
 
 1. Generate a search direction based on gradient/function information
-2. Apply a power iteration step to improve the search direction
+2. Apply a powell iteration step to improve the search direction
 3. Perform line search along this direction
 4. Update the current point
 5. Repeat until convergence
 
 For root-finding:
-1. Use a modified power iteration approach to estimate the direction
+1. Use a modified powell iteration approach to estimate the direction
    toward the root
 2. Take steps in that direction, adaptively adjusting step size
 3. Repeat until |f(x)| is sufficiently small
@@ -39,11 +39,11 @@ import numpy as np
 from .protocols import BaseNumericalMethod, NumericalMethodConfig, MethodType
 
 
-class PowerConjugateMethod(BaseNumericalMethod):
+class PowellConjugateMethod(BaseNumericalMethod):
     """
-    Implementation of the Power Conjugate method.
+    Implementation of the Powell Conjugate method.
 
-    The Power Conjugate method combines power iteration techniques with conjugate
+    The Powell Conjugate method combines powell iteration techniques with conjugate
     direction methods to efficiently optimize functions or find roots. It is particularly
     effective for problems with poorly conditioned Hessians.
 
@@ -59,18 +59,18 @@ class PowerConjugateMethod(BaseNumericalMethod):
         x0: float,
         direction_reset_freq: int = 5,
         line_search_factor: float = 0.5,
-        power_iterations: int = 2,
+        powell_iterations: int = 2,
         record_initial_state: bool = False,
     ):
         """
-        Initialize the Power Conjugate method.
+        Initialize the Powell Conjugate method.
 
         Args:
             config: Configuration including function and tolerances
             x0: Initial point
             direction_reset_freq: Frequency of direction resets (similar to CG restarts)
             line_search_factor: Factor for line search step size reduction
-            power_iterations: Number of power iterations to perform in each step
+            powell_iterations: Number of powell iterations to perform in each step
             record_initial_state: Whether to record the initial state in history
 
         Raises:
@@ -89,7 +89,7 @@ class PowerConjugateMethod(BaseNumericalMethod):
         self.prev_x = x0
         self.direction_reset_freq = direction_reset_freq
         self.line_search_factor = line_search_factor
-        self.power_iterations = power_iterations
+        self.powell_iterations = powell_iterations
 
         # For bracketing in root-finding
         self.bracket = None
@@ -221,9 +221,9 @@ class PowerConjugateMethod(BaseNumericalMethod):
         else:
             return self.estimate_derivative(x)
 
-    def _power_iteration_update(self) -> float:
+    def _powell_iteration_update(self) -> float:
         """
-        Apply power iteration to refine search direction.
+        Apply powell iteration to refine search direction.
 
         This approximates the dominant eigenvector of the local Hessian.
 
@@ -232,13 +232,13 @@ class PowerConjugateMethod(BaseNumericalMethod):
         """
         direction = self.direction
 
-        # For numerical stability, don't do power iteration if direction is near zero
+        # For numerical stability, don't do powell iteration if direction is near zero
         if abs(direction) < 1e-10:
             gradient = self._estimate_gradient(self.x)
             return -math.copysign(1.0, gradient)
 
-        for _ in range(self.power_iterations):
-            # Simple power iteration: approximates applying the Hessian
+        for _ in range(self.powell_iterations):
+            # Simple powell iteration: approximates applying the Hessian
             step_size = min(
                 self.finite_diff_step, 0.1 * abs(self.x) + self.finite_diff_step
             )
@@ -260,7 +260,7 @@ class PowerConjugateMethod(BaseNumericalMethod):
                     # Normalize
                     direction = direction / abs(direction)
             except:
-                # If power iteration fails, revert to simple gradient direction
+                # If powell iteration fails, revert to simple gradient direction
                 gradient = self._estimate_gradient(self.x)
                 direction = -math.copysign(1.0, gradient)
 
@@ -542,11 +542,11 @@ class PowerConjugateMethod(BaseNumericalMethod):
 
     def step(self) -> float:
         """
-        Perform one iteration of the Power Conjugate method.
+        Perform one iteration of the Powell Conjugate method.
 
         Each iteration:
         1. Computes a conjugate direction
-        2. Refines it using power iteration
+        2. Refines it using powell iteration
         3. Performs line search to update the current point
         4. Checks convergence criteria
 
@@ -563,8 +563,8 @@ class PowerConjugateMethod(BaseNumericalMethod):
         # 1. Compute conjugate direction
         base_direction = self._compute_conjugate_direction()
 
-        # 2. Apply power iteration to refine direction
-        refined_direction = self._power_iteration_update()
+        # 2. Apply powell iteration to refine direction
+        refined_direction = self._powell_iteration_update()
 
         # Combine directions (with more weight on refined direction)
         if self.method_type == "optimize":
@@ -774,15 +774,15 @@ class PowerConjugateMethod(BaseNumericalMethod):
         Returns:
             str: Name of the method
         """
-        return f"Power Conjugate {'Root-Finding' if self.method_type == 'root' else 'Optimization'} Method"
+        return f"Powell Conjugate {'Root-Finding' if self.method_type == 'root' else 'Optimization'} Method"
 
 
-def power_conjugate_search(
+def powell_conjugate_search(
     f: Union[Callable[[float], float], NumericalMethodConfig],
     x0: float,
     direction_reset_freq: int = 5,
     line_search_factor: float = 0.5,
-    power_iterations: int = 2,
+    powell_iterations: int = 2,
     tol: float = 1e-6,
     max_iter: int = 100,
     method_type: MethodType = "optimize",
@@ -790,7 +790,7 @@ def power_conjugate_search(
     """
     Legacy wrapper for backward compatibility.
 
-    This function provides a simpler interface to the Power Conjugate method.
+    This function provides a simpler interface to the Powell Conjugate method.
 
     Mathematical guarantees:
     - For optimization: Converges superlinearly to local minima for smooth functions
@@ -801,7 +801,7 @@ def power_conjugate_search(
         x0: Initial point
         direction_reset_freq: Frequency of direction resets
         line_search_factor: Factor for line search step size reduction
-        power_iterations: Number of power iterations per step
+        powell_iterations: Number of powell iterations per step
         tol: Error tolerance
         max_iter: Maximum number of iterations
         method_type: Type of problem ("root" or "optimize")
@@ -818,12 +818,12 @@ def power_conjugate_search(
         config = f
 
     # Create and run the method
-    method = PowerConjugateMethod(
+    method = PowellConjugateMethod(
         config,
         x0,
         direction_reset_freq=direction_reset_freq,
         line_search_factor=line_search_factor,
-        power_iterations=power_iterations,
+        powell_iterations=powell_iterations,
     )
     errors = []
 

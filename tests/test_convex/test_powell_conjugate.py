@@ -1,4 +1,4 @@
-# tests/test_convex/test_power_conjugate.py
+# tests/test_convex/test_powell_conjugate.py
 
 import pytest
 import math
@@ -11,9 +11,9 @@ project_root = str(Path(__file__).parent.parent.parent)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from algorithms.convex.power_conjugate import (
-    PowerConjugateMethod,
-    power_conjugate_search,
+from algorithms.convex.powell_conjugate import (
+    PowellConjugateMethod,
+    powell_conjugate_search,
 )
 from algorithms.convex.protocols import NumericalMethodConfig
 
@@ -25,7 +25,7 @@ def test_basic_optimization():
         return x**2
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(config, x0=1.0)
+    method = PowellConjugateMethod(config, x0=1.0)
 
     while not method.has_converged():
         x = method.step()
@@ -41,7 +41,7 @@ def test_basic_root_finding():
         return x**2 - 2
 
     config = NumericalMethodConfig(func=f, method_type="root")
-    method = PowerConjugateMethod(config, x0=1.0)
+    method = PowellConjugateMethod(config, x0=1.0)
 
     while not method.has_converged():
         x = method.step()
@@ -57,7 +57,7 @@ def test_power_iteration():
         return x**2
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(config, x0=1.0, power_iterations=3)
+    method = PowellConjugateMethod(config, x0=1.0, powell_iterations=3)
 
     # Execute a step to compute directions
     method.step()
@@ -102,7 +102,7 @@ def test_conjugate_updates():
         return (x - 2) ** 2  # Minimum at x=2
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(config, x0=0.0)
+    method = PowellConjugateMethod(config, x0=0.0)
 
     # Run a few iterations
     for _ in range(3):
@@ -121,7 +121,7 @@ def test_line_search():
         return x**4  # Steeper function to test line search
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(config, x0=1.0)
+    method = PowellConjugateMethod(config, x0=1.0)
 
     x_old = method.get_current_x()
     f_old = f(x_old)
@@ -142,10 +142,10 @@ def test_method_type_validation():
 
     # Test both method types
     config_opt = NumericalMethodConfig(func=f, method_type="optimize")
-    method_opt = PowerConjugateMethod(config_opt, x0=0.5)
+    method_opt = PowellConjugateMethod(config_opt, x0=0.5)
 
     config_root = NumericalMethodConfig(func=f, method_type="root")
-    method_root = PowerConjugateMethod(config_root, x0=0.5)
+    method_root = PowellConjugateMethod(config_root, x0=0.5)
 
     # Run both methods
     while not method_opt.has_converged():
@@ -169,7 +169,7 @@ def test_invalid_method_type():
 
     with pytest.raises(ValueError, match="Invalid method_type"):
         config = NumericalMethodConfig(func=f, method_type="invalid")
-        PowerConjugateMethod(config, x0=1.0)
+        PowellConjugateMethod(config, x0=1.0)
 
 
 def test_iteration_history():
@@ -179,7 +179,7 @@ def test_iteration_history():
         return x**2
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(
+    method = PowellConjugateMethod(
         config, x0=2.0
     )  # Start further from minimum for better testing
 
@@ -220,7 +220,9 @@ def test_legacy_wrapper():
         return x**2
 
     # Test optimization mode
-    min_point, errors, iters = power_conjugate_search(f, x0=1.0, method_type="optimize")
+    min_point, errors, iters = powell_conjugate_search(
+        f, x0=1.0, method_type="optimize"
+    )
     assert abs(min_point) < 1e-4  # Should find minimum at x=0
     assert len(errors) == iters
 
@@ -228,7 +230,7 @@ def test_legacy_wrapper():
     def g(x):
         return x**2 - 2
 
-    root, errors, iters = power_conjugate_search(g, x0=1.0, method_type="root")
+    root, errors, iters = powell_conjugate_search(g, x0=1.0, method_type="root")
     assert abs(root - math.sqrt(2)) < 1e-4  # Should find root at x=sqrt(2)
     assert len(errors) == iters
 
@@ -253,7 +255,7 @@ def test_different_functions():
             tol=tol,
             max_iter=100,
         )
-        method = PowerConjugateMethod(config, x0=x0)
+        method = PowellConjugateMethod(config, x0=x0)
 
         while not method.has_converged():
             x = method.step()
@@ -283,7 +285,7 @@ def test_different_functions():
             tol=tol,
             max_iter=100,
         )
-        method = PowerConjugateMethod(config, x0=x0)
+        method = PowellConjugateMethod(config, x0=x0)
 
         while not method.has_converged():
             x = method.step()
@@ -304,7 +306,7 @@ def test_max_iterations():
         return x**2
 
     config = NumericalMethodConfig(func=f, method_type="optimize", max_iter=5)
-    method = PowerConjugateMethod(config, x0=1.0)
+    method = PowellConjugateMethod(config, x0=1.0)
 
     while not method.has_converged():
         method.step()
@@ -319,7 +321,7 @@ def test_get_current_x():
         return x**2
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(config, x0=1.0)
+    method = PowellConjugateMethod(config, x0=1.0)
 
     x = method.step()
     assert x == method.get_current_x()
@@ -332,7 +334,7 @@ def test_convergence_rate():
         return x**2
 
     config = NumericalMethodConfig(func=f, method_type="optimize")
-    method = PowerConjugateMethod(config, x0=1.0)
+    method = PowellConjugateMethod(config, x0=1.0)
 
     # Run enough iterations to get convergence rate data
     for _ in range(5):
@@ -356,15 +358,15 @@ def test_custom_parameters():
     config = NumericalMethodConfig(func=f, method_type="optimize")
 
     # Test with standard parameters
-    method1 = PowerConjugateMethod(config, x0=1.0)
+    method1 = PowellConjugateMethod(config, x0=1.0)
 
     # Test with custom parameters
-    method2 = PowerConjugateMethod(
+    method2 = PowellConjugateMethod(
         config,
         x0=1.0,
         direction_reset_freq=2,
         line_search_factor=0.8,
-        power_iterations=4,
+        powell_iterations=4,
     )
 
     # Run both methods and compare
@@ -399,7 +401,7 @@ def test_difficult_function():
     config = NumericalMethodConfig(
         func=f, method_type="optimize", tol=1e-4, max_iter=100
     )
-    method = PowerConjugateMethod(config, x0=x0)
+    method = PowellConjugateMethod(config, x0=x0)
 
     # Run for a limited number of iterations
     for _ in range(50):  # Reduce max iterations for the test
