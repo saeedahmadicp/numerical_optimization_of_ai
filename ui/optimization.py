@@ -7,7 +7,7 @@ from algorithms.convex.protocols import NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
 from algorithms.convex.quasi_newton import BFGSMethod
 from algorithms.convex.nelder_mead import NelderMeadMethod
-from algorithms.convex.powell import PowellMethod
+from algorithms.convex.powell_quadratic import PowellMethod
 from algorithms.convex.steepest_descent import SteepestDescentMethod
 
 

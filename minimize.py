@@ -16,7 +16,7 @@ from algorithms.convex.newton import NewtonMethod
 from algorithms.convex.newton_hessian import NewtonHessianMethod
 from algorithms.convex.quasi_newton import BFGSMethod
 from algorithms.convex.nelder_mead import NelderMeadMethod
-from algorithms.convex.powell import PowellMethod
+from algorithms.convex.powell_quadratic import PowellMethod
 from algorithms.convex.steepest_descent import SteepestDescentMethod
 from plot.optimizer_viz import OptimizationVisualizer, VisualizationConfig
 from utils.funcs import get_minimization_function, MINIMIZATION_MAP
