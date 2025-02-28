@@ -316,10 +316,8 @@ class RootFindingVisualizer:
                     ),
                     colorbar=dict(
                         title="f(x,y)",
-                        titlefont=dict(size=12),
                         thickness=15,
                         len=0.6,
-                        y=0.5,
                     ),
                     name="f(x,y)",
                     legendgroup="function",
@@ -637,7 +635,70 @@ class RootFindingVisualizer:
                     pass
             elif self.dimensions == 2:
                 # For 2D functions, add the contour plot to each frame
-                # (code for contours would need to be included here)
+                x_min, x_max = self.config.x_range
+                y_min, y_max = self.config.x_range  # Assuming same range for y
+
+                # Create a grid of points
+                x_grid = np.linspace(x_min, x_max, 100)
+                y_grid = np.linspace(y_min, y_max, 100)
+                X, Y = np.meshgrid(x_grid, y_grid)
+
+                # Compute function values
+                Z = np.zeros_like(X)
+                for i in range(X.shape[0]):
+                    for j in range(X.shape[1]):
+                        try:
+                            Z[i, j] = self.config.func(np.array([X[i, j], Y[i, j]]))
+                        except:
+                            Z[i, j] = np.nan
+
+                # Add main contour plot
+                frame_data.append(
+                    go.Contour(
+                        z=Z,
+                        x=x_grid,
+                        y=y_grid,
+                        colorscale="Viridis",
+                        contours=dict(
+                            showlabels=True,
+                            labelfont=dict(size=12, color="white"),
+                        ),
+                        colorbar=dict(
+                            title="f(x,y)",
+                            thickness=15,
+                            len=0.6,
+                        ),
+                        name="f(x,y)",
+                        legendgroup="function",
+                        xaxis="x",  # Explicitly set to first x-axis
+                        yaxis="y",  # Explicitly set to first y-axis
+                    )
+                )
+
+                # Add contour line for z=0 to show roots
+                frame_data.append(
+                    go.Contour(
+                        z=Z,
+                        x=x_grid,
+                        y=y_grid,
+                        contours=dict(
+                            start=0,
+                            end=0,
+                            showlabels=False,
+                            coloring="lines",
+                        ),
+                        line=dict(color="white", width=3),
+                        showscale=False,
+                        name="f(x,y)=0",
+                        legendgroup="function",
+                        showlegend=False,
+                        xaxis="x",  # Explicitly set to first x-axis
+                        yaxis="y",  # Explicitly set to first y-axis
+                    )
+                )
+            elif self.dimensions == 3:
+                # For 3D functions, add the 3D visualization to each frame
+                # (code for 3D visualization would need to be included here)
                 pass
 
             # Keep track of which methods are shown in this frame

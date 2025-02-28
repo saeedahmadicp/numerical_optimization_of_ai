@@ -10,6 +10,7 @@ import yaml
 from pathlib import Path
 import pandas as pd
 import os
+import numpy as np
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
@@ -54,6 +55,8 @@ DEFAULT_RANGES = {
     "stiff": (0, 1),
     "multiple_roots": (-3, 2),
     "ill_conditioned": (0, 2),
+    "2d_himmelblau": (-6, 6),
+    "2d_rastrigin": (-5, 5),
 }
 
 
@@ -230,18 +233,26 @@ Examples:
     f, df = get_test_function(args.function)
     d2f = None  # Second derivative only needed for some methods
 
+    # Check if we're using a 2D function
+    is_2d_function = args.function.startswith("2d_")
+
     # Use default range if not specified
     if args.xrange is None:
-        args.xrange = DEFAULT_RANGES.get(args.function, (-2, 2))
+        if is_2d_function:
+            # Default range for 2D functions
+            args.xrange = (-5, 5)
+        else:
+            args.xrange = DEFAULT_RANGES.get(args.function, (-2, 2))
 
-        # Check if initial guess is outside the default range and expand if needed
-        for x0_value in args.x0:
-            # Add padding to ensure points aren't right at the edge
-            padding = 0.5
-            if x0_value < args.xrange[0]:
-                args.xrange = (x0_value - padding, args.xrange[1])
-            if x0_value > args.xrange[1]:
-                args.xrange = (args.xrange[0], x0_value + padding)
+            # Check if initial guess is outside the default range and expand if needed
+            if not is_2d_function:  # Only for 1D functions
+                for x0_value in args.x0:
+                    # Add padding to ensure points aren't right at the edge
+                    padding = 0.5
+                    if x0_value < args.xrange[0]:
+                        args.xrange = (x0_value - padding, args.xrange[1])
+                    if x0_value > args.xrange[1]:
+                        args.xrange = (args.xrange[0], x0_value + padding)
 
     # Create configuration
     config = NumericalMethodConfig(
@@ -258,23 +269,53 @@ Examples:
     for method_name in args.methods:
         method_class = METHOD_MAP[method_name]
 
+        # Prepare initial points based on function dimensionality
+        if is_2d_function:
+            # For 2D functions, we need an array of [x, y]
+            if len(args.x0) >= 2:
+                x0_point = np.array(args.x0[:2])
+            else:
+                # If only one coordinate is provided, use [x0, x0]
+                x0_point = np.array([args.x0[0], args.x0[0]])
+        else:
+            # For 1D functions, use the first x0
+            x0_point = args.x0[0] if args.x0 else None
+
         # Get appropriate initial points
         x0, x1 = get_safe_initial_points(
             f=config.func,
             x_range=config.x_range,
             method_name=method_name,
-            x0=args.x0[0] if args.x0 else None,
+            x0=x0_point,
         )
 
-        if method_name in ROOT_FINDING_ONLY:
-            # Methods that need two points
-            if method_name in ["secant", "bisection", "regula_falsi"]:
-                methods.append(method_class(config, x0, x1))
+        # Initialize the method with appropriate parameters
+        try:
+            if method_name in ROOT_FINDING_ONLY:
+                # Methods that need two points
+                if method_name in ["secant", "bisection", "regula_falsi"]:
+                    methods.append(
+                        method_class(config, x0, x1, record_initial_state=True)
+                    )
+                else:
+                    methods.append(method_class(config, x0, record_initial_state=True))
             else:
-                methods.append(method_class(config, x0))
-        else:
-            # Dual-capable methods - don't pass second_derivative since we're in root-finding mode
-            methods.append(method_class(config, x0))
+                # Dual-capable methods - don't pass second_derivative since we're in root-finding mode
+                # For BFGS and potentially other methods that don't accept record_initial_state
+                if method_name == "bfgs":
+                    methods.append(method_class(config, x0))
+                else:
+                    methods.append(method_class(config, x0, record_initial_state=True))
+        except TypeError as e:
+            # Fallback if record_initial_state is not supported
+            if "record_initial_state" in str(e):
+                if method_name in ["secant", "bisection", "regula_falsi"]:
+                    methods.append(method_class(config, x0, x1))
+                else:
+                    methods.append(method_class(config, x0))
+            else:
+                # Re-raise if it's a different TypeError
+                raise
 
     # Create visualization configuration
     vis_config = VisualizationConfig(
@@ -422,3 +463,9 @@ if __name__ == "__main__":
 
 # # Override config file values with command line
 # python find_roots.py --config configs/root_finding.yaml --tol 1.0e-8
+
+# python find_roots.py --function 2d_himmelblau --methods newton --x0 1.0 1.0 --viz-3d
+
+# python find_roots.py --function 2d_rastrigin --methods newton --x0 0.5 0.5 --viz-3d
+
+# python find_roots.py --function 2d_himmelblau --methods newton bfgs --x0 3.0 2.0 --viz-3d
