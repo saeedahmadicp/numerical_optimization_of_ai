@@ -9,6 +9,7 @@ import json
 import yaml
 from pathlib import Path
 import pandas as pd
+import os
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 from algorithms.convex.newton import NewtonMethod
@@ -70,6 +71,12 @@ Examples:
   
   # Test on a challenging function
   python find_roots.py --methods newton bfgs --function multiple_roots --x0 0.5
+  
+  # Save visualizations in different formats
+  python find_roots.py --methods newton secant --function cubic --x0 1.5 --save-viz results/cubic_comparison
+  
+  # Create 3D visualization for 2D functions
+  python find_roots.py --methods newton bfgs --function 2d_example --x0 0.5 0.5 --viz-3d
 """,
     )
 
@@ -150,6 +157,43 @@ Examples:
         help="Directory to save iteration history CSV files",
     )
 
+    # Add visualization saving options
+    parser.add_argument(
+        "--save-viz",
+        type=str,
+        help="Path to save visualizations (without extension)",
+    )
+
+    parser.add_argument(
+        "--viz-format",
+        type=str,
+        choices=["html", "png", "jpg", "svg", "pdf"],
+        default="html",
+        help="Format for saving visualizations",
+    )
+
+    # Add 3D visualization option
+    parser.add_argument(
+        "--viz-3d",
+        action="store_true",
+        help="Create 3D visualization for 2D functions",
+    )
+
+    # Add option to show/hide convergence and error plots
+    parser.add_argument(
+        "--show-convergence",
+        action="store_true",
+        default=True,
+        help="Show convergence plot",
+    )
+
+    parser.add_argument(
+        "--show-error",
+        action="store_true",
+        default=True,
+        help="Show error plot",
+    )
+
     args = parser.parse_args()
 
     # Load configuration from file if provided
@@ -225,25 +269,67 @@ Examples:
 
     # Create visualization configuration
     vis_config = VisualizationConfig(
-        figsize=(12, 8),
-        show_convergence=True,
-        show_error=True,
+        show_convergence=args.show_convergence,
+        show_error=args.show_error,
         style="white",
         context="talk",
         palette="viridis",
-        point_size=100,
+        point_size=10,
         dpi=100,
         show_legend=True,
         grid_alpha=0.2,
-        title="Root Finding Methods Comparison",
+        title=f"Root Finding Methods Comparison: {args.function.capitalize()}",
         background_color="#FFFFFF",
+        animation_duration=800,
+        animation_transition=300,
     )
 
-    # Create and run visualizer
+    # Create visualizer
     visualizer = RootFindingVisualizer(config, methods, vis_config)
+
+    # Run comparison (show interactive visualization)
     visualizer.run_comparison()
 
-    # Show final results and save to Excel if requested
+    # Generate and display summary table
+    summary_table = visualizer.generate_summary_table()
+    print("\nRoot-Finding Results Summary:")
+    print("-" * 50)
+    print(summary_table.to_string(index=False))
+
+    # Create 3D visualization if requested and if function is 2D
+    if args.viz_3d:
+        fig_3d = visualizer.create_3d_visualization()
+        if fig_3d:
+            fig_3d.show()
+        else:
+            print("\nNote: 3D visualization is only available for 2D functions.")
+
+    # Save visualizations if requested
+    if args.save_viz:
+        # Create directory if it doesn't exist
+        save_dir = os.path.dirname(args.save_viz)
+        if save_dir and not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # Save main visualization
+        visualizer.save_visualization(args.save_viz, format=args.viz_format)
+
+        # Save 3D visualization if created
+        if (
+            args.viz_3d
+            and hasattr(visualizer, "dimensions")
+            and visualizer.dimensions == 2
+        ):
+            viz_3d_path = f"{args.save_viz}_3d"
+            fig_3d = visualizer.create_3d_visualization()
+            if fig_3d:
+                if args.viz_format == "html":
+                    fig_3d.write_html(f"{viz_3d_path}.html")
+                else:
+                    fig_3d.write_image(f"{viz_3d_path}.{args.viz_format}", scale=2)
+                print(f"3D visualization saved to {viz_3d_path}.{args.viz_format}")
+
+    # Save iteration history to Excel if requested
     if args.save:
         # Create directory if it doesn't exist
         args.save.mkdir(parents=True, exist_ok=True)
@@ -264,9 +350,17 @@ Examples:
                 for iter_data in history:
                     row = {
                         "Iteration": iter_data.iteration,
-                        "x_old": f"{iter_data.x_old:.8f}",
+                        "x_old": (
+                            f"{iter_data.x_old:.8f}"
+                            if isinstance(iter_data.x_old, (float, int))
+                            else str(iter_data.x_old)
+                        ),
                         "f(x_old)": f"{iter_data.f_old:.8e}",
-                        "x_new": f"{iter_data.x_new:.8f}",
+                        "x_new": (
+                            f"{iter_data.x_new:.8f}"
+                            if isinstance(iter_data.x_new, (float, int))
+                            else str(iter_data.x_new)
+                        ),
                         "f(x_new)": f"{iter_data.f_new:.8e}",
                         "|error|": f"{iter_data.error:.2e}",
                     }
@@ -285,22 +379,7 @@ Examples:
 
             print(f"Saved root-finding history to {filepath}")
 
-    # Print final results summary
-    print("\nRoot-Finding Results Summary:")
-    print("-" * 50)
-    for method in methods:
-        x_final = method.get_current_x()
-        f_final = method.func(x_final)
-        iterations = len(method.get_iteration_history())
-
-        print(f"\n{method.name}:")
-        print(f"  Iterations: {iterations}")
-        print(f"  Root found: {x_final:.8f}")
-        print(f"  f(root): {f_final:.2e}")
-        print(f"  Converged: {method.has_converged()}")
-        if hasattr(method, "get_convergence_rate"):
-            print(f"  Convergence Rate: {method.get_convergence_rate():.2f}")
-
+    # Show visualizations (if they were created)
     plt.ioff()
     plt.show(block=True)
 
@@ -319,8 +398,13 @@ if __name__ == "__main__":
 # Compare dual-capable methods:
 # python find_roots.py --methods newton newton_hessian bfgs --function multiple_roots --x0 0.5 --save data/
 
+# Save interactive visualizations:
+# python find_roots.py --methods newton secant --function cubic --x0 1.5 --save-viz results/cubic_comparison
 
-# # Config file examples
+# Create 3D visualizations for 2D functions:
+# python find_roots.py --methods newton bfgs --function 2d_example --x0 0.5 0.5 --viz-3d
+
+# Config file examples
 # # Basic example with YAML
 # python find_roots.py --config configs/root_finding.yaml
 
@@ -329,6 +413,3 @@ if __name__ == "__main__":
 
 # # Override config file values with command line
 # python find_roots.py --config configs/root_finding.yaml --tol 1.0e-8
-
-# # Note: The test cases in root_finding_tests.yaml would need additional
-# # functionality in find_roots.py to handle multiple test cases

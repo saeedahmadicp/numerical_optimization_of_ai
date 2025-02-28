@@ -1,293 +1,1060 @@
 # plot/root_finder_viz.py
 
 """
-Visualization utilities for comparing root finding methods.
+Root Finding Visualization Module.
 
-This module provides comparative visualizations for various root finding algorithms.
-It is designed to work with any root finding implementation that follows the defined protocol.
+This module provides visualization capabilities for root-finding algorithms,
+allowing for interactive exploration of algorithmic behavior, convergence
+properties, and comparative analysis of different methods.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict
-
+from typing import List, Dict, Tuple, Optional
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.collections import LineCollection
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import pandas as pd
 
 from algorithms.convex.protocols import BaseNumericalMethod, NumericalMethodConfig
 
 
-# Configuration for visualization options like figure size, animation speed, styles, etc.
 @dataclass
 class VisualizationConfig:
-    """Configuration for visualization."""
+    """
+    Configuration for visualization settings.
 
-    figsize: Tuple[int, int] = (15, 8)  # Default figure size
-    animation_interval: int = 500  # Default animation interval in milliseconds
-    show_convergence: bool = True  # Default to show convergence plot
-    show_error: bool = True  # Default to show error plot
-    style: str = "white"  # Options: darkgrid, whitegrid, dark, white, ticks
-    context: str = "talk"  # Options: paper, notebook, talk, poster
-    palette: str = "viridis"  # Options: viridis, magma, husl, hls, etc.
-    point_size: int = 100  # Default point size
-    dpi: int = 100  # Default DPI for figure resolution
-    show_legend: bool = True  # Default to show legend
-    grid_alpha: float = 0.2  # Default grid transparency
+    This dataclass encapsulates all parameters related to visualization appearance,
+    layout, and behavior.
+
+    Attributes:
+        show_convergence: Whether to show convergence plot
+        show_error: Whether to show error plot
+        style: Plot style
+        context: Plot context
+        palette: Color palette for different methods
+        point_size: Size of points in scatter plots
+        dpi: Dots per inch for saved figures
+        show_legend: Whether to display the legend
+        grid_alpha: Transparency of grid lines
+        title: Main title for the visualization
+        background_color: Background color for plots
+        animation_duration: Duration for each animation frame (ms)
+        animation_transition: Transition time between frames (ms)
+    """
+
+    show_convergence: bool = True
+    show_error: bool = True
+    style: str = "white"
+    context: str = "talk"
+    palette: str = "viridis"
+    point_size: int = 8
+    dpi: int = 100
+    show_legend: bool = True
+    grid_alpha: float = 0.2
     title: str = "Root Finding Methods Comparison"
-    background_color: str = "#FFFFFF"  # Clean white background
-    verbose: bool = False
+    background_color: str = "#FFFFFF"
+    animation_duration: int = 800  # ms per frame
+    animation_transition: int = 300  # ms for transition
 
 
 class RootFindingVisualizer:
-    """Visualizer for comparing root finding methods."""
+    """
+    Visualizer for root-finding algorithms.
+
+    This class provides functionality for visualizing the behavior of different
+    root-finding algorithms, with support for 1D, 2D, and 3D visualizations,
+    animations of the iterative process, and comparative analysis.
+    """
 
     def __init__(
         self,
-        problem: NumericalMethodConfig,
+        config: NumericalMethodConfig,
         methods: List[BaseNumericalMethod],
-        config: Optional[VisualizationConfig] = None,
+        vis_config: VisualizationConfig,
     ):
         """
-        Initialize the visualizer.
+        Initialize the visualizer with configuration and methods.
 
         Args:
-            problem: Configuration including function, derivative, and tolerances
-            methods: List of root finding methods to compare
-            config: Optional visualization configuration
-
-        Note:
-            Expects problem.method_type to be "root"
+            config: Configuration for the numerical methods
+            methods: List of root-finding methods to visualize
+            vis_config: Visualization configuration
         """
-        if problem.method_type != "root":
-            raise ValueError("RootFindingVisualizer requires method_type='root'")
-
-        self.problem = problem
+        self.config = config
         self.methods = methods
-        self.config = config or VisualizationConfig()
+        self.vis_config = vis_config
 
-        # Apply Seaborn styling based on the provided configuration
-        sns.set_style(self.config.style)
-        sns.set_context(self.config.context)
+        # Check if we're dealing with multivariate functions
+        self.dimensions = self._detect_dimensions()
 
-        # Enable interactive mode for live updating of the plots
-        plt.ion()
+        # Generate a list of distinct colors for methods
+        self.colors = self._generate_colors(len(methods))
 
-        # Create the main figure with the specified size, dpi, and background color
-        self.fig = plt.figure(
-            figsize=self.config.figsize,
-            dpi=self.config.dpi,
-            facecolor=self.config.background_color,
-        )
+        # Store for computed data
+        self.all_data = []
+        self.root_estimates = []
 
-        # Setup the layout and styling for subplots
-        self.setup_plots()
+    def _detect_dimensions(self) -> int:
+        """
+        Detect the dimensionality of the problem based on the methods.
 
-        # Initialize dictionaries to store method histories and error estimates over iterations
-        self.histories: Dict[str, List[float]] = {method.name: [] for method in methods}
-        self.errors: Dict[str, List[float]] = {method.name: [] for method in methods}
+        Returns:
+            int: Number of dimensions (1, 2, or 3)
+        """
+        # Try to call the function with a sample point to check dimensionality
+        try:
+            # Check the first method for its current x
+            x0 = self.methods[0].get_current_x()
 
-        # Determine a color for each method from the configured palette
-        n_colors = len(methods)
-        if self.config.palette in plt.colormaps:
-            colors = plt.colormaps[self.config.palette]
-            # Handle single method case: choose the middle color of the colormap
-            if n_colors == 1:
-                color_list = [colors(0.5)]
+            if isinstance(x0, np.ndarray):
+                return len(x0)
             else:
-                color_list = [colors(i / (n_colors - 1)) for i in range(n_colors)]
-        else:
-            # Use Seaborn's palette function if not using a matplotlib colormap
-            color_list = sns.color_palette(self.config.palette, n_colors=n_colors)
+                return 1
+        except:
+            # Default to 1D if we can't detect
+            return 1
 
-        # Initialize state for each method: store the method, its associated line on the plot, and its color.
-        self.method_states = {}
+    def _generate_colors(self, n_colors: int) -> List[str]:
+        """
+        Generate a list of distinct colors for the methods.
+
+        Args:
+            n_colors: Number of colors needed
+
+        Returns:
+            List[str]: List of color strings
+        """
+        if n_colors <= 10:
+            # Use qualitative colors for better distinction when few methods
+            return px.colors.qualitative.D3[:n_colors]
+        else:
+            # Use a colorscale for many methods
+            return [
+                px.colors.sample_colorscale(
+                    px.colors.sequential.Viridis, i / (n_colors - 1)
+                )[0]
+                for i in range(n_colors)
+            ]
+
+    def _prepare_data(self) -> None:
+        """
+        Prepare data from the methods for visualization.
+
+        This method extracts iteration history from each method and converts
+        it to a format suitable for plotting.
+        """
+        self.all_data = []
+        self.root_estimates = []
+
         for i, method in enumerate(self.methods):
-            color = color_list[i]
-            # Plot an initial empty line for each method on the function plot
-            (line,) = self.ax_func.plot(
-                [],
-                [],
-                "o-",
-                color=color,
-                label=method.name,
-                linewidth=2,
-                markersize=8,
-                alpha=0.7,  # Add some transparency
+            # Run the method until convergence if it hasn't been run yet
+            if not method.get_iteration_history():
+                while not method.has_converged():
+                    method.step()
+
+            # Get the iteration history
+            history = method.get_iteration_history()
+
+            # Extract the final root estimate
+            root = method.get_current_x()
+            self.root_estimates.append(root)
+
+            # Convert history to a DataFrame for easier manipulation
+            method_data = []
+            for iter_data in history:
+                data_point = {
+                    "Method": method.name,
+                    "Iteration": iter_data.iteration,
+                    "x_old": iter_data.x_old,
+                    "x_new": iter_data.x_new,
+                    "f_old": iter_data.f_old,
+                    "f_new": iter_data.f_new,
+                    "Error": iter_data.error,
+                    "Color": self.colors[i],
+                }
+
+                # Add method-specific details
+                for key, value in iter_data.details.items():
+                    if isinstance(value, (int, float, str, bool)):
+                        data_point[key] = value
+
+                method_data.append(data_point)
+
+            self.all_data.append(pd.DataFrame(method_data))
+
+    def _create_function_space(self, fig, row=1, col=1) -> None:
+        """
+        Create the function space visualization based on dimensionality.
+
+        Args:
+            fig: The plotly figure to add the visualization to
+            row: Row in the subplot grid
+            col: Column in the subplot grid
+        """
+        if self.dimensions == 1:
+            # 1D function visualization
+            x_min, x_max = self.config.x_range
+            x = np.linspace(x_min, x_max, 1000)
+
+            # Calculate function values
+            try:
+                y = [self.config.func(xi) for xi in x]
+
+                # Plot the function
+                fig.add_trace(
+                    go.Scatter(
+                        x=x,
+                        y=y,
+                        mode="lines",
+                        name="f(x)",
+                        line=dict(color="black", width=2.5),
+                        legendgroup="function",
+                        hoverinfo="text",
+                        hovertemplate="x: %{x:.4f}<br>f(x): %{y:.4f}<extra></extra>",
+                    ),
+                    row=row,
+                    col=col,
+                )
+
+                # Add a horizontal line at y=0 to show the roots
+                fig.add_trace(
+                    go.Scatter(
+                        x=[x_min, x_max],
+                        y=[0, 0],
+                        mode="lines",
+                        name="y=0",
+                        line=dict(color="gray", width=1, dash="dash"),
+                        legendgroup="function",
+                        showlegend=False,
+                    ),
+                    row=row,
+                    col=col,
+                )
+
+                # Set axis labels with improved styling
+                fig.update_xaxes(
+                    title_text="x",
+                    title_font=dict(size=14),
+                    row=row,
+                    col=col,
+                )
+                fig.update_yaxes(
+                    title_text="f(x)",
+                    title_font=dict(size=14),
+                    row=row,
+                    col=col,
+                )
+
+            except Exception as e:
+                print(f"Error plotting function: {e}")
+
+        elif self.dimensions == 2:
+            # 2D function visualization (surface plot or contour)
+            x_min, x_max = self.config.x_range
+            y_min, y_max = self.config.x_range  # Assuming same range for y
+
+            # Create a grid of points
+            x_grid = np.linspace(x_min, x_max, 100)
+            y_grid = np.linspace(y_min, y_max, 100)
+            X, Y = np.meshgrid(x_grid, y_grid)
+
+            # Compute function values
+            Z = np.zeros_like(X)
+            for i in range(X.shape[0]):
+                for j in range(X.shape[1]):
+                    try:
+                        Z[i, j] = self.config.func(np.array([X[i, j], Y[i, j]]))
+                    except:
+                        Z[i, j] = np.nan
+
+            # Create contour plot
+            fig.add_trace(
+                go.Contour(
+                    z=Z,
+                    x=x_grid,
+                    y=y_grid,
+                    colorscale="Viridis",
+                    contours=dict(
+                        showlabels=True,
+                        labelfont=dict(size=12, color="white"),
+                    ),
+                    colorbar=dict(
+                        title="f(x,y)",
+                        titlefont=dict(size=12),
+                        thickness=15,
+                        len=0.6,
+                        y=0.5,
+                    ),
+                    name="f(x,y)",
+                    legendgroup="function",
+                ),
+                row=row,
+                col=col,
             )
-            self.method_states[method.name] = {
-                "method": method,
-                "line": line,
-                "color": color,
-            }
 
-        # Optionally display a legend on the function plot
-        if self.config.show_legend:
-            self.ax_func.legend()
+            # Add contour line for z=0 to show roots
+            fig.add_trace(
+                go.Contour(
+                    z=Z,
+                    x=x_grid,
+                    y=y_grid,
+                    contours=dict(
+                        start=0,
+                        end=0,
+                        showlabels=False,
+                        coloring="lines",
+                    ),
+                    line=dict(color="white", width=3),
+                    showscale=False,
+                    name="f(x,y)=0",
+                    legendgroup="function",
+                    showlegend=False,
+                ),
+                row=row,
+                col=col,
+            )
 
-        # Setup convergence plot lines if that axis exists
-        if self.ax_conv:
-            self.conv_lines = {
-                name: self.ax_conv.plot([], [], label=name, color=state["color"])[0]
-                for name, state in self.method_states.items()
-            }
+            # Set axis labels with improved styling
+            fig.update_xaxes(
+                title_text="x",
+                title_font=dict(size=14),
+                row=row,
+                col=col,
+            )
+            fig.update_yaxes(
+                title_text="y",
+                title_font=dict(size=14),
+                row=row,
+                col=col,
+            )
 
-        # Setup error plot lines if that axis exists
-        if self.ax_error:
-            self.error_lines = {
-                name: self.ax_error.plot([], [], label=name, color=state["color"])[0]
-                for name, state in self.method_states.items()
-            }
+        elif self.dimensions == 3:
+            # 3D function - represented as isosurfaces or slices
+            # For 3D, we'll create a simpler visualization as it's more complex
 
-        # Adjust layout to prevent overlapping and update the canvas
-        plt.tight_layout()
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+            fig.update_layout(
+                scene=dict(
+                    xaxis_title="x", yaxis_title="y", zaxis_title="z", aspectmode="cube"
+                )
+            )
 
-    def setup_plots(self):
-        """Setup the subplot layout with enhanced styling."""
-        # If both convergence and error plots are enabled, create a 2x2 grid layout
-        if self.config.show_convergence and self.config.show_error:
-            gs = plt.GridSpec(2, 2, height_ratios=[2, 1])
-            self.ax_func = self.fig.add_subplot(gs[0, :])  # Top row for function plot
-            self.ax_conv = self.fig.add_subplot(gs[1, 0])  # Bottom left for convergence
-            self.ax_error = self.fig.add_subplot(gs[1, 1])  # Bottom right for error
-        else:
-            # If not, use a single plot
-            self.ax_func = self.fig.add_subplot(111)
-            self.ax_conv = None
-            self.ax_error = None
+            # NOTE: Detailed 3D visualization would be added here
+            # For now, we'll add a placeholder message
+            fig.add_annotation(
+                text="3D visualization not fully implemented",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font=dict(size=14),
+            )
 
-        # Style each axis with the specified background and text colors
-        for ax in [self.ax_func, self.ax_conv, self.ax_error]:
-            if ax is not None:
-                ax.set_facecolor(self.config.background_color)
-                ax.tick_params(colors="#333333")  # Dark gray for ticks
-                ax.xaxis.label.set_color("#333333")
-                ax.yaxis.label.set_color("#333333")
-                ax.title.set_color("#333333")
-                # Make spines (axis lines) dark gray
-                for spine in ax.spines.values():
-                    spine.set_color("#333333")
+    def _add_initial_points(self, fig, row=1, col=1) -> List[Dict]:
+        """
+        Add initial points for all methods to the visualization.
 
-        # Plot the target function with a gradient line to enhance visualization.
-        x = np.linspace(*self.problem.x_range, 1000)
-        # Evaluate the function at each x value
-        y = [self.problem.func(xi) for xi in x]
+        Args:
+            fig: The plotly figure to add points to
+            row: Row in the subplot grid
+            col: Column in the subplot grid
 
-        # Create a custom colormap using professional blues
-        colors = ["#1f77b4", "#7aafe5", "#2c9dd1"]  # Professional blue gradient
-        n_bins = 100
-        cmap = LinearSegmentedColormap.from_list("custom", colors, N=n_bins)
+        Returns:
+            List of trace indices for initial points
+        """
+        point_traces = []
 
-        # Create segments for the function line to apply the gradient color mapping
-        points = np.array([x, y]).T.reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
-        norm = plt.Normalize(min(y), max(y))
-        lc = LineCollection(segments, cmap=cmap, norm=norm)
-        lc.set_array(np.array(y))
-        self.ax_func.add_collection(lc)
+        for i, method in enumerate(self.methods):
+            if not self.all_data[i].empty:
+                # Get initial point
+                initial_data = self.all_data[i].iloc[0]
 
-        # Add a horizontal line at y=0 (the x-axis) to mark the root level.
-        self.ax_func.axhline(
-            y=0, color="#ff7f0e", linestyle="--", alpha=0.5
-        )  # Orange line
-        # Enable grid lines with the specified transparency
-        self.ax_func.grid(
-            True, alpha=self.config.grid_alpha, color="#cccccc"
-        )  # Light gray grid
-        self.ax_func.set_title("Root Finding Methods Comparison", pad=20)
+                if self.dimensions == 1:
+                    x0 = initial_data["x_old"]
+                    y0 = self.config.func(x0)
 
-        # Setup the convergence plot's title, labels, and grid (if it exists)
-        if self.ax_conv:
-            self.ax_conv.set_title("Convergence Plot")
-            self.ax_conv.set_xlabel("Iteration")
-            self.ax_conv.set_ylabel("x value")
-            self.ax_conv.grid(True, alpha=self.config.grid_alpha, color="#cccccc")
+                    trace = fig.add_trace(
+                        go.Scatter(
+                            x=[x0],
+                            y=[y0],
+                            mode="markers",
+                            marker=dict(
+                                color=self.colors[i],
+                                size=self.vis_config.point_size + 2,
+                                line=dict(color="black", width=1),
+                            ),
+                            name=method.name,
+                            hoverinfo="text",
+                            hovertext=f"Initial: x={x0:.6f}, f(x)={y0:.6f}",
+                            legendgroup=method.name,  # Group legends by method name
+                            showlegend=True,  # Show only one legend entry per method
+                        ),
+                        row=row,
+                        col=col,
+                    )
+                    point_traces.append(trace)
 
-        # Setup the error plot with title, labels, and a logarithmic y-scale for error values.
-        if self.ax_error:
-            self.ax_error.set_title("Error Plot")
-            self.ax_error.set_xlabel("Iteration")
-            self.ax_error.set_ylabel("|f(x)|")
-            self.ax_error.set_yscale("log")
-            self.ax_error.grid(True, alpha=self.config.grid_alpha, color="#cccccc")
+                elif self.dimensions == 2:
+                    x0, y0 = initial_data["x_old"]
+                    z0 = self.config.func(np.array([x0, y0]))
 
-        # Set the overall figure background color
-        self.fig.patch.set_facecolor(self.config.background_color)
+                    trace = fig.add_trace(
+                        go.Scatter(
+                            x=[x0],
+                            y=[y0],
+                            mode="markers",
+                            marker=dict(
+                                color=self.colors[i],
+                                size=self.vis_config.point_size + 2,
+                                line=dict(color="black", width=1),
+                            ),
+                            name=method.name,
+                            hoverinfo="text",
+                            hovertext=f"Initial: x={x0:.4f}, y={y0:.4f}, f(x,y)={z0:.6f}",
+                            legendgroup=method.name,  # Group legends by method name
+                            showlegend=True,  # Show only one legend entry per method
+                        ),
+                        row=row,
+                        col=col,
+                    )
+                    point_traces.append(trace)
 
-    def run_comparison(self):
-        """Run comparison in real-time."""
-        all_converged = False
-        iteration = 0
-        n_frames = 5  # Fewer frames for faster animation
-        base_interval = 20  # Base animation interval in milliseconds (total time = 20ms * 5 frames = 100ms per step)
+                elif self.dimensions == 3:
+                    # For 3D, we'd add a point to the 3D scene
+                    # This would be implemented as needed
+                    pass
 
-        while not all_converged and iteration < self.problem.max_iter:
-            all_converged = True
-            any_updated = False
+        return point_traces
 
-            # Store old and new positions for interpolation
-            updates = {}
-            for name, state in self.method_states.items():
-                method = state["method"]
-                if not method.has_converged():
-                    all_converged = False
-                    any_updated = True
+    def _create_convergence_plot(self, fig, row=1, col=1) -> None:
+        """
+        Create a plot showing the convergence of x values.
 
-                    x_old = method.get_current_x()
-                    x_new = method.step()
-                    iter_data = method.get_last_iteration()
+        Args:
+            fig: The plotly figure to add the visualization to
+            row: Row in the subplot grid
+            col: Column in the subplot grid
+        """
+        for i, method in enumerate(self.methods):
+            if not self.all_data[i].empty:
+                df = self.all_data[i]
 
-                    self.histories[name].append(x_new)
-                    self.errors[name].append(
-                        iter_data.error if iter_data else abs(self.problem.func(x_new))
+                # For 1D functions
+                if self.dimensions == 1:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df["Iteration"],
+                            y=df["x_new"],
+                            mode="lines+markers",
+                            name=method.name,
+                            line=dict(color=self.colors[i], width=2),
+                            marker=dict(
+                                color=self.colors[i], size=self.vis_config.point_size
+                            ),
+                            legendgroup=method.name,  # Group legends by method name
+                            showlegend=False,  # Don't show duplicate legend entries
+                        ),
+                        row=row,
+                        col=col,
                     )
 
-                    # Store update information for smooth transition
-                    updates[name] = {
-                        "x_old": x_old,
-                        "x_new": x_new,
-                        "y_old": self.problem.func(x_old),
-                        "y_new": self.problem.func(x_new),
+                # For 2D or 3D functions, we would show the norm of the position vector
+                else:
+                    # Calculate norms for multidimensional x values
+                    norms = []
+                    for j in range(len(df)):
+                        if isinstance(df["x_new"].iloc[j], np.ndarray):
+                            norms.append(np.linalg.norm(df["x_new"].iloc[j]))
+                        else:
+                            # Handle case where x_new might be stored as a string or other format
+                            try:
+                                norms.append(float(df["x_new"].iloc[j]))
+                            except:
+                                norms.append(np.nan)
+
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df["Iteration"],
+                            y=norms,
+                            mode="lines+markers",
+                            name=f"{method.name} |x|",
+                            line=dict(color=self.colors[i], width=2),
+                            marker=dict(
+                                color=self.colors[i], size=self.vis_config.point_size
+                            ),
+                            legendgroup=method.name,  # Group legends by method name
+                            showlegend=False,  # Don't show duplicate legend entries
+                        ),
+                        row=row,
+                        col=col,
+                    )
+
+        # Set axis labels
+        fig.update_xaxes(title_text="Iteration", row=row, col=col)
+        if self.dimensions == 1:
+            fig.update_yaxes(title_text="x value", row=row, col=col)
+        else:
+            fig.update_yaxes(title_text="||x||", row=row, col=col)
+
+    def _create_error_plot(self, fig, row=1, col=1) -> None:
+        """
+        Create a plot showing the error over iterations.
+
+        Args:
+            fig: The plotly figure to add the visualization to
+            row: Row in the subplot grid
+            col: Column in the subplot grid
+        """
+        for i, method in enumerate(self.methods):
+            if not self.all_data[i].empty:
+                df = self.all_data[i]
+
+                # Plot error on a log scale
+                fig.add_trace(
+                    go.Scatter(
+                        x=df["Iteration"],
+                        y=df["Error"],
+                        mode="lines+markers",
+                        name=method.name,
+                        line=dict(color=self.colors[i], width=2),
+                        marker=dict(
+                            color=self.colors[i], size=self.vis_config.point_size
+                        ),
+                        legendgroup=method.name,  # Group legends by method name
+                        showlegend=False,  # Don't show duplicate legend entries
+                    ),
+                    row=row,
+                    col=col,
+                )
+
+        # Set axis labels and log scale for y-axis
+        fig.update_xaxes(title_text="Iteration", row=row, col=col)
+        fig.update_yaxes(title_text="Error (|f(x)|)", type="log", row=row, col=col)
+
+    def _create_animation_frames(self) -> Tuple[List[go.Frame], List[Dict]]:
+        """
+        Create animation frames showing the progression of root-finding.
+
+        Returns:
+            Tuple containing animation frames and slider steps
+        """
+        frames = []
+        slider_steps = []
+
+        # Determine the maximum number of iterations across all methods
+        max_iterations = max(
+            [df["Iteration"].max() if not df.empty else 0 for df in self.all_data]
+        )
+
+        # Create frames for each iteration
+        for iteration in range(int(max_iterations) + 1):
+            frame_data = []
+
+            for i, method in enumerate(self.methods):
+                df = self.all_data[i]
+
+                # Filter data for this iteration
+                iter_data = df[df["Iteration"] == iteration]
+
+                if not iter_data.empty:
+                    if self.dimensions == 1:
+                        x_val = iter_data["x_new"].iloc[0]
+                        y_val = iter_data["f_new"].iloc[0]
+
+                        frame_data.append(
+                            go.Scatter(
+                                x=[x_val],
+                                y=[y_val],
+                                mode="markers",
+                                marker=dict(
+                                    color=self.colors[i],
+                                    size=self.vis_config.point_size,
+                                    symbol="circle",
+                                ),
+                                name=method.name,
+                                hoverinfo="text",
+                                hovertext=f"{method.name}: x={x_val:.6f}, f(x)={y_val:.6f}",
+                                legendgroup=method.name,
+                                showlegend=False,
+                            )
+                        )
+
+                    elif self.dimensions == 2:
+                        try:
+                            x_val, y_val = iter_data["x_new"].iloc[0]
+                            z_val = self.config.func(np.array([x_val, y_val]))
+
+                            frame_data.append(
+                                go.Scatter(
+                                    x=[x_val],
+                                    y=[y_val],
+                                    mode="markers",
+                                    marker=dict(
+                                        color=self.colors[i],
+                                        size=self.vis_config.point_size,
+                                        symbol="circle",
+                                    ),
+                                    name=method.name,
+                                    hoverinfo="text",
+                                    hovertext=f"{method.name}: x={x_val:.4f}, y={y_val:.4f}, f(x,y)={z_val:.6f}",
+                                    legendgroup=method.name,
+                                    showlegend=False,
+                                )
+                            )
+                        except:
+                            # Handle the case where x_new might not be an array
+                            pass
+
+            # Create frame
+            frame = go.Frame(
+                data=frame_data,
+                name=f"iteration_{iteration}",
+                traces=list(range(len(frame_data))),
+            )
+            frames.append(frame)
+
+            # Create slider step
+            slider_step = {
+                "args": [
+                    [f"iteration_{iteration}"],
+                    {
+                        "frame": {
+                            "duration": self.vis_config.animation_duration,
+                            "redraw": True,
+                        },
+                        "mode": "immediate",
+                        "transition": {
+                            "duration": self.vis_config.animation_transition
+                        },
+                    },
+                ],
+                "label": str(iteration),
+                "method": "animate",
+            }
+            slider_steps.append(slider_step)
+
+        return frames, slider_steps
+
+    def run_comparison(self, show_plots: bool = True) -> Optional[go.Figure]:
+        """
+        Run a comparison of all configured methods and visualize the results.
+
+        Args:
+            show_plots: Whether to display the plots
+
+        Returns:
+            The plotly figure object if show_plots is False
+        """
+        # Prepare data from all methods
+        self._prepare_data()
+
+        # Create a figure with a 2-column layout: 50% for function plot, 50% for convergence/error plots
+        fig = make_subplots(
+            rows=2,
+            cols=2,
+            specs=[
+                [{"rowspan": 2, "colspan": 1}, {"rowspan": 1, "colspan": 1}],
+                [None, {"rowspan": 1, "colspan": 1}],
+            ],
+            column_widths=[0.5, 0.5],  # Equal 50-50 split
+            row_heights=[0.5, 0.5],
+            subplot_titles=[
+                "<b>Function Plot</b>",  # Bold titles
+                "<b>Convergence of x Values</b>",
+                "",  # Empty for the None cell
+                "<b>Error Rate</b>",
+            ],
+            vertical_spacing=0.15,  # Increased spacing between rows
+            horizontal_spacing=0.08,  # Increased spacing between columns
+        )
+
+        # Add function visualization in the first column (spans both rows)
+        self._create_function_space(fig, row=1, col=1)
+
+        # Add initial points
+        self._add_initial_points(fig, row=1, col=1)
+
+        # Add convergence plot in the top of the second column
+        self._create_convergence_plot(fig, row=1, col=2)
+
+        # Add error plot in the bottom of the second column
+        self._create_error_plot(fig, row=2, col=2)
+
+        # Create animation frames and slider steps
+        frames, slider_steps = self._create_animation_frames()
+
+        # Add frames to the figure
+        fig.frames = frames
+
+        # Add animation controls
+        if frames:
+            fig.update_layout(
+                updatemenus=[
+                    {
+                        "buttons": [
+                            {
+                                "args": [
+                                    None,
+                                    {
+                                        "frame": {
+                                            "duration": self.vis_config.animation_duration,
+                                            "redraw": True,
+                                        },
+                                        "fromcurrent": True,
+                                        "transition": {
+                                            "duration": self.vis_config.animation_transition
+                                        },
+                                    },
+                                ],
+                                "label": "Play",
+                                "method": "animate",
+                            },
+                            {
+                                "args": [
+                                    [None],
+                                    {
+                                        "frame": {"duration": 0, "redraw": True},
+                                        "mode": "immediate",
+                                        "transition": {"duration": 0},
+                                    },
+                                ],
+                                "label": "Pause",
+                                "method": "animate",
+                            },
+                        ],
+                        "direction": "left",
+                        "pad": {"r": 10, "t": 87},
+                        "showactive": False,
+                        "type": "buttons",
+                        "x": 0.1,
+                        "xanchor": "right",
+                        "y": 0,
+                        "yanchor": "top",
                     }
+                ],
+                sliders=[
+                    {
+                        "active": 0,
+                        "yanchor": "top",
+                        "xanchor": "left",
+                        "currentvalue": {
+                            "font": {"size": 16},
+                            "prefix": "Iteration: ",
+                            "visible": True,
+                            "xanchor": "right",
+                        },
+                        "transition": {
+                            "duration": self.vis_config.animation_transition
+                        },
+                        "pad": {"b": 10, "t": 50},
+                        "len": 0.9,
+                        "x": 0.1,
+                        "y": 0,
+                        "steps": slider_steps,
+                    }
+                ],
+            )
 
-            # Animate transitions
-            if any_updated:
-                for frame in range(n_frames):
-                    t = frame / (n_frames - 1)  # Interpolation parameter
-                    # Use easing function for smoother motion
-                    t = 0.5 * (1 - np.cos(t * np.pi))  # Cosine easing
+        # Add borders to subplots for better distinction
+        # The specific subplot layout is: 2x2 grid with function plot in (1,1) spanning 2 rows,
+        # convergence plot in (1,2), and error plot in (2,2)
 
-                    # Update each method's position
-                    for name, update in updates.items():
-                        x = update["x_old"] * (1 - t) + update["x_new"] * t
-                        y = update["y_old"] * (1 - t) + update["y_new"] * t
-                        if name == "Newton's Method":  # Add small offset for one method
-                            y += 0.05
-                        self.method_states[name]["line"].set_data([x], [y])
+        # Map of used subplot positions to their axis indices
+        subplot_axes = {
+            (1, 1): 1,  # function plot
+            (1, 2): 2,  # convergence plot
+            (2, 2): 3,  # error plot
+        }
 
-                    # Update convergence and error plots
-                    if self.ax_conv:
-                        for name in self.method_states:
-                            self.conv_lines[name].set_data(
-                                range(len(self.histories[name])), self.histories[name]
-                            )
-                        self.ax_conv.relim()
-                        self.ax_conv.autoscale_view()
+        # Add borders and grids to each used subplot
+        for pos, axis_idx in subplot_axes.items():
+            row, col = pos
+            # Only process existing subplots
+            fig.update_xaxes(
+                showline=True,
+                linewidth=1,
+                linecolor="lightgray",
+                mirror=True,
+                showgrid=True,
+                gridwidth=0.5,
+                gridcolor="rgba(211,211,211,0.3)",
+                row=row,
+                col=col,
+            )
+            fig.update_yaxes(
+                showline=True,
+                linewidth=1,
+                linecolor="lightgray",
+                mirror=True,
+                showgrid=True,
+                gridwidth=0.5,
+                gridcolor="rgba(211,211,211,0.3)",
+                row=row,
+                col=col,
+            )
 
-                    if self.ax_error:
-                        for name in self.method_states:
-                            self.error_lines[name].set_data(
-                                range(len(self.errors[name])), self.errors[name]
-                            )
-                        self.ax_error.relim()
-                        self.ax_error.autoscale_view()
+        # Update subplot title font sizes
+        for i in fig["layout"]["annotations"]:
+            i["font"] = dict(size=14, family="Arial", color="#000000")
 
-                    # Redraw with shorter pause
-                    self.fig.canvas.draw()
-                    self.fig.canvas.flush_events()
-                    plt.pause(base_interval / 1000)  # Fixed 20ms delay between frames
+        # Update layout to use the full browser window
+        fig.update_layout(
+            autosize=True,
+            paper_bgcolor=self.vis_config.background_color,
+            plot_bgcolor=self.vis_config.background_color,
+            showlegend=self.vis_config.show_legend,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                # Make the legend more compact and readable
+                itemsizing="constant",
+                itemwidth=30,
+                font=dict(size=10),
+                tracegroupgap=2,
+            ),
+            title={
+                "text": f"<b>{self.vis_config.title}</b>",  # Bold title
+                "y": 0.98,
+                "x": 0.5,
+                "xanchor": "center",
+                "yanchor": "top",
+                "font": {"size": 24, "family": "Arial"},
+            },
+            margin=dict(l=70, r=70, t=100, b=100),
+            height=800,  # Default height that will scale with browser
+        )
 
-            iteration += 1
+        # Show the figure if requested
+        if show_plots:
+            config = {
+                "displayModeBar": True,
+                "responsive": True,
+                "scrollZoom": True,
+            }
+            fig.show(config=config)
+            return None
+        else:
+            return fig
+
+    def create_3d_visualization(self) -> Optional[go.Figure]:
+        """
+        Create a specialized 3D visualization for 2D functions (surface plot with paths).
+
+        Returns:
+            The plotly figure object
+        """
+        if self.dimensions != 2:
+            print(
+                f"3D visualization only available for 2D functions, not {self.dimensions}D"
+            )
+            return None
+
+        # Prepare data if not already done
+        if not self.all_data:
+            self._prepare_data()
+
+        # Create a 3D figure
+        fig = go.Figure()
+
+        # Generate surface plot of the function
+        x_min, x_max = self.config.x_range
+        y_min, y_max = self.config.x_range  # Assuming same range for y
+
+        # Create a grid of points
+        x_grid = np.linspace(x_min, x_max, 100)
+        y_grid = np.linspace(y_min, y_max, 100)
+        X, Y = np.meshgrid(x_grid, y_grid)
+
+        # Compute function values
+        Z = np.zeros_like(X)
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                try:
+                    Z[i, j] = self.config.func(np.array([X[i, j], Y[i, j]]))
+                except:
+                    Z[i, j] = np.nan
+
+        # Add surface plot
+        fig.add_trace(
+            go.Surface(
+                x=X,
+                y=Y,
+                z=Z,
+                colorscale="Viridis",
+                opacity=0.8,
+                colorbar=dict(title="f(x,y)"),
+                name="f(x,y)",
+            )
+        )
+
+        # Add z=0 plane to show where roots would be
+        fig.add_trace(
+            go.Surface(
+                x=X,
+                y=Y,
+                z=np.zeros_like(Z),
+                colorscale=[[0, "rgba(255,255,255,0.3)"], [1, "rgba(255,255,255,0.3)"]],
+                showscale=False,
+                name="z=0 plane",
+            )
+        )
+
+        # Add paths for each method
+        for i, method in enumerate(self.methods):
+            df = self.all_data[i]
+
+            if not df.empty:
+                # Extract x and y coordinates from each iteration
+                x_vals = []
+                y_vals = []
+                z_vals = []
+
+                for j in range(len(df)):
+                    x_new = df["x_new"].iloc[j]
+                    if isinstance(x_new, np.ndarray) and len(x_new) == 2:
+                        x, y = x_new
+                        z = self.config.func(np.array([x, y]))
+
+                        x_vals.append(x)
+                        y_vals.append(y)
+                        z_vals.append(z)
+
+                # Add path as a scatter3d trace
+                fig.add_trace(
+                    go.Scatter3d(
+                        x=x_vals,
+                        y=y_vals,
+                        z=z_vals,
+                        mode="lines+markers",
+                        name=method.name,
+                        line=dict(color=self.colors[i], width=5),
+                        marker=dict(color=self.colors[i], size=4, symbol="circle"),
+                    )
+                )
+
+                # Add final point with a larger marker
+                if x_vals:
+                    fig.add_trace(
+                        go.Scatter3d(
+                            x=[x_vals[-1]],
+                            y=[y_vals[-1]],
+                            z=[z_vals[-1]],
+                            mode="markers",
+                            name=f"{method.name} final",
+                            marker=dict(
+                                color=self.colors[i],
+                                size=8,
+                                symbol="circle",
+                                line=dict(color="black", width=1),
+                            ),
+                        )
+                    )
+
+        # Update layout for better 3D visualization
+        fig.update_layout(
+            autosize=True,
+            title=f"3D Visualization of Root-Finding Methods",
+            scene=dict(
+                xaxis_title="x",
+                yaxis_title="y",
+                zaxis_title="f(x,y)",
+                aspectmode="manual",
+                aspectratio=dict(x=1, y=1, z=0.8),
+            ),
+            showlegend=self.vis_config.show_legend,
+            margin=dict(l=0, r=0, t=50, b=0),
+        )
+
+        # Enable better controls for 3D visualization
+        config = {
+            "displayModeBar": True,
+            "responsive": True,
+            "scrollZoom": True,
+        }
+
+        return fig
+
+    def generate_summary_table(self) -> pd.DataFrame:
+        """
+        Generate a summary table with performance metrics for all methods.
+
+        Returns:
+            DataFrame with method performance metrics
+        """
+        # Prepare data if not already done
+        if not self.all_data:
+            self._prepare_data()
+
+        # Prepare summary data
+        summary_data = []
+
+        for i, method in enumerate(self.methods):
+            df = self.all_data[i]
+
+            if not df.empty:
+                # Extract final point
+                final_point = df.iloc[-1]
+
+                # Calculate convergence metrics
+                iterations = int(final_point["Iteration"]) + 1
+                error = final_point["Error"]
+                converged = method.has_converged()
+
+                # Get convergence rate if available
+                conv_rate = None
+                if hasattr(method, "get_convergence_rate"):
+                    try:
+                        conv_rate = method.get_convergence_rate()
+                    except:
+                        pass
+
+                # Format the root value based on dimensionality
+                if self.dimensions == 1:
+                    root_val = f"{final_point['x_new']:.6f}"
+                else:
+                    # Format vector roots
+                    root_val = str([f"{x:.6f}" for x in final_point["x_new"]])
+
+                # Add to summary data
+                summary_data.append(
+                    {
+                        "Method": method.name,
+                        "Root": root_val,
+                        "f(Root)": f"{final_point['f_new']:.2e}",
+                        "Error": f"{error:.2e}",
+                        "Iterations": iterations,
+                        "Converged": converged,
+                        "Convergence Rate": (
+                            f"{conv_rate:.2f}" if conv_rate is not None else "N/A"
+                        ),
+                    }
+                )
+
+        return pd.DataFrame(summary_data)
+
+    def save_visualization(self, filename: str, format: str = "html") -> None:
+        """
+        Save the visualization to a file.
+
+        Args:
+            filename: Name of the file to save to
+            format: Format to save in ('html', 'png', 'jpg', 'svg', or 'pdf')
+        """
+        # Create the visualization if not already done
+        fig = self.run_comparison(show_plots=False)
+
+        if fig is not None:
+            if format.lower() == "html":
+                fig.write_html(
+                    f"{filename}.html", include_plotlyjs="cdn", full_html=True
+                )
+            elif format.lower() in ["png", "jpg", "jpeg", "svg", "pdf"]:
+                fig.write_image(f"{filename}.{format}", scale=2)
+            else:
+                raise ValueError(f"Unsupported format: {format}")
+
+            print(f"Visualization saved to {filename}.{format}")
