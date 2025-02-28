@@ -551,17 +551,70 @@ class RootFindingVisualizer:
         for iteration in range(int(max_iterations) + 1):
             frame_data = []
 
+            # First, include the function curve and y=0 line in each frame so they don't disappear
+            if self.dimensions == 1:
+                # Add the function curve
+                x_min, x_max = self.config.x_range
+                x = np.linspace(x_min, x_max, 1000)
+                try:
+                    y = [self.config.func(xi) for xi in x]
+                    frame_data.append(
+                        go.Scatter(
+                            x=x,
+                            y=y,
+                            mode="lines",
+                            name="f(x)",
+                            line=dict(color="black", width=2.5),
+                            legendgroup="function",
+                            showlegend=True,
+                            hoverinfo="text",
+                            hovertemplate="x: %{x:.4f}<br>f(x): %{y:.4f}<extra></extra>",
+                            xaxis="x",  # Explicitly set to first x-axis
+                            yaxis="y",  # Explicitly set to first y-axis
+                        )
+                    )
+
+                    # Add y=0 line
+                    frame_data.append(
+                        go.Scatter(
+                            x=[x_min, x_max],
+                            y=[0, 0],
+                            mode="lines",
+                            name="y=0",
+                            line=dict(color="gray", width=1, dash="dash"),
+                            legendgroup="function",
+                            showlegend=False,
+                            xaxis="x",  # Explicitly set to first x-axis
+                            yaxis="y",  # Explicitly set to first y-axis
+                        )
+                    )
+                except:
+                    pass
+            elif self.dimensions == 2:
+                # For 2D functions, add the contour plot to each frame
+                # (code for contours would need to be included here)
+                pass
+
+            # Keep track of which methods are shown in this frame
+            methods_in_current_frame = set()
+
+            # Add method-specific points for this iteration
             for i, method in enumerate(self.methods):
                 df = self.all_data[i]
+                if df.empty:
+                    continue
 
-                # Filter data for this iteration
+                # Add current point to function plot
                 iter_data = df[df["Iteration"] == iteration]
 
+                # If we have data for this iteration
                 if not iter_data.empty:
+                    methods_in_current_frame.add(i)
                     if self.dimensions == 1:
                         x_val = iter_data["x_new"].iloc[0]
                         y_val = iter_data["f_new"].iloc[0]
 
+                        # Keep the showlegend setting for the first point of each method to maintain the legend
                         frame_data.append(
                             go.Scatter(
                                 x=[x_val],
@@ -576,7 +629,9 @@ class RootFindingVisualizer:
                                 hoverinfo="text",
                                 hovertext=f"{method.name}: x={x_val:.6f}, f(x)={y_val:.6f}",
                                 legendgroup=method.name,
-                                showlegend=False,
+                                showlegend=True,  # Always show legend for this trace
+                                xaxis="x",  # Explicitly set to first x-axis
+                                yaxis="y",  # Explicitly set to first y-axis
                             )
                         )
 
@@ -599,12 +654,141 @@ class RootFindingVisualizer:
                                     hoverinfo="text",
                                     hovertext=f"{method.name}: x={x_val:.4f}, y={y_val:.4f}, f(x,y)={z_val:.6f}",
                                     legendgroup=method.name,
-                                    showlegend=False,
+                                    showlegend=True,  # Always show legend for this trace
+                                    xaxis="x",  # Explicitly set to first x-axis
+                                    yaxis="y",  # Explicitly set to first y-axis
                                 )
                             )
                         except:
                             # Handle the case where x_new might not be an array
                             pass
+                # If this method has already converged, we still need to show its last point to keep legend entry
+                elif iteration > df["Iteration"].max():
+                    methods_in_current_frame.add(i)
+                    # Get the last data point for this method
+                    last_point = df.iloc[-1]
+
+                    if self.dimensions == 1:
+                        x_val = last_point["x_new"]
+                        y_val = last_point["f_new"]
+
+                        # Add the last point with a special marker to indicate it has converged
+                        frame_data.append(
+                            go.Scatter(
+                                x=[x_val],
+                                y=[y_val],
+                                mode="markers",
+                                marker=dict(
+                                    color=self.colors[i],
+                                    size=self.vis_config.point_size,
+                                    symbol="circle",
+                                    opacity=0.7,  # Slightly transparent to indicate it's not changing
+                                ),
+                                name=method.name,
+                                hoverinfo="text",
+                                hovertext=f"{method.name} (converged): x={x_val:.6f}, f(x)={y_val:.6f}",
+                                legendgroup=method.name,
+                                showlegend=True,  # Important: always show in legend
+                                xaxis="x",  # Explicitly set to first x-axis
+                                yaxis="y",  # Explicitly set to first y-axis
+                            )
+                        )
+                    elif self.dimensions == 2:
+                        try:
+                            x_val, y_val = last_point["x_new"]
+                            z_val = self.config.func(np.array([x_val, y_val]))
+
+                            frame_data.append(
+                                go.Scatter(
+                                    x=[x_val],
+                                    y=[y_val],
+                                    mode="markers",
+                                    marker=dict(
+                                        color=self.colors[i],
+                                        size=self.vis_config.point_size,
+                                        symbol="circle",
+                                        opacity=0.7,
+                                    ),
+                                    name=method.name,
+                                    hoverinfo="text",
+                                    hovertext=f"{method.name} (converged): x={x_val:.4f}, y={y_val:.4f}, f(x,y)={z_val:.6f}",
+                                    legendgroup=method.name,
+                                    showlegend=True,  # Important: always show in legend
+                                    xaxis="x",  # Explicitly set to first x-axis
+                                    yaxis="y",  # Explicitly set to first y-axis
+                                )
+                            )
+                        except:
+                            pass
+
+                # For convergence and error plots, include only data up to current iteration
+                filtered_df = df[df["Iteration"] <= iteration]
+                if not filtered_df.empty:
+                    # Add convergence plot trace - progressively showing data
+                    if self.dimensions == 1:
+                        # Convergence plot (row 1, col 2)
+                        convergence_trace = go.Scatter(
+                            x=filtered_df["Iteration"],
+                            y=filtered_df["x_new"],
+                            mode="lines+markers",
+                            name=method.name,
+                            line=dict(color=self.colors[i], width=2),
+                            marker=dict(
+                                color=self.colors[i], size=self.vis_config.point_size
+                            ),
+                            legendgroup=method.name,
+                            showlegend=False,  # Keep as False to avoid duplicate legend entries
+                            xaxis="x2",  # Reference to second x-axis
+                            yaxis="y2",  # Reference to second y-axis
+                        )
+                        frame_data.append(convergence_trace)
+                    else:
+                        # For 2D/3D, calculate norms
+                        norms = []
+                        for j in range(len(filtered_df)):
+                            if isinstance(filtered_df["x_new"].iloc[j], np.ndarray):
+                                norms.append(
+                                    np.linalg.norm(filtered_df["x_new"].iloc[j])
+                                )
+                            else:
+                                try:
+                                    norms.append(float(filtered_df["x_new"].iloc[j]))
+                                except:
+                                    norms.append(np.nan)
+
+                        # Convergence plot (row 1, col 2)
+                        convergence_trace = go.Scatter(
+                            x=filtered_df["Iteration"],
+                            y=norms,
+                            mode="lines+markers",
+                            name=f"{method.name} |x|",
+                            line=dict(color=self.colors[i], width=2),
+                            marker=dict(
+                                color=self.colors[i], size=self.vis_config.point_size
+                            ),
+                            legendgroup=method.name,
+                            showlegend=False,  # Keep as False to avoid duplicate legend entries
+                            xaxis="x2",  # Reference to second x-axis
+                            yaxis="y2",  # Reference to second y-axis
+                        )
+                        frame_data.append(convergence_trace)
+
+                    # Error plot (row 2, col 2)
+                    error_trace = go.Scatter(
+                        x=filtered_df["Iteration"],
+                        y=filtered_df["Error"],
+                        mode="lines+markers",
+                        name=method.name,
+                        line=dict(color=self.colors[i], width=2),
+                        marker=dict(
+                            color=self.colors[i], size=self.vis_config.point_size
+                        ),
+                        legendgroup=method.name,
+                        showlegend=False,  # Keep as False to avoid duplicate legend entries
+                        xaxis="x3",  # Reference to third x-axis
+                        yaxis="y3",  # Reference to third y-axis
+                    )
+                    frame_data.append(error_trace)
 
             # Create frame
             frame = go.Frame(
@@ -680,6 +864,49 @@ class RootFindingVisualizer:
 
         # Add error plot in the bottom of the second column
         self._create_error_plot(fig, row=2, col=2)
+
+        # Add summary text to function plot
+        summary_text = (
+            f"<b>Function:</b> {self.vis_config.title.split(':')[-1].strip()}<br>"
+        )
+
+        # Add information for each method
+        for i, method in enumerate(self.methods):
+            if not self.all_data[i].empty:
+                df = self.all_data[i]
+                final_point = df.iloc[-1]
+
+                # Format based on dimensionality
+                if self.dimensions == 1:
+                    root_val = f"{final_point['x_new']:.6f}"
+                else:
+                    # Format vector roots
+                    root_val = str([f"{x:.6f}" for x in final_point["x_new"]])
+
+                # Add method details
+                summary_text += (
+                    f"<span style='color:{self.colors[i]}'>{method.name}:</span> "
+                )
+                summary_text += f"Root={root_val}, f(Root)={final_point['f_new']:.2e}, "
+                summary_text += f"Iter={int(final_point['Iteration'])+1}<br>"
+
+        # Add the annotation to the function plot
+        fig.add_annotation(
+            text=summary_text,
+            xref="x domain",
+            yref="y domain",
+            x=0.05,  # Position in the top left
+            y=0.95,
+            showarrow=False,
+            font=dict(size=10, family="Arial"),
+            align="left",
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="lightgray",
+            borderwidth=1,
+            borderpad=4,
+            row=1,
+            col=1,
+        )
 
         # Create animation frames and slider steps
         frames, slider_steps = self._create_animation_frames()

@@ -234,6 +234,15 @@ Examples:
     if args.xrange is None:
         args.xrange = DEFAULT_RANGES.get(args.function, (-2, 2))
 
+        # Check if initial guess is outside the default range and expand if needed
+        for x0_value in args.x0:
+            # Add padding to ensure points aren't right at the edge
+            padding = 0.5
+            if x0_value < args.xrange[0]:
+                args.xrange = (x0_value - padding, args.xrange[1])
+            if x0_value > args.xrange[1]:
+                args.xrange = (args.xrange[0], x0_value + padding)
+
     # Create configuration
     config = NumericalMethodConfig(
         func=f,
