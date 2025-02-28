@@ -91,6 +91,41 @@ class RootFindingVisualizer:
         # Generate a list of distinct colors for methods
         self.colors = self._generate_colors(len(methods))
 
+        # Define a list of marker symbols for methods to ensure they don't overlap completely
+        self.marker_symbols = [
+            "circle",
+            "square",
+            "diamond",
+            "triangle-up",
+            "triangle-down",
+            "triangle-left",
+            "triangle-right",
+            "pentagon",
+            "hexagon",
+            "star",
+            "hexagram",
+            "star-triangle-up",
+            "star-triangle-down",
+            "star-square",
+            "star-diamond",
+            "diamond-tall",
+            "diamond-wide",
+            "hourglass",
+            "bowtie",
+            "circle-cross",
+        ]
+
+        # Ensure we have enough symbols (cycle if needed)
+        if len(methods) > len(self.marker_symbols):
+            # Repeat the marker symbols if we have more methods than symbols
+            repeat_count = (len(methods) // len(self.marker_symbols)) + 1
+            self.marker_symbols = self.marker_symbols * repeat_count
+
+        # Define size variation based on method index (between 8 and 14)
+        self.marker_sizes = [
+            self.vis_config.point_size + (i % 4) * 2 for i in range(len(methods))
+        ]
+
         # Store for computed data
         self.all_data = []
         self.root_estimates = []
@@ -381,7 +416,9 @@ class RootFindingVisualizer:
                             mode="markers",
                             marker=dict(
                                 color=self.colors[i],
-                                size=self.vis_config.point_size + 2,
+                                size=self.marker_sizes[i]
+                                + 2,  # Slightly larger for initial points
+                                symbol=self.marker_symbols[i],
                                 line=dict(color="black", width=1),
                             ),
                             name=method.name,
@@ -406,7 +443,9 @@ class RootFindingVisualizer:
                             mode="markers",
                             marker=dict(
                                 color=self.colors[i],
-                                size=self.vis_config.point_size + 2,
+                                size=self.marker_sizes[i]
+                                + 2,  # Slightly larger for initial points
+                                symbol=self.marker_symbols[i],
                                 line=dict(color="black", width=1),
                             ),
                             name=method.name,
@@ -450,7 +489,9 @@ class RootFindingVisualizer:
                             name=method.name,
                             line=dict(color=self.colors[i], width=2),
                             marker=dict(
-                                color=self.colors[i], size=self.vis_config.point_size
+                                color=self.colors[i],
+                                size=self.marker_sizes[i],
+                                symbol=self.marker_symbols[i],
                             ),
                             legendgroup=method.name,  # Group legends by method name
                             showlegend=False,  # Don't show duplicate legend entries
@@ -481,7 +522,9 @@ class RootFindingVisualizer:
                             name=f"{method.name} |x|",
                             line=dict(color=self.colors[i], width=2),
                             marker=dict(
-                                color=self.colors[i], size=self.vis_config.point_size
+                                color=self.colors[i],
+                                size=self.marker_sizes[i],
+                                symbol=self.marker_symbols[i],
                             ),
                             legendgroup=method.name,  # Group legends by method name
                             showlegend=False,  # Don't show duplicate legend entries
@@ -519,7 +562,9 @@ class RootFindingVisualizer:
                         name=method.name,
                         line=dict(color=self.colors[i], width=2),
                         marker=dict(
-                            color=self.colors[i], size=self.vis_config.point_size
+                            color=self.colors[i],
+                            size=self.marker_sizes[i],
+                            symbol=self.marker_symbols[i],
                         ),
                         legendgroup=method.name,  # Group legends by method name
                         showlegend=False,  # Don't show duplicate legend entries
@@ -622,8 +667,8 @@ class RootFindingVisualizer:
                                 mode="markers",
                                 marker=dict(
                                     color=self.colors[i],
-                                    size=self.vis_config.point_size,
-                                    symbol="circle",
+                                    size=self.marker_sizes[i],
+                                    symbol=self.marker_symbols[i],
                                 ),
                                 name=method.name,
                                 hoverinfo="text",
@@ -647,8 +692,8 @@ class RootFindingVisualizer:
                                     mode="markers",
                                     marker=dict(
                                         color=self.colors[i],
-                                        size=self.vis_config.point_size,
-                                        symbol="circle",
+                                        size=self.marker_sizes[i],
+                                        symbol=self.marker_symbols[i],
                                     ),
                                     name=method.name,
                                     hoverinfo="text",
@@ -680,8 +725,8 @@ class RootFindingVisualizer:
                                 mode="markers",
                                 marker=dict(
                                     color=self.colors[i],
-                                    size=self.vis_config.point_size,
-                                    symbol="circle",
+                                    size=self.marker_sizes[i],
+                                    symbol=self.marker_symbols[i],
                                     opacity=0.7,  # Slightly transparent to indicate it's not changing
                                 ),
                                 name=method.name,
@@ -705,8 +750,8 @@ class RootFindingVisualizer:
                                     mode="markers",
                                     marker=dict(
                                         color=self.colors[i],
-                                        size=self.vis_config.point_size,
-                                        symbol="circle",
+                                        size=self.marker_sizes[i],
+                                        symbol=self.marker_symbols[i],
                                         opacity=0.7,
                                     ),
                                     name=method.name,
@@ -734,7 +779,9 @@ class RootFindingVisualizer:
                             name=method.name,
                             line=dict(color=self.colors[i], width=2),
                             marker=dict(
-                                color=self.colors[i], size=self.vis_config.point_size
+                                color=self.colors[i],
+                                size=self.marker_sizes[i],
+                                symbol=self.marker_symbols[i],
                             ),
                             legendgroup=method.name,
                             showlegend=False,  # Keep as False to avoid duplicate legend entries
@@ -764,7 +811,9 @@ class RootFindingVisualizer:
                             name=f"{method.name} |x|",
                             line=dict(color=self.colors[i], width=2),
                             marker=dict(
-                                color=self.colors[i], size=self.vis_config.point_size
+                                color=self.colors[i],
+                                size=self.marker_sizes[i],
+                                symbol=self.marker_symbols[i],
                             ),
                             legendgroup=method.name,
                             showlegend=False,  # Keep as False to avoid duplicate legend entries
@@ -781,7 +830,9 @@ class RootFindingVisualizer:
                         name=method.name,
                         line=dict(color=self.colors[i], width=2),
                         marker=dict(
-                            color=self.colors[i], size=self.vis_config.point_size
+                            color=self.colors[i],
+                            size=self.marker_sizes[i],
+                            symbol=self.marker_symbols[i],
                         ),
                         legendgroup=method.name,
                         showlegend=False,  # Keep as False to avoid duplicate legend entries
@@ -1159,7 +1210,17 @@ class RootFindingVisualizer:
                         mode="lines+markers",
                         name=method.name,
                         line=dict(color=self.colors[i], width=5),
-                        marker=dict(color=self.colors[i], size=4, symbol="circle"),
+                        marker=dict(
+                            color=self.colors[i],
+                            size=self.marker_sizes[i],
+                            symbol=(
+                                self.marker_symbols[i][
+                                    : self.marker_symbols[i].find("-")
+                                ]
+                                if "-" in self.marker_symbols[i]
+                                else self.marker_symbols[i]
+                            ),
+                        ),
                     )
                 )
 
@@ -1174,8 +1235,14 @@ class RootFindingVisualizer:
                             name=f"{method.name} final",
                             marker=dict(
                                 color=self.colors[i],
-                                size=8,
-                                symbol="circle",
+                                size=self.marker_sizes[i] + 4,
+                                symbol=(
+                                    self.marker_symbols[i][
+                                        : self.marker_symbols[i].find("-")
+                                    ]
+                                    if "-" in self.marker_symbols[i]
+                                    else self.marker_symbols[i]
+                                ),
                                 line=dict(color="black", width=1),
                             ),
                         )
