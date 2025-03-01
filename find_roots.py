@@ -182,21 +182,6 @@ Examples:
         help="Create 3D visualization for 2D functions",
     )
 
-    # Add option to show/hide convergence and error plots
-    parser.add_argument(
-        "--show-convergence",
-        action="store_true",
-        default=True,
-        help="Show convergence plot",
-    )
-
-    parser.add_argument(
-        "--show-error",
-        action="store_true",
-        default=True,
-        help="Show error plot",
-    )
-
     args = parser.parse_args()
 
     # Load configuration from file if provided
@@ -319,8 +304,6 @@ Examples:
 
     # Create visualization configuration
     vis_config = VisualizationConfig(
-        show_convergence=args.show_convergence,
-        show_error=args.show_error,
         style="white",
         context="talk",
         palette="viridis",
