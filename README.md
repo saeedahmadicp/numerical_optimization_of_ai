@@ -117,6 +117,11 @@ The package provides interactive visualizations for both optimization and root-f
 - Convergence analysis
 - Error tracking
 
+## References
+
+- [Numerical Optimization](https://indrag49.github.io/Numerical-Optimization/)
+- [Numerical Optimization](https://github.com/indrag49/Numerical-Optimization)
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

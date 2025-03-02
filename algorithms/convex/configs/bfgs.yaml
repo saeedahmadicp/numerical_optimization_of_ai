@@ -1,0 +1,66 @@
+# algorithms/convex/configs/bfgs.yaml
+
+# Configuration for BFGS Method - handles both root-finding and optimization
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: trigonometric  # f(x) = sin(x), roots at x = 0, π, 2π, etc.
+  
+  # Initial point
+  x0: 2.5
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 3.14159265358979  # π
+  
+  # Visualization settings
+  xrange: [0, 6.3]
+  no_viz: true
+
+# Optimization configuration
+optimize:
+  # Function with known minimum
+  function: quadratic_with_linear  # f(x) = x^2 - 4x + 3, minimum at x = 2
+  
+  # Initial point
+  x0: 0.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Step length parameters
+  step_length_method: strong_wolfe
+  step_length_params: {"c1": 1.0e-4, "c2": 0.1, "alpha_init": 1.0}
+  
+  # Expected outcome
+  expected_minimum: 2.0
+  
+  # Visualization settings
+  xrange: [-1, 5]
+  no_viz: true
+
+# For 2D optimization
+optimize_2d:
+  # Function to optimize - Himmelblau function
+  function: himmelblau  # Has 4 local minima
+  
+  # Initial point - starting near but not at one of the minima
+  x0: [2.5, 1.5]
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome - one of the minima
+  expected_minimum: [3.0, 2.0]
+  
+  # Visualization settings
+  xrange: [-6, 6]
+  yrange: [-6, 6]
+  viz_3d: true
+  no_viz: true 

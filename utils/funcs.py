@@ -88,16 +88,79 @@ def stiff() -> FuncPair:
 
 
 def multiple_roots() -> FuncPair:
-    """f(x) = (x-1)²(x+2), roots at x = 1 (double root) and x = -2."""
+    """f(x) = x^5 - 5x^3 - 20x + 5, multiple roots, including 2.0."""
     return (
-        lambda x: (x - 1) ** 2 * (x + 2),
-        lambda x: (x - 1) ** 2 + 2 * (x - 1) * (x + 2),
+        lambda x: x**5 - 5 * x**3 - 20 * x + 5,
+        lambda x: 5 * x**4 - 15 * x**2 - 20,
     )
 
 
 def ill_conditioned() -> FuncPair:
-    """f(x) = x¹⁰ - 1, roots at e^(2πik/10), k=0,1,...,9."""
-    return (lambda x: x**10 - 1, lambda x: 10 * x**9)
+    """A cubic polynomial with ill-conditioned root near x = 1."""
+    return (
+        lambda x: 0.01 * x**3 + x**2 - 0.0001,
+        lambda x: 0.03 * x**2 + 2 * x,
+    )
+
+
+def himmelblau_roots() -> FuncPair:
+    """
+    Modified Himmelblau function for root finding.
+    f(x,y) = (x²+y-11)² + (x+y²-7)²-100
+
+    Has roots (≈ zeros) where the original Himmelblau function equals 100,
+    which creates a closed curve in 2D space.
+    """
+
+    def f(x):
+        if not isinstance(x, np.ndarray) or x.size == 1:
+            raise ValueError("Himmelblau roots function requires 2D input")
+        return (x[0] ** 2 + x[1] - 11) ** 2 + (x[0] + x[1] ** 2 - 7) ** 2 - 100
+
+    def df(x):
+        if not isinstance(x, np.ndarray) or x.size == 1:
+            raise ValueError("Himmelblau roots function requires 2D input")
+        return np.array(
+            [
+                4 * x[0] * (x[0] ** 2 + x[1] - 11) + 2 * (x[0] + x[1] ** 2 - 7),
+                2 * (x[0] ** 2 + x[1] - 11) + 4 * x[1] * (x[0] + x[1] ** 2 - 7),
+            ]
+        )
+
+    return (f, df)
+
+
+def rastrigin_roots() -> FuncPair:
+    """
+    Modified Rastrigin function for root finding.
+    f(x,y) = 20 + x² + y² - 10(cos(2πx) + cos(2πy)) - 30
+
+    Has roots (zeros) where the original Rastrigin function equals 30,
+    creating interesting patterns of zeroes in 2D space.
+    """
+
+    def f(x):
+        if not isinstance(x, np.ndarray) or x.size != 2:
+            raise ValueError("Rastrigin roots function requires 2D input (x,y)")
+        return (
+            20
+            + x[0] ** 2
+            + x[1] ** 2
+            - 10 * (np.cos(2 * np.pi * x[0]) + np.cos(2 * np.pi * x[1]))
+            - 30
+        )
+
+    def df(x):
+        if not isinstance(x, np.ndarray) or x.size != 2:
+            raise ValueError("Rastrigin roots function requires 2D input (x,y)")
+        return np.array(
+            [
+                2 * x[0] + 20 * np.pi * np.sin(2 * np.pi * x[0]),
+                2 * x[1] + 20 * np.pi * np.sin(2 * np.pi * x[1]),
+            ]
+        )
+
+    return (f, df)
 
 
 # PyTorch-based functions for automatic differentiation
@@ -142,6 +205,8 @@ FUNCTION_MAP = {
     "stiff": stiff(),
     "multiple_roots": multiple_roots(),
     "ill_conditioned": ill_conditioned(),
+    "2d_himmelblau": himmelblau_roots(),
+    "2d_rastrigin": rastrigin_roots(),
 }
 
 # List of all available test functions

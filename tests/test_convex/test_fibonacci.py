@@ -14,7 +14,7 @@ from algorithms.convex.fibonacci import (
     fibonacci_search,
     fib_generator,
 )
-from algorithms.convex.protocols import RootFinderConfig
+from algorithms.convex.protocols import NumericalMethodConfig
 
 
 def test_fib_generator():
@@ -37,7 +37,7 @@ def test_basic_root_finding():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = FibonacciMethod(config, 1, 2)
 
     while not method.has_converged():
@@ -53,7 +53,7 @@ def test_fibonacci_points():
     def f(x):
         return x**2 - 4
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = FibonacciMethod(config, 0, 3, n_terms=10)
 
     # Check initial points
@@ -68,7 +68,7 @@ def test_convergence_criteria():
     def f(x):
         return x**3 - x - 2
 
-    config = RootFinderConfig(func=f, tol=1e-6)
+    config = NumericalMethodConfig(func=f, method_type="root", tol=1e-6)
     method = FibonacciMethod(config, 1, 2)
 
     while not method.has_converged():
@@ -83,7 +83,7 @@ def test_iteration_history():
     def f(x):
         return x**2 - 4
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = FibonacciMethod(config, 0, 3)
 
     # Perform a few steps
@@ -105,7 +105,12 @@ def test_legacy_wrapper():
         return x**2 - 2
 
     root, errors, iters = fibonacci_search(
-        f, 1, 2, n_terms=30, tol=1e-5  # Increased terms and relaxed tolerance
+        f,
+        1,
+        2,
+        n_terms=30,
+        tol=1e-5,
+        method_type="root",  # Ensure method_type is specified
     )
 
     assert abs(root - math.sqrt(2)) < 1e-5  # Relaxed tolerance
@@ -118,7 +123,7 @@ def test_fibonacci_exhaustion():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = FibonacciMethod(config, 1, 2, n_terms=5)  # Small number of terms
 
     while not method.has_converged():
@@ -138,7 +143,7 @@ def test_different_functions():
     ]
 
     for func, a, b in test_cases:
-        config = RootFinderConfig(func=func, tol=1e-4)
+        config = NumericalMethodConfig(func=func, method_type="root", tol=1e-4)
         method = FibonacciMethod(config, a, b)
 
         while not method.has_converged():
@@ -153,7 +158,7 @@ def test_get_current_x():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = FibonacciMethod(config, 1, 2)
 
     x = method.step()
@@ -166,7 +171,7 @@ def test_interval_reduction():
     def f(x):
         return x - 1
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = FibonacciMethod(config, 0, 2)
 
     initial_width = method.b - method.a
@@ -184,7 +189,7 @@ def test_n_terms_validation():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
 
     # Test with minimum viable terms
     method = FibonacciMethod(config, 1, 2, n_terms=3)
@@ -194,3 +199,23 @@ def test_n_terms_validation():
     method = FibonacciMethod(config, 1, 2, n_terms=30)
     assert len(method.fib) == 31
     assert method.fib[-1] > method.fib[-2]  # Verify sequence is increasing
+
+
+def test_optimization_mode():
+    """Test that the method works for optimization problems"""
+
+    def f(x):
+        # Simple quadratic function with minimum at x=2
+        return (x - 2) ** 2
+
+    config = NumericalMethodConfig(func=f, method_type="optimize", tol=1e-5)
+    method = FibonacciMethod(config, 0, 4)
+
+    while not method.has_converged():
+        x = method.step()
+
+    # The minimum should be close to x=2
+    assert abs(x - 2) < 1e-4
+
+    # Function value should be close to zero at minimum
+    assert f(x) < 1e-8

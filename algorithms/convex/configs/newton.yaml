@@ -1,0 +1,66 @@
+# algorithms/convex/configs/newton.yaml
+
+# Configuration for Newton's method - handles both root-finding and optimization
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: cubic_polynomial  # f(x) = x^3 - 2x^2 - 5x + 6, roots at x = {-2, 1, 3}
+  
+  # Initial point
+  x0: 2.0
+
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 3.0
+  
+  # Visualization settings
+  xrange: [-3, 4]
+  no_viz: true
+
+# Optimization configuration
+optimize:
+  # Function with known minimum
+  function: quadratic  # f(x) = x^2 + 4x + 4, minimum at x = -2
+  
+  # Initial point
+  x0: 0.0
+
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Step length parameters - using a more sophisticated line search
+  step_length_method: wolfe
+  step_length_params: {"c1": 1.0e-4, "c2": 0.9, "alpha_init": 1.0}
+  
+  # Expected outcome
+  expected_minimum: -2.0
+  
+  # Visualization settings
+  xrange: [-4, 2]
+  no_viz: true
+
+# For 2D optimization
+optimize_2d:
+  # Function to optimize - Rosenbrock function
+  function: rosenbrock  # f(x,y) = (1-x)^2 + 100(y-x^2)^2, minimum at (1,1)
+  
+  # Initial point - starting away from minimum
+  x0: [0.0, 0.0]
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_minimum: [1.0, 1.0]
+  
+  # Visualization settings
+  xrange: [-2, 2]
+  yrange: [-1, 3]
+  viz_3d: true
+  no_viz: true 

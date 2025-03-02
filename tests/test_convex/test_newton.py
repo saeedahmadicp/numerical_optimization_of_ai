@@ -109,6 +109,8 @@ def test_iteration_history():
         assert "f(x)" in data.details
         assert "f'(x)" in data.details
         assert "step" in data.details
+        assert "descent_direction" in data.details
+        assert "step_size" in data.details
 
     # Verify progress
     first_iter = history[0]
@@ -137,9 +139,154 @@ def test_optimization_history():
     history = method.get_iteration_history()
     details = history[0].details
 
-    assert "f'(x)" in details
-    assert "f''(x)" in details
+    assert "f(x)" in details
+    assert "gradient" in details
+    assert "descent_direction" in details
+    assert "step_size" in details
     assert "step" in details
+
+
+def test_line_search_methods():
+    """Test different line search methods for optimization"""
+
+    def f(x):
+        return (
+            (x - 3) ** 4 + (x - 3) ** 2 + 1
+        )  # A function with slow convergence without line search
+
+    def df(x):
+        return 4 * (x - 3) ** 3 + 2 * (x - 3)
+
+    def d2f(x):
+        return 12 * (x - 3) ** 2 + 2
+
+    # Compare different line search methods
+    line_search_methods = [
+        "backtracking",
+        "wolfe",
+        "strong_wolfe",
+        "goldstein",
+        "fixed",
+    ]
+    results = {}
+
+    for method_name in line_search_methods:
+        config = NumericalMethodConfig(
+            func=f,
+            derivative=df,
+            method_type="optimize",
+            tol=1e-6,
+            step_length_method=method_name,
+            step_length_params=(
+                {"alpha_init": 1.0} if method_name != "fixed" else {"step_size": 0.5}
+            ),
+        )
+
+        method = NewtonMethod(config, x0=0.0, second_derivative=d2f)
+
+        # Run the method
+        try:
+            while not method.has_converged():
+                method.step()
+
+            results[method_name] = {
+                "x": method.get_current_x(),
+                "iterations": method.iterations,
+                "f(x)": f(method.get_current_x()),
+            }
+        except Exception as e:
+            print(f"Error with {method_name}: {str(e)}")
+            results[method_name] = {
+                "error": str(e),
+                "x": method.get_current_x(),
+                "iterations": method.iterations,
+            }
+
+    # All methods should find the minimum approximately
+    for method_name, result in results.items():
+        if "error" not in result:
+            assert (
+                abs(result["x"] - 3.0) < 1e-2
+            ), f"{method_name} should find minimum near x=3"
+            assert result["f(x)"] < f(
+                0.0
+            ), f"{method_name} should decrease function value"
+
+    # Print results for comparison
+    print("\nLine search method comparison:")
+    for method_name, result in results.items():
+        if "error" not in result:
+            print(
+                f"  {method_name}: x={result['x']:.6f}, iterations={result['iterations']}, f(x)={result['f(x)']:.6e}"
+            )
+        else:
+            print(f"  {method_name}: error={result['error']}")
+
+
+def test_step_length_params():
+    """Test customization of step length parameters"""
+
+    # Using a function that requires different step lengths
+    def f(x):
+        return (x - 3) ** 4 + 10 * np.sin(x)
+
+    def df(x):
+        return 4 * (x - 3) ** 3 + 10 * np.cos(x)
+
+    def d2f(x):
+        return 12 * (x - 3) ** 2 - 10 * np.sin(x)
+
+    # Test with different line search methods
+    config_backtracking = NumericalMethodConfig(
+        func=f,
+        derivative=df,
+        method_type="optimize",
+        step_length_method="backtracking",
+        step_length_params={"rho": 0.5, "c": 1e-4},
+    )
+    method_backtracking = NewtonMethod(
+        config_backtracking, x0=10.0, second_derivative=d2f
+    )
+
+    # Test with fixed step length
+    config_fixed = NumericalMethodConfig(
+        func=f,
+        derivative=df,
+        method_type="optimize",
+        step_length_method="fixed",
+        step_length_params={"step_size": 0.5},
+    )
+    method_fixed = NewtonMethod(config_fixed, x0=10.0, second_derivative=d2f)
+
+    # Run both methods for one iteration
+    method_backtracking.step()
+    method_fixed.step()
+
+    # The methods should produce different results due to different line search methods
+    x_backtracking = method_backtracking.get_current_x()
+    x_fixed = method_fixed.get_current_x()
+
+    # Different line search methods should result in different x values
+    assert (
+        x_backtracking != x_fixed
+    ), f"Expected different x values, got {x_backtracking} and {x_fixed}"
+
+    # Both methods should decrease the function value
+    assert f(x_backtracking) < f(10.0), "Backtracking failed to decrease function value"
+    assert f(x_fixed) < f(10.0), "Fixed step failed to decrease function value"
+
+    # Get step sizes from history
+    history_backtracking = method_backtracking.get_iteration_history()[0].details
+    history_fixed = method_fixed.get_iteration_history()[0].details
+
+    # Verify step sizes are different
+    assert (
+        history_backtracking["step_size"] != history_fixed["step_size"]
+    ), f"Expected different step sizes, got {history_backtracking['step_size']} and {history_fixed['step_size']}"
+
+    # Print step sizes for debugging (useful if the test fails)
+    print(f"\nBacktracking step size: {history_backtracking['step_size']}")
+    print(f"Fixed step size: {history_fixed['step_size']}")
 
 
 def test_legacy_wrapper_root():
@@ -148,6 +295,7 @@ def test_legacy_wrapper_root():
     def f(x):
         return x**2 - 2
 
+    # Test with default parameters
     root, errors, iters = newton_search(f, x0=1.5)
     assert abs(root - math.sqrt(2)) < 1e-6
     assert len(errors) == iters
@@ -159,9 +307,133 @@ def test_legacy_wrapper_optimize():
     def f(x):
         return x**2
 
+    # Test with default parameters
     minimum, errors, iters = newton_search(f, x0=1.0, method_type="optimize")
     assert abs(minimum) < 1e-6
     assert len(errors) == iters
+
+
+def test_legacy_wrapper_with_step_length():
+    """Test the backward-compatible newton_search function with step length parameters"""
+
+    def f(x):
+        return (x - 3) ** 4  # Function with minimum at x=3
+
+    # Test with backtracking line search
+    minimum1, errors1, iters1 = newton_search(
+        f,
+        x0=0.0,
+        method_type="optimize",
+        step_length_method="backtracking",
+        step_length_params={"rho": 0.5, "c": 1e-4},
+    )
+
+    # Test with strong Wolfe line search
+    minimum2, errors2, iters2 = newton_search(
+        f,
+        x0=0.0,
+        method_type="optimize",
+        step_length_method="strong_wolfe",
+        step_length_params={"c1": 1e-4, "c2": 0.1},
+    )
+
+    # Both methods should find the minimum approximately
+    assert abs(minimum1 - 3.0) < 1e-1, "Should find minimum near x=3"
+    assert abs(minimum2 - 3.0) < 1e-1, "Should find minimum near x=3"
+
+
+def test_convergence_rate():
+    """Test that Newton's method achieves quadratic convergence rate"""
+
+    def f(x):
+        return x**2 - 2  # Simple function with known root at sqrt(2)
+
+    def df(x):
+        return 2 * x
+
+    config = NumericalMethodConfig(func=f, derivative=df, method_type="root", tol=1e-10)
+    method = NewtonMethod(config, x0=1.5)
+
+    # Run several iterations to get convergence data
+    for _ in range(5):
+        if method.has_converged():
+            break
+        method.step()
+
+    # Get convergence rate
+    rate = method.get_convergence_rate()
+
+    # For well-behaved functions, Newton's method should show quadratic convergence
+    # This means error_{n+1} ≈ C * error_n^2, so rate should be small
+    assert rate is not None, "Should have calculated convergence rate"
+    assert (
+        rate < 10.0
+    ), f"Rate {rate} should indicate quadratic convergence (typically < 10)"
+
+    # The error should decrease rapidly
+    errors = [data.error for data in method.get_iteration_history()]
+    for i in range(1, len(errors)):
+        if errors[i - 1] > 1e-10:  # Avoid division by very small numbers
+            ratio = errors[i] / (errors[i - 1] ** 2)
+            assert (
+                ratio < 100
+            ), f"Error ratio {ratio} should indicate quadratic convergence"
+
+
+def test_difficult_function():
+    """Test Newton's method on a more challenging function"""
+
+    def f(x):
+        # Function with severe non-linearity and flat regions
+        if x <= 0:
+            return x**2 + 1
+        else:
+            return math.log(1 + x**2) - 0.5
+
+    def df(x):
+        if x <= 0:
+            return 2 * x
+        else:
+            return 2 * x / (1 + x**2)
+
+    def d2f(x):
+        if x <= 0:
+            return 2.0
+        else:
+            return 2 / (1 + x**2) - 4 * x**2 / (1 + x**2) ** 2
+
+    # Test root finding
+    config_root = NumericalMethodConfig(
+        func=f, derivative=df, method_type="root", tol=1e-6, max_iter=50
+    )
+    method_root = NewtonMethod(config_root, x0=2.0)
+
+    while not method_root.has_converged():
+        method_root.step()
+
+    # There's a root near x ≈ 1.31
+    root = method_root.get_current_x()
+    assert abs(f(root)) < 1e-5, f"Should find a root. f({root}) = {f(root)}"
+
+    # Test optimization
+    config_opt = NumericalMethodConfig(
+        func=f,
+        derivative=df,
+        method_type="optimize",
+        tol=1e-6,
+        max_iter=50,
+        step_length_method="backtracking",
+    )
+    method_opt = NewtonMethod(config_opt, x0=-1.0, second_derivative=d2f)
+
+    while not method_opt.has_converged():
+        method_opt.step()
+
+    # The minimum is at x = 0 (for the left part of the function)
+    minimum = method_opt.get_current_x()
+    assert (
+        abs(minimum) < 1e-5 or abs(df(minimum)) < 1e-5
+    ), f"Should find a minimum. x = {minimum}, f'(x) = {df(minimum)}"
 
 
 def test_different_functions():
@@ -225,6 +497,7 @@ def test_different_functions():
             method_type="optimize",
             tol=tol,
             max_iter=200,
+            step_length_method="backtracking",
         )
         method = NewtonMethod(config, x0=x0, second_derivative=d2f)
 
@@ -303,6 +576,69 @@ def test_get_current_x():
     assert x == method.get_current_x()
 
 
+def test_near_zero_derivative():
+    """Test Newton's method with nearly zero derivative"""
+
+    def f(x):
+        return (x - 1) ** 3  # Has zero derivative at x=1
+
+    def df(x):
+        return 3 * (x - 1) ** 2  # Derivative is zero at x=1
+
+    # For root finding - near a root with small derivative
+    config_root = NumericalMethodConfig(
+        func=f, derivative=df, method_type="root", tol=1e-6
+    )
+    method_root = NewtonMethod(config_root, x0=1.01)  # Start very close to x=1
+
+    while not method_root.has_converged():
+        method_root.step()
+
+    # When derivative is near zero, Newton's method may not converge precisely
+    # to the root, but it should still make progress. The function value should
+    # be close to zero even if x is not exactly at the root
+    x_final = method_root.get_current_x()
+    assert (
+        abs(f(x_final)) < 1e-5
+    ), f"Function value should be near zero. f({x_final}) = {f(x_final)}"
+
+    # Allow for a larger tolerance since we're dealing with a challenging case
+    # (cubic function with zero derivative at the root)
+    assert (
+        abs(x_final - 1.0) < 1e-2
+    ), f"Should find a point near the root at x=1, got {x_final}"
+
+
+def test_record_initial_state():
+    """Test that initial state is recorded properly when requested"""
+
+    def f(x):
+        return x**2 - 2
+
+    def df(x):
+        return 2 * x
+
+    config = NumericalMethodConfig(func=f, derivative=df, method_type="root", tol=1e-6)
+    method = NewtonMethod(config, x0=1.5, record_initial_state=True)
+
+    # History should have initial state before any steps
+    history = method.get_iteration_history()
+    assert len(history) == 1, "Should have initial state recorded"
+
+    # Initial details should contain expected keys
+    details = history[0].details
+    assert "x0" in details
+    assert "f(x0)" in details
+    assert "f'(x0)" in details
+    assert "method_type" in details
+
+    # Initial values should match what we provided
+    assert details["x0"] == 1.5
+    assert details["f(x0)"] == f(1.5)
+    assert details["f'(x0)"] == df(1.5)
+    assert details["method_type"] == "root"
+
+
 def test_rosenbrock_optimization():
     """Test optimization of Rosenbrock function f(x,y) = (1-x)^2 + 100(y-x^2)^2"""
 
@@ -335,6 +671,7 @@ def test_rosenbrock_optimization():
             method_type="optimize",
             tol=1e-5,
             max_iter=100,
+            step_length_method="backtracking",
         )
         method = NewtonMethod(config, x0, second_derivative=d2f)
 
@@ -409,6 +746,7 @@ def test_scaled_quadratic():
             method_type="optimize",
             tol=1e-6,
             max_iter=100,
+            step_length_method="backtracking",
         )
         method = NewtonMethod(config, x0, second_derivative=d2f)
 

@@ -1,0 +1,66 @@
+# algorithms/convex/configs/powell_quadratic.yaml
+
+# Configuration for Powell's Quadratic Interpolation Method - for one-dimensional optimization
+
+# Optimization configuration
+optimize:
+  # Function with known minimum
+  function: parabola  # f(x) = x^2, minimum at x = 0
+  
+  # Initial bracket - must contain the minimum
+  x0: -1.0
+  x1: 0.5
+  x2: 2.0  # Three points required for quadratic interpolation
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 50
+  
+  # Expected outcome
+  expected_minimum: 0.0
+  
+  # Visualization settings
+  xrange: [-2, 3]
+  no_viz: true
+
+# Optimization with asymmetric function
+optimize_asymmetric:
+  # Function with asymmetric behavior around minimum
+  function: cubic  # f(x) = x^3 - 3x + 2, minimum near x = 1
+  
+  # Initial bracket
+  x0: 0.0
+  x1: 1.5
+  x2: 3.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 50
+  
+  # Expected outcome
+  expected_minimum: 1.0
+  
+  # Visualization settings
+  xrange: [-1, 4]
+  no_viz: true
+
+# Optimization with challenging function
+optimize_challenging:
+  # Function with multiple local minima
+  function: multi_modal  # f(x) = x^4 - 14x^2 + 24x - 1
+  
+  # Initial bracket - targeting global minimum
+  x0: 0.0
+  x1: 2.0
+  x2: 3.5
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 75
+  
+  # Expected outcome
+  expected_minimum: 3.0  # Approximate value
+  
+  # Visualization settings
+  xrange: [-1, 4]
+  no_viz: true 

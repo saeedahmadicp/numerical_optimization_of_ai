@@ -1,0 +1,63 @@
+# algorithms/convex/configs/fibonacci.yaml
+
+# Configuration for Fibonacci Method - primarily for optimization but can be adapted for root-finding
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: cubic_polynomial  # f(x) = x^3 - 2x^2 - 5x + 6, roots at x = {-2, 1, 3}
+  
+  # Initial bracket - must contain a root
+  a: 2.0
+  b: 4.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 30  # Fibonacci method uses a predetermined number of evaluations
+  
+  # Expected outcome
+  expected_root: 3.0
+  
+  # Visualization settings
+  xrange: [1, 5]
+  no_viz: true
+
+# Optimization configuration
+optimize:
+  # Function with known minimum
+  function: parabola  # f(x) = x^2, minimum at x = 0
+  
+  # Initial bracket - must contain the minimum
+  a: -1.0
+  b: 1.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 20  # Number of Fibonacci evaluations
+  
+  # Expected outcome
+  expected_minimum: 0.0
+  
+  # Visualization settings
+  xrange: [-2, 2]
+  no_viz: true
+
+# Optimization with asymmetric function
+optimize_asymmetric:
+  # Function with asymmetric behavior around minimum
+  function: asymmetric_bowl  # f(x) = x^2 for x≤0, 2*x^2 for x>0
+  
+  # Initial bracket - must contain the minimum
+  a: -2.0
+  b: 1.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 25
+  
+  # Expected outcome
+  expected_minimum: 0.0
+  
+  # Visualization settings
+  xrange: [-3, 2]
+  no_viz: true 

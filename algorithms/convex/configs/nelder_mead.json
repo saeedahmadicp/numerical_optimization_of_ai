@@ -1,0 +1,34 @@
+{
+  "optimize_1d": {
+    "function": "quadratic",
+    "x0": 0.0,
+    "delta": 0.1,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "expected_minimum": -2.0,
+    "xrange": [-4, 1],
+    "no_viz": true
+  },
+  "optimize_2d": {
+    "function": "rosenbrock",
+    "x0": [0.0, 0.0],
+    "delta": 0.2,
+    "tol": 1.0e-8,
+    "max_iter": 500,
+    "expected_minimum": [1.0, 1.0],
+    "xrange": [-1, 2],
+    "yrange": [-0.5, 1.5],
+    "viz_3d": true,
+    "no_viz": true
+  },
+  "optimize_nonsmooth": {
+    "function": "absolute_value",
+    "x0": 1.0,
+    "delta": 0.5,
+    "tol": 1.0e-6,
+    "max_iter": 200,
+    "expected_minimum": -1.0,
+    "xrange": [-3, 3],
+    "no_viz": true
+  }
+} 

@@ -1,0 +1,66 @@
+# algorithms/convex/configs/elimination.yaml
+
+# Configuration for Elimination Method - for both optimization and root-finding
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: cubic_polynomial  # f(x) = x^3 - 2x^2 - 5x + 6, roots at x = {-2, 1, 3}
+  
+  # Initial bracket - must contain a root
+  a: 2.0
+  b: 4.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  reduction_factor: 0.618  # Similar to golden ratio
+  
+  # Expected outcome
+  expected_root: 3.0
+  
+  # Visualization settings
+  xrange: [1, 5]
+  no_viz: true
+
+# Optimization configuration
+optimize:
+  # Function with known minimum
+  function: parabola  # f(x) = x^2, minimum at x = 0
+  
+  # Initial bracket - must contain the minimum
+  a: -2.0
+  b: 2.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  reduction_factor: 0.5  # Halving the interval
+  
+  # Expected outcome
+  expected_minimum: 0.0
+  
+  # Visualization settings
+  xrange: [-3, 3]
+  no_viz: true
+
+# Optimization with challenging function
+optimize_challenging:
+  # Function with multiple local minima
+  function: multi_modal  # f(x) = x^2 - 5*cos(2*x), multiple local minima
+  
+  # Initial bracket - targeting global minimum
+  a: -3.0
+  b: 0.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  reduction_factor: 0.6  # Custom reduction factor
+  
+  # Expected outcome
+  expected_minimum: -2.5  # Approximate value
+  
+  # Visualization settings
+  xrange: [-4, 1]
+  no_viz: true 

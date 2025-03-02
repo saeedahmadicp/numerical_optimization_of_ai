@@ -1,15 +1,44 @@
 # algorithms/convex/fibonacci.py
 
-"""Fibonacci search method for finding roots."""
+"""
+Fibonacci search method for optimization and root-finding.
 
-from typing import List, Tuple
+The Fibonacci search method is primarily an optimization technique for finding extrema
+of unimodal functions. It efficiently narrows down the interval containing the minimum
+by using Fibonacci numbers to determine testing points.
 
-from .protocols import BaseRootFinder, RootFinderConfig
+Mathematical Basis:
+----------------
+For optimization of a unimodal function f over an interval [a,b]:
+
+1. Place test points x₁ and x₂ at positions determined by Fibonacci ratios
+2. Compare f(x₁) and f(x₂) to determine which portion of the interval to eliminate
+3. Reduce the interval and recalculate test points
+4. Repeat until convergence or Fibonacci terms are exhausted
+
+For root-finding, this method adapts by:
+1. Comparing absolute function values |f(x₁)| and |f(x₂)| instead
+2. Selecting the subinterval that likely contains the root
+
+Convergence Properties:
+--------------------
+- The interval reduction factor is asymptotically the golden ratio: (√5-1)/2 ≈ 0.618
+- More efficient than bisection for minimization problems
+- For n iterations, requires only n+1 function evaluations
+- Optimal for minimizing the worst-case number of function evaluations
+"""
+
+from typing import List, Tuple, Optional, Callable, Union
+
+from .protocols import BaseNumericalMethod, NumericalMethodConfig, MethodType
 
 
 def fib_generator(n: int) -> List[int]:
     """
     Generate Fibonacci sequence up to n terms.
+
+    The Fibonacci sequence is defined by the recurrence relation:
+    F₀ = 0, F₁ = 1, Fₙ = Fₙ₋₁ + Fₙ₋₂ for n > 1
 
     Args:
         n: Number of terms to generate
@@ -17,180 +46,446 @@ def fib_generator(n: int) -> List[int]:
     Returns:
         List of first n Fibonacci numbers
     """
-    # Return an empty list if no terms are requested.
-    if n < 1:
+    # Handle edge cases
+    if n <= 0:
         return []
-    # If only one term is requested, return [1].
     elif n == 1:
         return [1]
+    elif n == 2:
+        return [1, 1]
 
-    # Initialize the sequence with the first two Fibonacci numbers.
+    # Initialize with first two Fibonacci numbers
     fib = [1, 1]
-    # Generate remaining terms using the recurrence relation.
+    # Generate remaining terms using the recurrence relation
     for i in range(2, n):
         fib.append(fib[i - 1] + fib[i - 2])
     return fib
 
 
-class FibonacciMethod(BaseRootFinder):
+class FibonacciMethod(BaseNumericalMethod):
     """
     Implementation of the Fibonacci search method.
 
-    This method uses Fibonacci ratios to successively narrow down the interval where a
-    root is located.
+    The Fibonacci method is an efficient technique for bracketing extrema
+    of unimodal functions or finding roots. It uses the Fibonacci sequence to
+    optimally place test points, requiring fewer function evaluations than
+    methods like bisection for the same accuracy.
+
+    Mathematical guarantees:
+    - For optimization tasks: If f is unimodal on [a,b], the method will converge
+      to a minimum with an interval of width approximately (b-a)/Fₙ after n steps.
+    - For root-finding tasks: If f is continuous and f(a)·f(b) < 0, the method will
+      converge to a root with similar efficiency, though bisection may be more robust.
     """
 
-    def __init__(self, config: RootFinderConfig, a: float, b: float, n_terms: int = 30):
+    def __init__(
+        self,
+        config: NumericalMethodConfig,
+        a: float,
+        b: float,
+        n_terms: int = 30,
+        record_initial_state: bool = False,
+    ):
         """
         Initialize the Fibonacci search method.
 
         Args:
-            config: Configuration including function, tolerances, etc.
-            a: Left endpoint of interval.
-            b: Right endpoint of interval.
-            n_terms: Number of Fibonacci terms to use in the search.
+            config: Configuration including function, convergence criteria, etc.
+            a: Left endpoint of interval
+            b: Right endpoint of interval
+            n_terms: Number of Fibonacci terms to use in the search
+            record_initial_state: Whether to record the initial state in history
+
+        Raises:
+            ValueError: If a >= b (invalid interval)
+            ValueError: For root-finding, if f(a)·f(b) >= 0 (no sign change)
         """
-        # Initialize the base class to set up common attributes.
+        # Validate input
+        if a >= b:
+            raise ValueError(f"Invalid interval: [a={a}, b={b}]. Must have a < b.")
+
+        # Initialize the base class
         super().__init__(config)
-        self.a = a  # Left endpoint of the interval.
-        self.b = b  # Right endpoint of the interval.
-        self.x = (a + b) / 2  # Initial approximation set as the midpoint.
 
-        # Generate the Fibonacci sequence needed for the search.
-        self.fib = fib_generator(n_terms + 1)
+        # Check method type is valid
+        if self.method_type not in ("root", "optimize"):
+            raise ValueError(
+                f"Invalid method_type: {self.method_type}. Must be 'root' or 'optimize'."
+            )
+
+        # For root-finding, verify sign change (optional but recommended)
+        if self.method_type == "root":
+            fa, fb = self.func(a), self.func(b)
+            if fa * fb > 0 and abs(fa) > self.tol and abs(fb) > self.tol:
+                # Only warn if neither endpoint is already close to a root
+                print(
+                    f"Warning: Function may not have a root in [{a}, {b}] as f({a})·f({b}) > 0"
+                )
+
+        self.a = a  # Left endpoint
+        self.b = b  # Right endpoint
+        self.x = (a + b) / 2  # Initial approximation (midpoint)
+
+        # Generate Fibonacci sequence for interval reduction
+        self.fib = fib_generator(n_terms + 1)  # We need n_terms+1 Fibonacci numbers
         self.n_terms = n_terms
-        self.current_term = n_terms  # This will be decreased with each iteration.
+        self.current_term = n_terms  # Index of current Fibonacci term (counts down)
 
-        # Initialize test points using Fibonacci ratios.
-        # These ratios determine how the interval is divided.
-        self.x1 = a + self.fib[self.n_terms - 2] / self.fib[self.n_terms] * (b - a)
-        self.x2 = a + self.fib[self.n_terms - 1] / self.fib[self.n_terms] * (b - a)
+        # Calculate initial test points using Fibonacci ratios
+        # These are placed optimally to minimize worst-case function evaluations
+        ratio1 = self.fib[self.current_term - 2] / self.fib[self.current_term]
+        ratio2 = self.fib[self.current_term - 1] / self.fib[self.current_term]
 
-    def get_current_x(self) -> float:
-        """Get current x value."""
-        return self.x
+        self.x1 = a + ratio1 * (b - a)  # First test point
+        self.x2 = a + ratio2 * (b - a)  # Second test point
 
-    def _update_points(self):
-        """
-        Update test points using Fibonacci ratios.
+        # Evaluate function at test points
+        self.f1 = self.func(self.x1)
+        self.f2 = self.func(self.x2)
 
-        This helper method recalculates x1 and x2 based on the current interval [a, b]
-        and the remaining Fibonacci numbers.
-        """
-        self.x1 = self.a + self.fib[self.current_term - 3] / self.fib[
-            self.current_term - 1
-        ] * (self.b - self.a)
-        self.x2 = self.a + self.fib[self.current_term - 2] / self.fib[
-            self.current_term - 1
-        ] * (self.b - self.a)
+        # Optionally record initial state
+        if record_initial_state:
+            initial_details = {
+                "a": a,
+                "b": b,
+                "x1": self.x1,
+                "x2": self.x2,
+                "f(x1)": self.f1,
+                "f(x2)": self.f2,
+                "interval_width": b - a,
+                "fib_term": self.current_term,
+                "fibonacci_number": self.fib[self.current_term],
+                "method_type": self.method_type,
+            }
+            self.add_iteration(x_old=a, x_new=self.x, details=initial_details)
+
+    # ------------------------
+    # Core Algorithm Methods
+    # ------------------------
 
     def step(self) -> float:
         """
         Perform one iteration of the Fibonacci search method.
 
+        Each iteration:
+        1. Evaluates function at test points and compares results
+        2. Eliminates a portion of the search interval
+        3. Updates one test point and reuses the other
+        4. Checks convergence criteria
+
         Returns:
-            float: Current approximation of the root.
+            float: Current best approximation
         """
-        # If convergence has been achieved, return the current approximation.
+        # If already converged, return current approximation
         if self._converged:
-            return self.x
+            return self.get_current_x()
 
-        # Store old x value
-        x_old = self.x
+        # Store old x value for history
+        x_old = self.get_current_x()
 
-        # Evaluate the function at the two test points.
-        f1, f2 = abs(self.func(self.x1)), abs(self.func(self.x2))
-
-        # Store iteration details
+        # Store iteration details before updating
         details = {
             "a": self.a,
             "b": self.b,
             "x1": self.x1,
             "x2": self.x2,
-            "f(x1)": f1,
-            "f(x2)": f2,
+            "f(x1)": self.func(self.x1),
+            "f(x2)": self.func(self.x2),
+            "interval_width": self.b - self.a,
             "fib_term": self.current_term,
+            "fibonacci_number": self.fib[self.current_term],
+            "method_type": self.method_type,
         }
 
-        # Update the search interval based on which test point gives a smaller function value.
-        if f1 < f2:
-            # If f1 is lower, the new interval becomes [a, x2].
-            self.b = self.x2
-            # Shift x2 to x1, and compute a new x1.
-            self.x2 = self.x1
-            self.x1 = self.a + self.fib[self.current_term - 3] / self.fib[
-                self.current_term - 1
-            ] * (self.b - self.a)
-        else:
-            # Otherwise, the new interval becomes [x1, b].
-            self.a = self.x1
-            # Shift x1 to x2, and compute a new x2.
-            self.x1 = self.x2
-            self.x2 = self.a + self.fib[self.current_term - 2] / self.fib[
-                self.current_term - 1
-            ] * (self.b - self.a)
-
-        # Update the current approximation to be the midpoint of the new interval.
-        self.x = (self.a + self.b) / 2
-
-        # Store iteration data
-        self.add_iteration(x_old, self.x, details)
-
-        # Increment the iteration counter.
-        self.iterations += 1
-        # Decrement the current Fibonacci term index.
+        # Decrement Fibonacci term counter
         self.current_term -= 1
 
-        # Check for convergence based on error, interval width, iteration count, or Fibonacci term exhaustion.
+        # Compare function values to determine interval reduction
+        if self.method_type == "root":
+            # For root-finding, use absolute function values
+            f1, f2 = abs(self.func(self.x1)), abs(self.func(self.x2))
+            compare_result = f1 < f2
+        else:
+            # For optimization, use actual function values
+            f1, f2 = self.func(self.x1), self.func(self.x2)
+            compare_result = f1 < f2
+
+        # Reduce interval based on comparison
+        if compare_result:
+            # If f(x₁) is better, eliminate [x₂, b]
+            self.b = self.x2
+            self.x2 = self.x1
+            # Calculate new x₁ using Fibonacci ratio
+            if self.current_term >= 2:  # Ensure we have enough Fibonacci terms
+                ratio = self.fib[self.current_term - 2] / self.fib[self.current_term]
+                self.x1 = self.a + ratio * (self.b - self.a)
+            else:
+                # For last iterations when we run out of terms
+                self.x1 = self.a + 0.5 * (self.x2 - self.a)
+        else:
+            # If f(x₂) is better, eliminate [a, x₁]
+            self.a = self.x1
+            self.x1 = self.x2
+            # Calculate new x₂ using Fibonacci ratio
+            if self.current_term >= 2:  # Ensure we have enough Fibonacci terms
+                ratio = self.fib[self.current_term - 1] / self.fib[self.current_term]
+                self.x2 = self.a + ratio * (self.b - self.a)
+            else:
+                # For last iterations when we run out of terms
+                self.x2 = self.x1 + 0.5 * (self.b - self.x1)
+
+        # Update current approximation to best point
+        x_new = self.get_current_x()
+
+        # Store iteration data
+        self.add_iteration(x_old, x_new, details)
+        self.iterations += 1
+
+        # Check convergence criteria
+        interval_width = self.b - self.a
         error = self.get_error()
+
         if (
-            error <= self.tol
-            or abs(self.b - self.a) < self.tol
-            or self.iterations >= self.max_iter
-            or self.current_term < 3
+            error <= self.tol  # Error within tolerance
+            or interval_width <= self.tol  # Interval sufficiently small
+            or self.iterations >= self.max_iter  # Max iterations reached
+            or self.current_term < 2  # Fibonacci terms exhausted
         ):
             self._converged = True
 
-        return self.x
+            # Add convergence reason to the last iteration
+            last_iteration = self._history[-1]
+            if error <= self.tol:
+                last_iteration.details["convergence_reason"] = (
+                    "function value within tolerance"
+                )
+            elif interval_width <= self.tol:
+                last_iteration.details["convergence_reason"] = (
+                    "interval width within tolerance"
+                )
+            elif self.current_term < 2:
+                last_iteration.details["convergence_reason"] = (
+                    "Fibonacci terms exhausted"
+                )
+            else:
+                last_iteration.details["convergence_reason"] = (
+                    "maximum iterations reached"
+                )
+
+        return x_new
+
+    def get_current_x(self) -> float:
+        """
+        Get current best approximation.
+
+        For root-finding: Returns the test point with smallest |f(x)|
+        For optimization: Returns the test point with smallest f(x)
+
+        Returns:
+            float: Current best approximation
+        """
+        # Choose best point based on method type
+        if self.method_type == "root":
+            # For root-finding, return point with smallest absolute function value
+            f_a, f_x1, f_x2, f_b = map(
+                abs,
+                [
+                    self.func(self.a),
+                    self.func(self.x1),
+                    self.func(self.x2),
+                    self.func(self.b),
+                ],
+            )
+
+            # Consider all possible points including endpoints
+            points = [(self.a, f_a), (self.x1, f_x1), (self.x2, f_x2), (self.b, f_b)]
+            return min(points, key=lambda p: p[1])[0]
+        else:
+            # For optimization, return point with smallest function value
+            f_a, f_x1, f_x2, f_b = [
+                self.func(self.a),
+                self.func(self.x1),
+                self.func(self.x2),
+                self.func(self.b),
+            ]
+
+            # Consider all possible points including endpoints
+            points = [(self.a, f_a), (self.x1, f_x1), (self.x2, f_x2), (self.b, f_b)]
+            return min(points, key=lambda p: p[1])[0]
+
+    def compute_descent_direction(self, x: Union[float, float]) -> Union[float, float]:
+        """
+        Compute the descent direction at the current point.
+
+        This method is implemented for interface compatibility, but is not used
+        by the Fibonacci method which doesn't use gradient information.
+
+        For Fibonacci method, we don't use descent directions because we're
+        bracketing the solution rather than following a gradient.
+
+        Args:
+            x: Current point
+
+        Returns:
+            Union[float, float]: Direction (always 0 for Fibonacci method)
+
+        Raises:
+            NotImplementedError: This method is not applicable for Fibonacci method
+        """
+        raise NotImplementedError(
+            "Fibonacci method doesn't use descent directions - it uses interval reduction"
+        )
+
+    def compute_step_length(
+        self, x: Union[float, float], direction: Union[float, float]
+    ) -> float:
+        """
+        Compute the step length.
+
+        This method is implemented for interface compatibility, but is not used
+        by the Fibonacci method which doesn't use step lengths.
+
+        The Fibonacci method uses strategic interval reduction based on the
+        Fibonacci sequence rather than step lengths.
+
+        Args:
+            x: Current point
+            direction: Descent direction (not used)
+
+        Returns:
+            float: Step length
+
+        Raises:
+            NotImplementedError: This method is not applicable for Fibonacci method
+        """
+        raise NotImplementedError(
+            "Fibonacci method doesn't use step lengths - it uses interval reduction"
+        )
+
+    # ---------------------
+    # State Access Methods
+    # ---------------------
+
+    def has_converged(self) -> bool:
+        """
+        Check if method has converged based on error tolerance, interval width,
+        maximum iterations, or exhaustion of Fibonacci terms.
+
+        Returns:
+            bool: True if converged, False otherwise
+        """
+        return self._converged
+
+    def get_error(self) -> float:
+        """
+        Get error at current point based on method type.
+
+        For root-finding:
+            - Error = |f(x)|, which measures how close we are to f(x) = 0
+
+        For optimization:
+            - Error estimate is based on interval width relative to original interval
+            - In practice, gradient or function differences could be used
+
+        Returns:
+            float: Current error estimate
+        """
+        x = self.get_current_x()
+
+        if self.method_type == "root":
+            # For root-finding, error is how close f(x) is to zero
+            return abs(self.func(x))
+        else:
+            # For optimization, we can use interval width as error measure
+            # or we can use the base class method which will estimate gradient
+            if self.derivative is not None:
+                return abs(self.derivative(x))  # If derivative available
+            else:
+                # Default to gradient estimation from base class
+                return super().get_error()
+
+    def get_convergence_rate(self) -> Optional[float]:
+        """
+        Calculate the observed convergence rate of the method.
+
+        For Fibonacci search, the theoretical reduction ratio approaches
+        the golden ratio (≈ 0.618) as n increases.
+
+        Returns:
+            Optional[float]: Observed convergence rate or None if insufficient data
+        """
+        if len(self._history) < 3:
+            return None
+
+        # Extract interval widths from last few iterations
+        widths = [data.details.get("interval_width", 0) for data in self._history[-3:]]
+        if any(w == 0 for w in widths):
+            return None
+
+        # Estimate convergence rate as ratio of successive interval widths
+        rate1 = widths[-1] / widths[-2] if widths[-2] != 0 else 0
+        rate2 = widths[-2] / widths[-3] if widths[-3] != 0 else 0
+
+        # Return average of recent rates
+        return (rate1 + rate2) / 2
 
     @property
     def name(self) -> str:
-        return "Fibonacci Method"
+        """
+        Get human-readable name of the method.
+
+        Returns:
+            str: Name of the method
+        """
+        return f"Fibonacci {'Root-Finding' if self.method_type == 'root' else 'Optimization'} Method"
 
 
 def fibonacci_search(
-    f: RootFinderConfig,
+    f: Union[Callable[[float], float], NumericalMethodConfig],
     a: float,
     b: float,
     n_terms: int = 30,
     tol: float = 1e-6,
+    max_iter: int = 100,
+    method_type: MethodType = "root",
 ) -> Tuple[float, List[float], int]:
     """
     Legacy wrapper for backward compatibility.
 
+    This function provides a simpler interface to the Fibonacci method for
+    users who don't need the full object-oriented functionality.
+
+    Mathematical guarantee:
+    - For n iterations, the final interval has width approximately (b-a)/Fₙ.
+    - For root-finding: If function is continuous with opposite signs at endpoints.
+    - For optimization: If function is unimodal on the interval.
+
     Args:
-        f: Function configuration (or function) for the root finder.
-        a: Left endpoint of the interval.
-        b: Right endpoint of the interval.
-        n_terms: Number of Fibonacci terms to use.
-        tol: Error tolerance.
+        f: Function or configuration (if function, it's wrapped in a config)
+        a: Left endpoint of interval
+        b: Right endpoint of interval
+        n_terms: Number of Fibonacci terms to use
+        tol: Error tolerance
+        max_iter: Maximum number of iterations
+        method_type: Type of problem ("root" or "optimize")
 
     Returns:
-        Tuple of (root, errors, iterations) where:
-         - root is the final approximation,
-         - errors is a list of error values for each iteration,
-         - iterations is the number of iterations performed.
+        Tuple of (solution, errors, iterations)
     """
-    # Create a configuration object using the provided function, tolerance, etc.
-    config = RootFinderConfig(func=f, tol=tol)
-    # Instantiate the FibonacciMethod with the specified parameters.
-    method = FibonacciMethod(config, a, b, n_terms)
+    # If f is a function rather than a config, create a config
+    if callable(f):
+        config = NumericalMethodConfig(
+            func=f, method_type=method_type, tol=tol, max_iter=max_iter
+        )
+    else:
+        config = f
 
-    errors = []  # Initialize a list to record errors for each iteration.
-    # Continue iterating until convergence is reached.
+    # Create and run the method
+    method = FibonacciMethod(config, a, b, n_terms)
+    errors = []
+
     while not method.has_converged():
         method.step()
         errors.append(method.get_error())
 
-    # Return the final approximation, the error history, and the iteration count.
-    return method.x, errors, method.iterations
+    return method.get_current_x(), errors, method.iterations

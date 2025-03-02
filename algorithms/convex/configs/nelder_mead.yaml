@@ -1,0 +1,71 @@
+# algorithms/convex/configs/nelder_mead.yaml
+
+# Configuration for Nelder-Mead Method - specifically for optimization (no root-finding mode)
+
+# 1D optimization configuration
+optimize_1d:
+  # Function with known minimum
+  function: quadratic  # f(x) = x^2 + 4x + 4, minimum at x = -2
+  
+  # Initial point
+  x0: 0.0
+  
+  # Simplex size parameter
+  delta: 0.1
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_minimum: -2.0
+  
+  # Visualization settings
+  xrange: [-4, 1]
+  no_viz: true
+
+# 2D optimization configuration
+optimize_2d:
+  # Function to optimize - Rosenbrock function (challenging)
+  function: rosenbrock  # f(x,y) = (1-x)^2 + 100(y-x^2)^2, minimum at (1,1)
+  
+  # Initial point - starting away from minimum
+  x0: [0.0, 0.0]
+  
+  # Simplex size parameter
+  delta: 0.2
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 500
+  
+  # Expected outcome
+  expected_minimum: [1.0, 1.0]
+  
+  # Visualization settings
+  xrange: [-1, 2]
+  yrange: [-0.5, 1.5]
+  viz_3d: true
+  no_viz: true
+
+# Challenging non-smooth function optimization
+optimize_nonsmooth:
+  # Function with non-smooth behavior
+  function: absolute_value  # f(x) = |x-2| + |x+1|, minimum at x = -1
+  
+  # Initial point
+  x0: 1.0
+  
+  # Simplex size parameter
+  delta: 0.5
+  
+  # Algorithm parameters
+  tol: 1.0e-6
+  max_iter: 200
+  
+  # Expected outcome
+  expected_minimum: -1.0
+  
+  # Visualization settings
+  xrange: [-3, 3]
+  no_viz: true 

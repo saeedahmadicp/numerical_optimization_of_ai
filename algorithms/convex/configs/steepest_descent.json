@@ -1,0 +1,69 @@
+{
+  "root": {
+    "function": "cubic_polynomial",
+    "x0": 2.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "step_size": 0.1,
+    "expected_root": 3.0,
+    "xrange": [-3, 4],
+    "no_viz": true
+  },
+  "optimize": {
+    "function": "quadratic",
+    "x0": 0.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "step_length_method": "exact_line_search",
+    "expected_minimum": -2.0,
+    "xrange": [-4, 2],
+    "no_viz": true
+  },
+  "optimize_backtracking": {
+    "function": "exponential_bowl",
+    "x0": 1.0,
+    "tol": 1.0e-8,
+    "max_iter": 200,
+    "step_length_method": "backtracking",
+    "step_length_params": {
+      "alpha_init": 1.0,
+      "rho": 0.5,
+      "c": 1.0e-4
+    },
+    "expected_minimum": 0.0,
+    "xrange": [-2, 2],
+    "no_viz": true
+  },
+  "optimize_2d": {
+    "function": "quadratic_bowl",
+    "x0": [1.0, 1.0],
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "step_length_method": "constant",
+    "step_length_params": {
+      "alpha": 0.1
+    },
+    "expected_minimum": [0.0, 0.0],
+    "xrange": [-2, 2],
+    "yrange": [-2, 2],
+    "viz_3d": true,
+    "no_viz": true
+  },
+  "optimize_rosenbrock": {
+    "function": "rosenbrock",
+    "x0": [0.0, 0.0],
+    "tol": 1.0e-8,
+    "max_iter": 10000,
+    "step_length_method": "armijo",
+    "step_length_params": {
+      "alpha_init": 1.0,
+      "beta": 0.5,
+      "c": 1.0e-4
+    },
+    "expected_minimum": [1.0, 1.0],
+    "xrange": [-1, 2],
+    "yrange": [-1, 2],
+    "viz_3d": true,
+    "no_viz": true
+  }
+} 

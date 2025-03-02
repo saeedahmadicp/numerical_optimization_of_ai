@@ -1,0 +1,63 @@
+# algorithms/convex/configs/secant.yaml
+
+# Configuration for Secant Method - primarily for root-finding but can be adapted for optimization
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: exponential_minus_x  # f(x) = e^x - x - 2, root near x ≈ 1.1
+  
+  # Initial points - secant method needs two points
+  x0: 0.0
+  x1: 2.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 1.146193  # Approximate solution
+  
+  # Visualization settings
+  xrange: [-1, 3]
+  no_viz: true
+
+# Root-finding with challenging function
+root_challenging:
+  # Function with known roots
+  function: complex_transcendental  # f(x) = x*cos(x) - 1, multiple roots
+  
+  # Initial points
+  x0: 0.5
+  x1: 1.5
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 1.0  # First positive root
+  
+  # Visualization settings
+  xrange: [0, 6]
+  no_viz: true
+
+# Optimization configuration (using secant method for derivative approximation)
+optimize:
+  # Function with known minimum
+  function: quartic  # f(x) = x^4 - 5x^2 + 4, minimum at x = 1
+  
+  # Initial points
+  x0: 0.0
+  x1: 2.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_minimum: 1.0
+  
+  # Visualization settings
+  xrange: [-2, 3]
+  no_viz: true 
