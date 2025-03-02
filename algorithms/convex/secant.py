@@ -7,29 +7,60 @@ The secant method approximates the derivative using finite differences
 between two consecutive iterations, making it suitable when analytical
 derivatives are unavailable or expensive to compute.
 
-For root-finding, it approximates Newton's method as:
+Mathematical Basis:
+----------------
+For root-finding (finding x where f(x) = 0):
     x_{n+1} = x_n - f(x_n) * (x_n - x_{n-1}) / (f(x_n) - f(x_{n-1}))
 
-For optimization, it applies the same formula to the derivative approximation:
+For optimization (finding x where f'(x) = 0):
     x_{n+1} = x_n - f'(x_n) * (x_n - x_{n-1}) / (f'(x_n) - f'(x_{n-1}))
 
-where f'(x) is approximated using finite differences.
+where f'(x) is approximated using finite differences if not provided.
+
+Convergence Properties:
+--------------------
+- Superlinear convergence with order approximately 1.618 (golden ratio)
+- Faster than bisection and fixed-point iteration, but slower than Newton's method
+- Does not require analytical derivatives
+- More robust than Newton's method in some cases
+- May fail when consecutive function evaluations are too close
+- Requires two initial points instead of one
 """
 
 from typing import List, Tuple, Optional, Callable, Union
 
-from .protocols import BaseNumericalMethod, NumericalMethodConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig, MethodType
+from .line_search import (
+    backtracking_line_search,
+    wolfe_line_search,
+    strong_wolfe_line_search,
+    goldstein_line_search,
+)
 
 
 class SecantMethod(BaseNumericalMethod):
     """
     Implementation of secant method for root finding and optimization.
 
-    For root-finding, the method approximates the derivative using finite differences
-    to find zeros of a function.
+    The secant method uses finite differences between consecutive iterations
+    to approximate derivatives, making it useful when analytical derivatives
+    are unavailable or expensive to compute.
 
-    For optimization, the method approximates the second derivative using finite differences
-    of the first derivative to find extrema of a function.
+    Mathematical basis:
+    - For root-finding: Uses secant approximation to find zeros of a function
+    - For optimization: Uses secant approximation of the second derivative to find extrema
+
+    Convergence properties:
+    - Superlinear convergence with order approximately 1.618 (golden ratio)
+    - Does not require analytical derivatives like Newton's method
+    - Requires two initial points instead of one
+    - May have stability issues if function values at consecutive points are too close
+
+    Implementation features:
+    - Handles both root-finding and optimization problems
+    - Includes safeguards for avoiding division by near-zero values
+    - Uses damping in optimization mode for better stability
+    - Can approximate derivatives with finite differences when not provided
     """
 
     def __init__(
@@ -61,6 +92,7 @@ class SecantMethod(BaseNumericalMethod):
         self.x0: Optional[float] = x0
         self.x1: Optional[float] = x1
         self.derivative = derivative
+        self.x = x1  # Current point is the second initial guess
 
         # For root-finding mode
         if self.method_type == "root":
@@ -75,10 +107,15 @@ class SecantMethod(BaseNumericalMethod):
             self.f0 = self.derivative(x0)
             self.f1 = self.derivative(x1)
 
-        self.x = x1
-
         # For finite difference approximation in optimization mode when no derivative is provided
         self.h = 1e-7  # Step size for finite difference
+
+        # Safeguards for step size
+        self.max_step_size = 2.0
+        self.min_step_size = 1e-14
+
+        # Damping factor for optimization to improve convergence
+        self.damping = 0.8
 
         # Record initial state for iteration history
         if self.method_type == "optimize":
@@ -93,23 +130,6 @@ class SecantMethod(BaseNumericalMethod):
                 "func(x1)": self.func(self.x1),
             }
             self.add_iteration(self.x0, self.x1, initial_details)
-
-    def _approx_derivative(self, x: float) -> float:
-        """
-        Approximate the derivative at point x using finite differences.
-
-        Args:
-            x: Point at which to approximate the derivative
-
-        Returns:
-            float: Approximated derivative value
-        """
-        h = self.h
-        return (self.func(x + h) - self.func(x - h)) / (2 * h)
-
-    def get_current_x(self) -> float:
-        """Get current x value."""
-        return self.x
 
     def step(self) -> float:
         """
@@ -127,23 +147,14 @@ class SecantMethod(BaseNumericalMethod):
             self._converged = True
             return self.x
 
-        if abs(self.f1 - self.f0) < 1e-10:
-            self._converged = True
-            return self.x
+        # Compute the descent direction using secant approximation
+        direction = self.compute_descent_direction(self.x)
+
+        # Compute step length with possible damping
+        step_length = self.compute_step_length(self.x, direction)
 
         # Calculate the next approximation
-        x2 = self.x1 - self.f1 * (self.x1 - self.x0) / (self.f1 - self.f0)
-
-        # Apply damping factor for optimization to improve convergence
-        if self.method_type == "optimize":
-            # Simple damping to improve convergence
-            damping = 0.8
-            x2 = self.x1 + damping * (x2 - self.x1)
-
-            # Safeguard step size for better convergence
-            max_step = 2.0 * abs(self.x1 - self.x0)
-            if abs(x2 - self.x1) > max_step:
-                x2 = self.x1 + (max_step if x2 > self.x1 else -max_step)
+        x2 = self.x1 + step_length * direction
 
         # Calculate function value at new point
         if self.method_type == "root":
@@ -159,6 +170,8 @@ class SecantMethod(BaseNumericalMethod):
             "f(x1)": self.f1,
             "f(x2)": f2,
             "denominator": self.f1 - self.f0,
+            "direction": direction,
+            "step_length": step_length,
             "step": x2 - self.x1,
         }
 
@@ -191,6 +204,118 @@ class SecantMethod(BaseNumericalMethod):
 
         return self.x
 
+    def get_current_x(self) -> float:
+        """Get current x value."""
+        return self.x
+
+    def compute_descent_direction(self, x: float) -> float:
+        """
+        Compute the secant descent direction.
+
+        For root-finding: direction = -(x_n - x_{n-1}) / (f(x_n) - f(x_{n-1})) * f(x_n)
+        For optimization: direction = -(x_n - x_{n-1}) / (f'(x_n) - f'(x_{n-1})) * f'(x_n)
+
+        Args:
+            x: Current point (ignored, using stored x0 and x1)
+
+        Returns:
+            float: Secant direction
+        """
+        # Check if denominator is close to zero
+        if abs(self.f1 - self.f0) < 1e-10:
+            # If function values are very close, use a small default step
+            if self.method_type == "root":
+                f_val = self.func(self.x1)
+                return -0.01 * (1.0 + abs(self.x1)) * (1.0 if f_val >= 0 else -1.0)
+            else:
+                df_val = (
+                    self.derivative(self.x1)
+                    if self.derivative
+                    else self._approx_derivative(self.x1)
+                )
+                return -0.01 * (1.0 + abs(self.x1)) * (1.0 if df_val >= 0 else -1.0)
+
+        # Calculate secant direction
+        if self.method_type == "root":
+            # Classical secant formula for root-finding
+            direction = -(self.x1 - self.x0) / (self.f1 - self.f0) * self.f1
+        else:
+            # Secant formula for optimization (minimizing f)
+            direction = -(self.x1 - self.x0) / (self.f1 - self.f0) * self.f1
+
+        # Limit step size if too large
+        if abs(direction) > self.max_step_size:
+            direction = self.max_step_size * (1.0 if direction >= 0 else -1.0)
+
+        return direction
+
+    def compute_step_length(self, x: float, direction: float) -> float:
+        """
+        Compute the step length for the given direction.
+
+        Args:
+            x: Current point
+            direction: Descent direction
+
+        Returns:
+            float: Step length
+        """
+        # If direction is too small, return zero
+        if abs(direction) < self.min_step_size:
+            return 0.0
+
+        # For root-finding, typically use full step
+        if self.method_type == "root":
+            return 1.0
+
+        # For optimization, apply damping factor
+        if self.method_type == "optimize":
+            # Use step length methods if specified
+            if self.step_length_method:
+                method = self.step_length_method
+                params = self.step_length_params or {}
+
+                if self.derivative is None:
+                    raise ValueError("Derivative function is required for line search")
+
+                # Use imported line search methods
+                if method == "backtracking":
+                    return backtracking_line_search(
+                        self.func, self.derivative, x, direction, **(params or {})
+                    )
+                elif method == "wolfe":
+                    return wolfe_line_search(
+                        self.func, self.derivative, x, direction, **(params or {})
+                    )
+                elif method == "strong_wolfe":
+                    return strong_wolfe_line_search(
+                        self.func, self.derivative, x, direction, **(params or {})
+                    )
+                elif method == "goldstein":
+                    return goldstein_line_search(
+                        self.func, self.derivative, x, direction, **(params or {})
+                    )
+                elif method == "fixed":
+                    return params.get("step_size", self.damping)
+
+            # Default: use damping factor
+            return self.damping
+
+        return 1.0  # Default to full step
+
+    def _approx_derivative(self, x: float) -> float:
+        """
+        Approximate the derivative at point x using finite differences.
+
+        Args:
+            x: Point at which to approximate the derivative
+
+        Returns:
+            float: Approximated derivative value
+        """
+        h = self.h
+        return (self.func(x + h) - self.func(x - h)) / (2 * h)
+
     def get_error(self) -> float:
         """
         Calculate the error estimate for the current approximation.
@@ -209,6 +334,40 @@ class SecantMethod(BaseNumericalMethod):
             else:
                 return abs(self._approx_derivative(self.x))
 
+    def get_convergence_rate(self) -> Optional[float]:
+        """
+        Calculate the observed convergence rate of the method.
+
+        For secant method, the theoretical rate is approximately 1.618 (golden ratio).
+
+        Returns:
+            Optional[float]: Observed convergence rate or None if insufficient data
+        """
+        if len(self._history) < 3:
+            return None
+
+        # Extract errors from last few iterations
+        recent_errors = [data.error for data in self._history[-3:]]
+        if any(err == 0 for err in recent_errors):
+            return 0.0  # Exact convergence
+
+        # For secant method, we expect error_{n+1} ≈ C * error_n^φ
+        # where φ ≈ 1.618 (golden ratio)
+        phi = 1.618
+        rate1 = (
+            recent_errors[-1] / (recent_errors[-2] ** phi)
+            if recent_errors[-2] > 0
+            else 0
+        )
+        rate2 = (
+            recent_errors[-2] / (recent_errors[-3] ** phi)
+            if recent_errors[-3] > 0
+            else 0
+        )
+
+        # Return average of recent rates
+        return (rate1 + rate2) / 2
+
     @property
     def name(self) -> str:
         """Return the name of the method."""
@@ -224,7 +383,7 @@ def secant_search(
     x1: float,
     tol: float = 1e-6,
     max_iter: int = 100,
-    method_type: str = "root",
+    method_type: MethodType = "root",
     derivative: Optional[Callable[[float], float]] = None,
 ) -> Tuple[float, List[float], int]:
     """

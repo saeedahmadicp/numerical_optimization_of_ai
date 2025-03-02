@@ -126,6 +126,52 @@ class GoldenSectionMethod(BaseNumericalMethod):
             }
             self.add_iteration(x_old=a, x_new=self.x, details=initial_details)
 
+    def compute_descent_direction(self, x: float) -> float:
+        """
+        Compute the descent direction at point x.
+
+        For Golden Section method, this is not explicitly used as the method
+        operates by bracketing an interval rather than computing a direction.
+        Included for protocol consistency.
+
+        Args:
+            x: Current point
+
+        Returns:
+            float: Direction towards the optimum (placeholder implementation)
+        """
+        # Golden Section method doesn't use a descent direction in the same way
+        # as gradient-based methods. It works by narrowing down intervals.
+        if self.method_type == "root":
+            # For root-finding, we could approximate direction towards zero
+            fx = self.func(x)
+            return -1.0 if fx > 0 else 1.0
+        else:
+            # For optimization, we would need derivatives to compute direction
+            # This is a placeholder for protocol consistency
+            return 0.0
+
+    def compute_step_length(self, x: float, direction: float) -> float:
+        """
+        Compute step length for the direction.
+
+        For Golden Section method, this is not explicitly used as the method
+        operates by bracketing an interval rather than computing step lengths.
+        Included for protocol consistency.
+
+        Args:
+            x: Current point
+            direction: Descent direction (unused)
+
+        Returns:
+            float: Step length (placeholder implementation)
+        """
+        # Golden Section method doesn't use step length in the same way as gradient-based methods
+        # It determines the next point based on interval reduction using the golden ratio
+        return (
+            self.b - self.a
+        ) * self.tau  # Approximate step as a fraction of the interval
+
     def get_current_x(self) -> float:
         """
         Get current best approximation.

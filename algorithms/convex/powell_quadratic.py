@@ -4,34 +4,54 @@
 Powell's Quadratic Interpolation Method for optimization and root-finding.
 
 This is a 1D numerical method that fits a quadratic polynomial to three points
-and uses it to estimate roots or optima of a function. It is a bracket-based method
-that iteratively refines the estimate by replacing one of the three points in each iteration.
+and uses it to estimate roots or optima of a function. Unlike gradient-based methods,
+it relies only on function evaluations, making it suitable for cases where derivatives
+are unavailable or expensive to compute. The method maintains a bracket of three points
+and iteratively refines the estimate by replacing one of these points in each iteration.
 
 Mathematical Basis:
 ----------------
-For optimization of function f over an interval with three points x₁ < x₂ < x₃:
+For optimization (finding minimum of function f):
+    1. Maintain a bracket of three points x₁ < x₂ < x₃
+    2. Fit a quadratic polynomial p(x) = ax² + bx + c through the points (x₁,f(x₁)), (x₂,f(x₂)), (x₃,f(x₃))
+    3. Calculate the minimum of p(x) at x = -b/(2a)
+    4. Evaluate f at this minimum and update the bracket by replacing one point
+    5. Repeat until convergence criteria are met
 
-1. Fit a quadratic polynomial through the points (x₁,f(x₁)), (x₂,f(x₂)), (x₃,f(x₃))
-2. Find the minimum u of this quadratic polynomial
-3. Evaluate f(u) and replace one point to maintain bracketing
-4. Repeat until convergence
-
-For root-finding:
-1. A similar quadratic fit is used, but the method seeks u where the quadratic = 0
-2. This is similar to the secant method but uses more points
+For root-finding (finding x where f(x) = 0):
+    1. Maintain a bracket of three points, ideally with a sign change
+    2. Fit a quadratic polynomial through the points
+    3. Calculate where p(x) = 0 (apply quadratic formula)
+    4. Evaluate f at this root estimate and update the bracket
+    5. If updating creates a bracket with a sign change, convergence is accelerated
 
 Convergence Properties:
 --------------------
-- Superlinear convergence for smooth functions (faster than golden section)
-- For optimization: Requires fewer function evaluations than bracketing methods
-- For root-finding: Similar properties to secant and regula falsi methods
-- Can be vulnerable to round-off errors without careful implementation
+- Superlinear convergence for smooth functions (faster than linear methods)
+- For optimization: More efficient than pure bracketing methods like golden section search
+- For root-finding: Comparable to secant method but potentially more robust with bracketing
+- Not dependent on derivatives, making it suitable for noisy or non-differentiable functions
+- Safeguards against failure of quadratic fitting with fallback strategies
+- May struggle with functions that are far from quadratic in shape
+
+The implementation includes:
+- Robust bracketing to ensure convergence
+- Fallback mechanisms when quadratic fitting fails
+- Support for both optimization and root-finding with appropriate error metrics
+- Compatible with line search methods for optimization problems
+- Appropriate termination criteria based on function value, bracket width, and iterations
 """
 
 from typing import List, Tuple, Optional, Callable, Union
 import numpy as np
 
 from .protocols import BaseNumericalMethod, NumericalMethodConfig, MethodType
+from .line_search import (
+    backtracking_line_search,
+    wolfe_line_search,
+    strong_wolfe_line_search,
+    goldstein_line_search,
+)
 
 
 class PowellMethod(BaseNumericalMethod):
@@ -124,106 +144,6 @@ class PowellMethod(BaseNumericalMethod):
             }
             self.add_iteration(x_old=a, x_new=self.x, details=initial_details)
 
-    def get_current_x(self) -> float:
-        """
-        Get current best approximation.
-
-        For root-finding: Returns the point with smallest |f(x)|
-        For optimization: Returns the point with smallest f(x)
-
-        Returns:
-            float: Current best approximation
-        """
-        if self.method_type == "root":
-            # For root-finding, return point with smallest absolute function value
-            points = [
-                (self.a, abs(self.fa)),
-                (self.b, abs(self.fb)),
-                (self.c, abs(self.fc)),
-            ]
-            return min(points, key=lambda p: p[1])[0]
-        else:
-            # For optimization, return point with smallest function value
-            points = [(self.a, self.fa), (self.b, self.fb), (self.c, self.fc)]
-            return min(points, key=lambda p: p[1])[0]
-
-    def _fit_quadratic(self) -> Optional[float]:
-        """
-        Fit a quadratic through the three points and find its minimum or root.
-
-        For optimization: Find the minimum of the quadratic
-        For root-finding: Find where the quadratic equals zero
-
-        Returns:
-            Optional[float]: Position of the minimum/root, or None if calculation fails
-        """
-        # Points must be distinct to avoid division by zero
-        if (
-            abs(self.a - self.b) < 1e-10
-            or abs(self.b - self.c) < 1e-10
-            or abs(self.a - self.c) < 1e-10
-        ):
-            return None
-
-        # For optimization: find the minimum of the quadratic
-        if self.method_type == "optimize":
-            # Compute coefficients for the quadratic fit
-            denom = (self.a - self.b) * (self.a - self.c) * (self.b - self.c)
-            A = (
-                self.c * (self.fb - self.fa)
-                + self.b * (self.fa - self.fc)
-                + self.a * (self.fc - self.fb)
-            ) / denom
-
-            # If A <= 0, the quadratic has no minimum
-            if abs(A) < 1e-10 or A < 0:
-                return None
-
-            B = (
-                self.c**2 * (self.fa - self.fb)
-                + self.b**2 * (self.fc - self.fa)
-                + self.a**2 * (self.fb - self.fc)
-            ) / denom
-
-            # Calculate the minimum of the quadratic: -B/(2A)
-            return -B / (2 * A)
-
-        # For root-finding: find where the quadratic equals zero
-        else:
-            # Fit a quadratic: p(x) = A(x-b)(x-c) + B(x-a)(x-c) + C(x-a)(x-b)
-            # where p(a)=fa, p(b)=fb, p(c)=fc
-            A = self.fa / ((self.a - self.b) * (self.a - self.c))
-            B = self.fb / ((self.b - self.a) * (self.b - self.c))
-            C = self.fc / ((self.c - self.a) * (self.c - self.b))
-
-            # Convert to standard form: p(x) = ax² + bx + c
-            a = A + B + C
-            b = -(A * (self.b + self.c) + B * (self.a + self.c) + C * (self.a + self.b))
-            c = A * self.b * self.c + B * self.a * self.c + C * self.a * self.b
-
-            # Solve the quadratic using quadratic formula
-            # The discriminant must be positive for real roots
-            discriminant = b**2 - 4 * a * c
-
-            if discriminant < 0 or abs(a) < 1e-10:
-                return None
-
-            # Calculate both roots
-            r1 = (-b + np.sqrt(discriminant)) / (2 * a)
-            r2 = (-b - np.sqrt(discriminant)) / (2 * a)
-
-            # Choose the root within our interval [a, c]
-            if self.a <= r1 <= self.c:
-                return r1
-            elif self.a <= r2 <= self.c:
-                return r2
-            else:
-                # If neither root is in the interval, return the closest one
-                if abs(r1 - self.b) < abs(r2 - self.b):
-                    return r1
-                else:
-                    return r2
-
     def step(self) -> float:
         """
         Perform one iteration of Powell's method.
@@ -256,21 +176,35 @@ class PowellMethod(BaseNumericalMethod):
             "method_type": self.method_type,
         }
 
-        # Fit quadratic and find the new point
-        u = self._fit_quadratic()
+        # Compute descent direction and step length
+        direction = self.compute_descent_direction(self.x)
+        step_length = self.compute_step_length(self.x, direction)
 
-        # If quadratic fitting fails, use bisection or golden section
-        if u is None or u <= self.a or u >= self.c:
-            # Fallback to midpoint of the smallest interval
-            if abs(self.b - self.a) < abs(self.c - self.b):
-                u = (self.a + self.b) / 2
-            else:
-                u = (self.b + self.c) / 2
+        # Calculate the new point u
+        u = self.x + step_length * direction
 
         # Evaluate function at the new point
         fu = self.func(u)
         details["u"] = u
         details["f(u)"] = fu
+        details["direction"] = direction
+        details["step_length"] = step_length
+
+        # Add line search info for details
+        line_search_method = self.step_length_method or "quadratic_fit"
+        line_search_info = {
+            "method": line_search_method,
+            "initial_alpha": 1.0,
+            "final_alpha": step_length,
+            "f_old": self.func(self.x),
+            "f_new": fu,
+            "success": (
+                fu < self.fb
+                if self.method_type == "optimize"
+                else abs(fu) < abs(self.fb)
+            ),
+        }
+        details["line_search"] = line_search_info
 
         # Update the bracketing points
         if self.method_type == "optimize":
@@ -351,6 +285,244 @@ class PowellMethod(BaseNumericalMethod):
 
         return self.x
 
+    def get_current_x(self) -> float:
+        """
+        Get current best approximation.
+
+        For root-finding: Returns the point with smallest |f(x)|
+        For optimization: Returns the point with smallest f(x)
+
+        Returns:
+            float: Current best approximation
+        """
+        if self.method_type == "root":
+            # For root-finding, return point with smallest absolute function value
+            points = [
+                (self.a, abs(self.fa)),
+                (self.b, abs(self.fb)),
+                (self.c, abs(self.fc)),
+            ]
+            return min(points, key=lambda p: p[1])[0]
+        else:
+            # For optimization, return point with smallest function value
+            points = [(self.a, self.fa), (self.b, self.fb), (self.c, self.fc)]
+            return min(points, key=lambda p: p[1])[0]
+
+    def compute_descent_direction(self, x: float) -> float:
+        """
+        Compute the descent direction based on the quadratic fit.
+
+        For optimization:
+        - Direction points toward the minimum of the fitted quadratic
+
+        For root-finding:
+        - Direction points toward the root of the fitted quadratic
+
+        Args:
+            x: Current point (typically in the bracket [a, c])
+
+        Returns:
+            float: Direction for the next step
+        """
+        # Get the quadratic fit point (minimum for optimization, root for root-finding)
+        u = self._fit_quadratic()
+
+        # If fitting failed, use a fallback strategy
+        if u is None:
+            if self.method_type == "optimize":
+                # For optimization, move toward the point with lowest function value
+                points = [(self.a, self.fa), (self.b, self.fb), (self.c, self.fc)]
+                best_point = min(points, key=lambda p: p[1])[0]
+                return best_point - x
+            else:
+                # For root-finding, use a secant-like approach if possible
+                if abs(self.fb) > self.tol and abs(self.fc) > self.tol:
+                    # Use secant direction between points with opposite signs if available
+                    if self.fa * self.fb < 0:
+                        return (self.a * self.fb - self.b * self.fa) / (
+                            self.fb - self.fa
+                        ) - x
+                    elif self.fb * self.fc < 0:
+                        return (self.b * self.fc - self.c * self.fb) / (
+                            self.fc - self.fb
+                        ) - x
+
+                # Fallback to moving toward midpoint
+                return (self.a + self.c) / 2 - x
+
+        # Return direction from current x to the quadratic-suggested point
+        return u - x
+
+    def compute_step_length(self, x: float, direction: float) -> float:
+        """
+        Compute step length along the given direction.
+
+        For Powell's method, we typically use the full step to the quadratic fit point,
+        but for optimization problems we can also use standard line search methods.
+
+        Args:
+            x: Current point
+            direction: Descent direction
+
+        Returns:
+            float: Step length
+        """
+        # If direction is very small, return 0
+        if abs(direction) < 1e-10:
+            return 0.0
+
+        # Default step length is 1.0 (full step to the quadratic fit point)
+        # This is appropriate for the pure Powell method
+        if not self.step_length_method or self.step_length_method == "quadratic_fit":
+            return 1.0
+
+        # Only use other line search methods for optimization problems
+        if self.method_type == "optimize":
+            # For optimization, we can use standard line search methods
+            method = self.step_length_method
+            params = self.step_length_params or {}
+
+            # Ensure we have a gradient function for line search methods
+            grad_f = lambda x: self._estimate_gradient(x)
+
+            # Dispatch to appropriate line search method
+            if method == "fixed":
+                return params.get("step_size", 1.0)
+
+            elif method == "backtracking":
+                return backtracking_line_search(
+                    self.func,
+                    grad_f,
+                    x,
+                    direction,
+                    alpha_init=params.get("alpha_init", 1.0),
+                    rho=params.get("rho", 0.5),
+                    c=params.get("c", 1e-4),
+                    max_iter=params.get("max_iter", 100),
+                    alpha_min=params.get("alpha_min", 1e-16),
+                )
+
+            elif method == "wolfe":
+                return wolfe_line_search(
+                    self.func,
+                    grad_f,
+                    x,
+                    direction,
+                    alpha_init=params.get("alpha_init", 1.0),
+                    c1=params.get("c1", 1e-4),
+                    c2=params.get("c2", 0.9),
+                    max_iter=params.get("max_iter", 25),
+                    zoom_max_iter=params.get("zoom_max_iter", 10),
+                    alpha_min=params.get("alpha_min", 1e-16),
+                )
+
+            elif method == "strong_wolfe":
+                return strong_wolfe_line_search(
+                    self.func,
+                    grad_f,
+                    x,
+                    direction,
+                    alpha_init=params.get("alpha_init", 1.0),
+                    c1=params.get("c1", 1e-4),
+                    c2=params.get("c2", 0.1),
+                    max_iter=params.get("max_iter", 25),
+                    zoom_max_iter=params.get("zoom_max_iter", 10),
+                    alpha_min=params.get("alpha_min", 1e-16),
+                )
+
+            elif method == "goldstein":
+                return goldstein_line_search(
+                    self.func,
+                    grad_f,
+                    x,
+                    direction,
+                    alpha_init=params.get("alpha_init", 1.0),
+                    c=params.get("c", 0.1),
+                    max_iter=params.get("max_iter", 100),
+                    alpha_min=params.get("alpha_min", 1e-16),
+                    alpha_max=params.get("alpha_max", 1e10),
+                )
+
+        # If no standard method matched or not in optimization mode, use full step
+        return 1.0
+
+    def _fit_quadratic(self) -> Optional[float]:
+        """
+        Fit a quadratic through the three points and find its minimum or root.
+
+        For optimization: Find the minimum of the quadratic
+        For root-finding: Find where the quadratic equals zero
+
+        Returns:
+            Optional[float]: Position of the minimum/root, or None if calculation fails
+        """
+        # Points must be distinct to avoid division by zero
+        if (
+            abs(self.a - self.b) < 1e-10
+            or abs(self.b - self.c) < 1e-10
+            or abs(self.a - self.c) < 1e-10
+        ):
+            return None
+
+        # For optimization: find the minimum of the quadratic
+        if self.method_type == "optimize":
+            # Compute coefficients for the quadratic fit
+            denom = (self.a - self.b) * (self.a - self.c) * (self.b - self.c)
+            A = (
+                self.c * (self.fb - self.fa)
+                + self.b * (self.fa - self.fc)
+                + self.a * (self.fc - self.fb)
+            ) / denom
+
+            # If A <= 0, the quadratic has no minimum
+            if abs(A) < 1e-10 or A < 0:
+                return None
+
+            B = (
+                self.c**2 * (self.fa - self.fb)
+                + self.b**2 * (self.fc - self.fa)
+                + self.a**2 * (self.fb - self.fc)
+            ) / denom
+
+            # Calculate the minimum of the quadratic: -B/(2A)
+            return -B / (2 * A)
+
+        # For root-finding: find where the quadratic equals zero
+        else:
+            # Fit a quadratic: p(x) = A(x-b)(x-c) + B(x-a)(x-c) + C(x-a)(x-b)
+            # where p(a)=fa, p(b)=fb, p(c)=fc
+            A = self.fa / ((self.a - self.b) * (self.a - self.c))
+            B = self.fb / ((self.b - self.a) * (self.b - self.c))
+            C = self.fc / ((self.c - self.a) * (self.c - self.b))
+
+            # Convert to standard form: p(x) = ax² + bx + c
+            a = A + B + C
+            b = -(A * (self.b + self.c) + B * (self.a + self.c) + C * (self.a + self.b))
+            c = A * self.b * self.c + B * self.a * self.c + C * self.a * self.b
+
+            # Solve the quadratic using quadratic formula
+            # The discriminant must be positive for real roots
+            discriminant = b**2 - 4 * a * c
+
+            if discriminant < 0 or abs(a) < 1e-10:
+                return None
+
+            # Calculate both roots
+            r1 = (-b + np.sqrt(discriminant)) / (2 * a)
+            r2 = (-b - np.sqrt(discriminant)) / (2 * a)
+
+            # Choose the root within our interval [a, c]
+            if self.a <= r1 <= self.c:
+                return r1
+            elif self.a <= r2 <= self.c:
+                return r2
+            else:
+                # If neither root is in the interval, return the closest one
+                if abs(r1 - self.b) < abs(r2 - self.b):
+                    return r1
+                else:
+                    return r2
+
     def _reorder_points(self):
         """
         Reorder points to ensure a < b < c.
@@ -380,6 +552,23 @@ class PowellMethod(BaseNumericalMethod):
                     # Shift points right
                     self.a, self.fa = self.b, self.fb
                     self.b, self.fb = self.c, self.fc
+
+    def _estimate_gradient(self, x: float) -> float:
+        """
+        Estimate gradient at point x using finite differences.
+
+        This is used for the line search methods.
+
+        Args:
+            x: Point at which to estimate gradient
+
+        Returns:
+            float: Estimated gradient
+        """
+        if self.derivative is not None:
+            return self.derivative(x)
+        else:
+            return self.estimate_derivative(x)
 
     def get_error(self) -> float:
         """

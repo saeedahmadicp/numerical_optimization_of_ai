@@ -10,7 +10,7 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from algorithms.convex.elimination import EliminationMethod, elimination_search
-from algorithms.convex.protocols import RootFinderConfig
+from algorithms.convex.protocols import NumericalMethodConfig
 
 
 def test_basic_root_finding():
@@ -19,7 +19,7 @@ def test_basic_root_finding():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = EliminationMethod(config, 1, 2)
 
     while not method.has_converged():
@@ -35,7 +35,7 @@ def test_elimination_step():
     def f(x):
         return x**2 - 4  # Roots at x = ±2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = EliminationMethod(config, 0, 3)
 
     # Take one step and verify interval reduction
@@ -53,7 +53,7 @@ def test_convergence_criteria():
     def f(x):
         return x**3 - x - 2
 
-    config = RootFinderConfig(func=f, tol=1e-8)
+    config = NumericalMethodConfig(func=f, method_type="root", tol=1e-8)
     method = EliminationMethod(config, 1, 2)
 
     while not method.has_converged():
@@ -68,7 +68,7 @@ def test_iteration_history():
     def f(x):
         return x**2 - 4
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root", tol=1e-8)
     method = EliminationMethod(config, 0, 3)
 
     # Perform a few steps
@@ -101,7 +101,7 @@ def test_max_iterations():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f, max_iter=5)
+    config = NumericalMethodConfig(func=f, method_type="root", max_iter=5)
     method = EliminationMethod(config, 1, 2)
 
     while not method.has_converged():
@@ -119,7 +119,7 @@ def test_different_functions():
     ]
 
     for func, a, b in test_cases:
-        config = RootFinderConfig(func=func, tol=1e-4)
+        config = NumericalMethodConfig(func=func, method_type="root", tol=1e-4)
         method = EliminationMethod(config, a, b)
 
         while not method.has_converged():
@@ -134,7 +134,7 @@ def test_get_current_x():
     def f(x):
         return x**2 - 2
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = EliminationMethod(config, 1, 2)
 
     x = method.step()
@@ -147,7 +147,7 @@ def test_interval_reduction():
     def f(x):
         return x - 1  # Simple linear function with root at x=1
 
-    config = RootFinderConfig(func=f)
+    config = NumericalMethodConfig(func=f, method_type="root")
     method = EliminationMethod(config, 0, 2)
 
     initial_width = 2  # b - a = 2 - 0
@@ -166,7 +166,7 @@ def test_convergence_with_interval():
     def f(x):
         return x**3 - x - 2
 
-    config = RootFinderConfig(func=f, tol=1e-6)
+    config = NumericalMethodConfig(func=f, method_type="root", tol=1e-6)
     method = EliminationMethod(config, 1, 2)
 
     while not method.has_converged():

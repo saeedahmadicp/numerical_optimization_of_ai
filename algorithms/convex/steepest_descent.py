@@ -5,7 +5,7 @@
 from typing import List, Tuple, Union, Dict, Any, Callable
 import numpy as np
 
-from .protocols import BaseNumericalMethod, NumericalMethodConfig
+from .protocols import BaseNumericalMethod, NumericalMethodConfig, MethodType
 from .line_search import (
     backtracking_line_search,
     wolfe_line_search,
@@ -49,6 +49,59 @@ class SteepestDescentMethod(BaseNumericalMethod):
         self.x = np.asarray(x0, dtype=float)
         self._converged = False
         self.iterations = 0
+
+    # -----------------------
+    # Core Algorithm Methods
+    # -----------------------
+
+    def step(self) -> np.ndarray:
+        """Perform one iteration of steepest descent.
+
+        Returns:
+            np.ndarray: New point
+        """
+        # Compute descent direction using the protocol method
+        p = self.compute_descent_direction(self.x)
+
+        # Find step size using the protocol method
+        alpha = self.compute_step_length(self.x, p)
+
+        # Get detailed information for history
+        if self.derivative is not None:
+            grad = self.derivative(self.x)
+        else:
+            if isinstance(self.x, np.ndarray) and self.x.size == 1:
+                grad = self.estimate_derivative(float(self.x.item()))
+            elif isinstance(self.x, (int, float)):
+                grad = self.estimate_derivative(self.x)
+            else:
+                grad = "N/A"  # Not available for vector case with no derivative
+
+        # Store details for visualization
+        self.add_iteration(
+            self.x,
+            self.x + alpha * p,
+            {
+                "gradient": str(grad),
+                "search_direction": str(p),
+                "step_size": alpha,
+                "line_search_method": self.step_length_method or "backtracking",
+            },
+        )
+
+        # Update position
+        self.x = self.x + alpha * p
+        self.iterations += 1
+
+        # Check convergence
+        error = self.get_error()
+        self._converged = error < self.tol or self.iterations >= self.max_iter
+
+        return self.x
+
+    def get_current_x(self) -> np.ndarray:
+        """Get current point."""
+        return self.x
 
     def compute_descent_direction(
         self, x: Union[float, np.ndarray]
@@ -192,54 +245,9 @@ class SteepestDescentMethod(BaseNumericalMethod):
                 self.func, grad_f, x, direction, alpha_init=self.initial_step_size
             )
 
-    def step(self) -> np.ndarray:
-        """Perform one iteration of steepest descent.
-
-        Returns:
-            np.ndarray: New point
-        """
-        # Compute descent direction using the protocol method
-        p = self.compute_descent_direction(self.x)
-
-        # Find step size using the protocol method
-        alpha = self.compute_step_length(self.x, p)
-
-        # Get detailed information for history
-        if self.derivative is not None:
-            grad = self.derivative(self.x)
-        else:
-            if isinstance(self.x, np.ndarray) and self.x.size == 1:
-                grad = self.estimate_derivative(float(self.x.item()))
-            elif isinstance(self.x, (int, float)):
-                grad = self.estimate_derivative(self.x)
-            else:
-                grad = "N/A"  # Not available for vector case with no derivative
-
-        # Store details for visualization
-        self.add_iteration(
-            self.x,
-            self.x + alpha * p,
-            {
-                "gradient": str(grad),
-                "search_direction": str(p),
-                "step_size": alpha,
-                "line_search_method": self.step_length_method or "backtracking",
-            },
-        )
-
-        # Update position
-        self.x = self.x + alpha * p
-        self.iterations += 1
-
-        # Check convergence
-        error = self.get_error()
-        self._converged = error < self.tol or self.iterations >= self.max_iter
-
-        return self.x
-
-    def get_current_x(self) -> np.ndarray:
-        """Get current point."""
-        return self.x
+    # ---------------------
+    # State Access Methods
+    # ---------------------
 
     @property
     def name(self) -> str:
@@ -254,6 +262,7 @@ def steepest_descent_search(
     step_length_params: Dict[str, Any] = None,
     tol: float = 1e-6,
     max_iter: int = 1000,
+    method_type: MethodType = "optimize",
 ) -> Tuple[float, List[float], int]:
     """
     Legacy wrapper for backward compatibility.
@@ -272,7 +281,7 @@ def steepest_descent_search(
     if callable(f):
         config = NumericalMethodConfig(
             func=f,
-            method_type="optimize",
+            method_type=method_type,
             tol=tol,
             max_iter=max_iter,
             step_length_method=step_length_method,

@@ -159,44 +159,9 @@ class FibonacciMethod(BaseNumericalMethod):
             }
             self.add_iteration(x_old=a, x_new=self.x, details=initial_details)
 
-    def get_current_x(self) -> float:
-        """
-        Get current best approximation.
-
-        For root-finding: Returns the test point with smallest |f(x)|
-        For optimization: Returns the test point with smallest f(x)
-
-        Returns:
-            float: Current best approximation
-        """
-        # Choose best point based on method type
-        if self.method_type == "root":
-            # For root-finding, return point with smallest absolute function value
-            f_a, f_x1, f_x2, f_b = map(
-                abs,
-                [
-                    self.func(self.a),
-                    self.func(self.x1),
-                    self.func(self.x2),
-                    self.func(self.b),
-                ],
-            )
-
-            # Consider all possible points including endpoints
-            points = [(self.a, f_a), (self.x1, f_x1), (self.x2, f_x2), (self.b, f_b)]
-            return min(points, key=lambda p: p[1])[0]
-        else:
-            # For optimization, return point with smallest function value
-            f_a, f_x1, f_x2, f_b = [
-                self.func(self.a),
-                self.func(self.x1),
-                self.func(self.x2),
-                self.func(self.b),
-            ]
-
-            # Consider all possible points including endpoints
-            points = [(self.a, f_a), (self.x1, f_x1), (self.x2, f_x2), (self.b, f_b)]
-            return min(points, key=lambda p: p[1])[0]
+    # ------------------------
+    # Core Algorithm Methods
+    # ------------------------
 
     def step(self) -> float:
         """
@@ -308,6 +273,108 @@ class FibonacciMethod(BaseNumericalMethod):
                 )
 
         return x_new
+
+    def get_current_x(self) -> float:
+        """
+        Get current best approximation.
+
+        For root-finding: Returns the test point with smallest |f(x)|
+        For optimization: Returns the test point with smallest f(x)
+
+        Returns:
+            float: Current best approximation
+        """
+        # Choose best point based on method type
+        if self.method_type == "root":
+            # For root-finding, return point with smallest absolute function value
+            f_a, f_x1, f_x2, f_b = map(
+                abs,
+                [
+                    self.func(self.a),
+                    self.func(self.x1),
+                    self.func(self.x2),
+                    self.func(self.b),
+                ],
+            )
+
+            # Consider all possible points including endpoints
+            points = [(self.a, f_a), (self.x1, f_x1), (self.x2, f_x2), (self.b, f_b)]
+            return min(points, key=lambda p: p[1])[0]
+        else:
+            # For optimization, return point with smallest function value
+            f_a, f_x1, f_x2, f_b = [
+                self.func(self.a),
+                self.func(self.x1),
+                self.func(self.x2),
+                self.func(self.b),
+            ]
+
+            # Consider all possible points including endpoints
+            points = [(self.a, f_a), (self.x1, f_x1), (self.x2, f_x2), (self.b, f_b)]
+            return min(points, key=lambda p: p[1])[0]
+
+    def compute_descent_direction(self, x: Union[float, float]) -> Union[float, float]:
+        """
+        Compute the descent direction at the current point.
+
+        This method is implemented for interface compatibility, but is not used
+        by the Fibonacci method which doesn't use gradient information.
+
+        For Fibonacci method, we don't use descent directions because we're
+        bracketing the solution rather than following a gradient.
+
+        Args:
+            x: Current point
+
+        Returns:
+            Union[float, float]: Direction (always 0 for Fibonacci method)
+
+        Raises:
+            NotImplementedError: This method is not applicable for Fibonacci method
+        """
+        raise NotImplementedError(
+            "Fibonacci method doesn't use descent directions - it uses interval reduction"
+        )
+
+    def compute_step_length(
+        self, x: Union[float, float], direction: Union[float, float]
+    ) -> float:
+        """
+        Compute the step length.
+
+        This method is implemented for interface compatibility, but is not used
+        by the Fibonacci method which doesn't use step lengths.
+
+        The Fibonacci method uses strategic interval reduction based on the
+        Fibonacci sequence rather than step lengths.
+
+        Args:
+            x: Current point
+            direction: Descent direction (not used)
+
+        Returns:
+            float: Step length
+
+        Raises:
+            NotImplementedError: This method is not applicable for Fibonacci method
+        """
+        raise NotImplementedError(
+            "Fibonacci method doesn't use step lengths - it uses interval reduction"
+        )
+
+    # ---------------------
+    # State Access Methods
+    # ---------------------
+
+    def has_converged(self) -> bool:
+        """
+        Check if method has converged based on error tolerance, interval width,
+        maximum iterations, or exhaustion of Fibonacci terms.
+
+        Returns:
+            bool: True if converged, False otherwise
+        """
+        return self._converged
 
     def get_error(self) -> float:
         """

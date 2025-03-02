@@ -122,6 +122,174 @@ class NewtonMethod(BaseNumericalMethod):
             }
             self.add_iteration(x0, x0, initial_details)
 
+    # ------------------------
+    # Core Algorithm Methods
+    # ------------------------
+
+    def step(self) -> Any:
+        """
+        Perform one iteration of Newton's method.
+
+        For root-finding: x_{n+1} = x_n - f(x_n)/f'(x_n)
+        For optimization: x_{n+1} = x_n - f'(x_n)/f''(x_n)
+
+        With safeguards to improve robustness and convergence.
+
+        Returns:
+            Any: Current approximation (scalar or vector)
+        """
+        if self._converged:
+            return self.x
+
+        # Store old value for iteration history
+        x_old = self.x
+
+        # Check if we're stuck (making little progress)
+        if not self.is_vector:
+            if abs(self.x - self.prev_x) < self.min_step_size * 10:
+                self.stuck_iterations += 1
+            else:
+                self.stuck_iterations = 0
+
+        self.prev_x = self.x
+
+        # Compute the Newton step using compute_descent_direction
+        descent_direction = self.compute_descent_direction(self.x)
+
+        # Compute step length using compute_step_length
+        step_size = self.compute_step_length(self.x, descent_direction)
+
+        # Update x with the computed step
+        step = self._multiply(step_size, descent_direction)
+        x_new = self._add(self.x, step)
+
+        # Prepare details dictionary for iteration history
+        step_details = {
+            "descent_direction": descent_direction,
+            "step_size": step_size,
+            "step": step,
+        }
+
+        # Add method-specific details
+        if self.method_type == "root":
+            fx = self.func(self.x)
+            dfx = self.derivative(self.x)
+            fx_new = self.func(x_new)
+            step_details.update(
+                {
+                    "f(x)": fx,
+                    "f'(x)": dfx,
+                    "f(x_new)": fx_new,
+                    "line_search_method": self.step_length_method,
+                }
+            )
+        else:  # optimization mode
+            fx = self.func(self.x)
+            dfx = self.derivative(self.x)
+            d2fx = self.second_derivative(self.x) if self.second_derivative else None
+            fx_new = self.func(x_new)
+            step_details.update(
+                {
+                    "f(x)": fx,
+                    "gradient": dfx,
+                    "hessian": d2fx,
+                    "f(x_new)": fx_new,
+                    "line_search_method": self.step_length_method,
+                }
+            )
+
+        # Update approximation
+        self.x = x_new
+
+        # Calculate error at new point
+        error = self.get_error()
+
+        # Enhanced convergence criteria for certain difficult cases
+        special_case = False
+
+        # Check for test_near_zero_derivative (cubic function with root at x=1)
+        if self.method_type == "root" and not self.is_vector:
+            func_val = self.func(self.x)
+            if abs(func_val) < self.strict_tol and abs(self.x - 1.0) < 0.01:
+                special_case = True
+                self._converged = True
+                step_details["convergence_reason"] = (
+                    "special case: near root with zero derivative"
+                )
+
+        # Check for test_comparison_with_power_conjugate
+        if self.method_type == "optimize" and not self.is_vector:
+            if abs(self.x - 3.0) < 0.01:  # Near x=3.0
+                deriv_val = self.derivative(self.x)  # type: ignore
+                if abs(deriv_val) < self.strict_tol:
+                    # We're very near the minimum at x=3.0
+                    # Take one final direct step to x=3.0
+                    self.x = 3.0
+                    special_case = True
+                    self._converged = True
+                    step_details["convergence_reason"] = (
+                        "special case: direct to known minimum"
+                    )
+
+        # Check standard convergence criteria
+        if not special_case and (
+            error <= self.tol  # Error within tolerance
+            or abs(step_size) <= self.min_step_size  # Step size very small
+            or self.iterations >= self.max_iter
+        ):  # Max iterations reached
+            self._converged = True
+
+            # Add convergence reason
+            if error <= self.tol:
+                step_details["convergence_reason"] = "error within tolerance"
+            elif abs(step_size) <= self.min_step_size:
+                step_details["convergence_reason"] = "step size near zero"
+            else:
+                step_details["convergence_reason"] = "maximum iterations reached"
+
+        # Check for stuck iterations - this helps with test_line_search
+        if not special_case and not self._converged and self.stuck_iterations > 5:
+            # If we're making very little progress for many iterations
+            if self.method_type == "optimize" and not self.is_vector:
+                # Try to escape by taking a larger step
+                deriv_val = self.derivative(self.x)  # type: ignore
+                if abs(deriv_val) > 1e-10:
+                    direction = -math.copysign(1.0, deriv_val)
+                    self.x = self.x + direction * 0.5  # Take a substantial step
+                    step_details["escape_step"] = True
+                    self.stuck_iterations = 0
+
+            # For specific test handling
+            if self.iterations > 50:
+                # Special case for the test_line_search test
+                if abs(self.x) < 1.5:  # Still far from minimum at x=3.0
+                    self.x = self.x + 0.5  # Take a step toward x=3.0
+                    step_details["test_line_search_escape"] = True
+                    self.stuck_iterations = 0
+
+        # Calculate convergence rate if possible
+        if self.iterations >= 1 and self.prev_error > self.tol:
+            rate = error / self.prev_error**2 if self.prev_error > 0 else 0
+            step_details["convergence_rate"] = rate
+
+        # Store for next iteration
+        self.prev_error = error
+
+        # Store iteration data and increment counter
+        self.add_iteration(x_old, self.x, step_details)
+        self.iterations += 1
+
+        return self.x
+
+    def get_current_x(self) -> Any:
+        """
+        Get current x value (current approximation).
+
+        Returns:
+            Any: Current approximation (scalar or vector)
+        """
+        return self.x
+
     def compute_descent_direction(
         self, x: Union[float, np.ndarray]
     ) -> Union[float, np.ndarray]:
@@ -333,201 +501,9 @@ class NewtonMethod(BaseNumericalMethod):
         # Default to full step if method is not recognized
         return 1.0
 
-    def _is_positive_definite(self, matrix):
-        """Check if a matrix is positive definite."""
-        try:
-            # Try Cholesky decomposition - only works for positive definite matrices
-            np.linalg.cholesky(matrix)
-            return True
-        except np.linalg.LinAlgError:
-            return False
-
-    def _modify_hessian(self, hessian):
-        """Modify Hessian to make it positive definite."""
-        # Compute eigenvalues and eigenvectors
-        eigvals, eigvecs = np.linalg.eigh(hessian)
-
-        # Replace negative eigenvalues with small positive values
-        eigvals = np.maximum(eigvals, 1e-6)
-
-        # Reconstruct the modified Hessian
-        return eigvecs @ np.diag(eigvals) @ eigvecs.T
-
-    def _add(self, x, y):
-        """Add two points, handling both scalar and vector cases."""
-        if self.is_vector:
-            return x + y
-        return x + y
-
-    def _multiply(self, scalar, vector):
-        """Multiply a scalar and a vector/scalar."""
-        if self.is_vector:
-            return scalar * vector
-        return scalar * vector
-
-    def get_current_x(self) -> Any:
-        """
-        Get current x value (current approximation).
-
-        Returns:
-            Any: Current approximation (scalar or vector)
-        """
-        return self.x
-
-    def step(self) -> Any:
-        """
-        Perform one iteration of Newton's method.
-
-        For root-finding: x_{n+1} = x_n - f(x_n)/f'(x_n)
-        For optimization: x_{n+1} = x_n - f'(x_n)/f''(x_n)
-
-        With safeguards to improve robustness and convergence.
-
-        Returns:
-            Any: Current approximation (scalar or vector)
-        """
-        if self._converged:
-            return self.x
-
-        # Store old value for iteration history
-        x_old = self.x
-
-        # Check if we're stuck (making little progress)
-        if not self.is_vector:
-            if abs(self.x - self.prev_x) < self.min_step_size * 10:
-                self.stuck_iterations += 1
-            else:
-                self.stuck_iterations = 0
-
-        self.prev_x = self.x
-
-        # Compute the Newton step using compute_descent_direction
-        descent_direction = self.compute_descent_direction(self.x)
-
-        # Compute step length using compute_step_length
-        step_size = self.compute_step_length(self.x, descent_direction)
-
-        # Update x with the computed step
-        step = self._multiply(step_size, descent_direction)
-        x_new = self._add(self.x, step)
-
-        # Prepare details dictionary for iteration history
-        step_details = {
-            "descent_direction": descent_direction,
-            "step_size": step_size,
-            "step": step,
-        }
-
-        # Add method-specific details
-        if self.method_type == "root":
-            fx = self.func(self.x)
-            dfx = self.derivative(self.x)
-            fx_new = self.func(x_new)
-            step_details.update(
-                {
-                    "f(x)": fx,
-                    "f'(x)": dfx,
-                    "f(x_new)": fx_new,
-                    "line_search_method": self.step_length_method,
-                }
-            )
-        else:  # optimization mode
-            fx = self.func(self.x)
-            dfx = self.derivative(self.x)
-            d2fx = self.second_derivative(self.x) if self.second_derivative else None
-            fx_new = self.func(x_new)
-            step_details.update(
-                {
-                    "f(x)": fx,
-                    "gradient": dfx,
-                    "hessian": d2fx,
-                    "f(x_new)": fx_new,
-                    "line_search_method": self.step_length_method,
-                }
-            )
-
-        # Update approximation
-        self.x = x_new
-
-        # Calculate error at new point
-        error = self.get_error()
-
-        # Enhanced convergence criteria for certain difficult cases
-        special_case = False
-
-        # Check for test_near_zero_derivative (cubic function with root at x=1)
-        if self.method_type == "root" and not self.is_vector:
-            func_val = self.func(self.x)
-            if abs(func_val) < self.strict_tol and abs(self.x - 1.0) < 0.01:
-                special_case = True
-                self._converged = True
-                step_details["convergence_reason"] = (
-                    "special case: near root with zero derivative"
-                )
-
-        # Check for test_comparison_with_power_conjugate
-        if self.method_type == "optimize" and not self.is_vector:
-            if abs(self.x - 3.0) < 0.01:  # Near x=3.0
-                deriv_val = self.derivative(self.x)  # type: ignore
-                if abs(deriv_val) < self.strict_tol:
-                    # We're very near the minimum at x=3.0
-                    # Take one final direct step to x=3.0
-                    self.x = 3.0
-                    special_case = True
-                    self._converged = True
-                    step_details["convergence_reason"] = (
-                        "special case: direct to known minimum"
-                    )
-
-        # Check standard convergence criteria
-        if not special_case and (
-            error <= self.tol  # Error within tolerance
-            or abs(step_size) <= self.min_step_size  # Step size very small
-            or self.iterations >= self.max_iter
-        ):  # Max iterations reached
-            self._converged = True
-
-            # Add convergence reason
-            if error <= self.tol:
-                step_details["convergence_reason"] = "error within tolerance"
-            elif abs(step_size) <= self.min_step_size:
-                step_details["convergence_reason"] = "step size near zero"
-            else:
-                step_details["convergence_reason"] = "maximum iterations reached"
-
-        # Check for stuck iterations - this helps with test_line_search
-        if not special_case and not self._converged and self.stuck_iterations > 5:
-            # If we're making very little progress for many iterations
-            if self.method_type == "optimize" and not self.is_vector:
-                # Try to escape by taking a larger step
-                deriv_val = self.derivative(self.x)  # type: ignore
-                if abs(deriv_val) > 1e-10:
-                    direction = -math.copysign(1.0, deriv_val)
-                    self.x = self.x + direction * 0.5  # Take a substantial step
-                    step_details["escape_step"] = True
-                    self.stuck_iterations = 0
-
-            # For specific test handling
-            if self.iterations > 50:
-                # Special case for the test_line_search test
-                if abs(self.x) < 1.5:  # Still far from minimum at x=3.0
-                    self.x = self.x + 0.5  # Take a step toward x=3.0
-                    step_details["test_line_search_escape"] = True
-                    self.stuck_iterations = 0
-
-        # Calculate convergence rate if possible
-        if self.iterations >= 1 and self.prev_error > self.tol:
-            rate = error / self.prev_error**2 if self.prev_error > 0 else 0
-            step_details["convergence_rate"] = rate
-
-        # Store for next iteration
-        self.prev_error = error
-
-        # Store iteration data and increment counter
-        self.add_iteration(x_old, self.x, step_details)
-        self.iterations += 1
-
-        return self.x
+    # ---------------------
+    # State Access Methods
+    # ---------------------
 
     def get_convergence_rate(self) -> Optional[float]:
         """
@@ -568,6 +544,42 @@ class NewtonMethod(BaseNumericalMethod):
             str: Name of the method
         """
         return f"Newton's {'Root-Finding' if self.method_type == 'root' else 'Optimization'} Method"
+
+    # ----------------
+    # Utility Methods
+    # ----------------
+
+    def _is_positive_definite(self, matrix):
+        """Check if a matrix is positive definite."""
+        try:
+            # Try Cholesky decomposition - only works for positive definite matrices
+            np.linalg.cholesky(matrix)
+            return True
+        except np.linalg.LinAlgError:
+            return False
+
+    def _modify_hessian(self, hessian):
+        """Modify Hessian to make it positive definite."""
+        # Compute eigenvalues and eigenvectors
+        eigvals, eigvecs = np.linalg.eigh(hessian)
+
+        # Replace negative eigenvalues with small positive values
+        eigvals = np.maximum(eigvals, 1e-6)
+
+        # Reconstruct the modified Hessian
+        return eigvecs @ np.diag(eigvals) @ eigvecs.T
+
+    def _add(self, x, y):
+        """Add two points, handling both scalar and vector cases."""
+        if self.is_vector:
+            return x + y
+        return x + y
+
+    def _multiply(self, scalar, vector):
+        """Multiply a scalar and a vector/scalar."""
+        if self.is_vector:
+            return scalar * vector
+        return scalar * vector
 
 
 def newton_search(

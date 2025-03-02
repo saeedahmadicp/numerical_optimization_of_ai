@@ -90,6 +90,15 @@ class NumericalMethod(Protocol):
         """
         ...
 
+    def get_current_x(self) -> float:
+        """
+        Get current x value (current approximation).
+
+        Returns:
+            float: Current approximation
+        """
+        ...
+
     def get_error(self) -> float:
         """
         Get current error estimate.
@@ -152,7 +161,7 @@ class IterationData:
     f_old: float
     f_new: float
     error: float
-    details: Dict[str, Any]  # Method-specific details
+    details: Dict[str, Any]
 
 
 @dataclass
@@ -245,48 +254,88 @@ class BaseNumericalMethod:
         self.iterations = 0
         self._history: List[IterationData] = []
 
-    def has_converged(self) -> bool:
+    # ----------------------------------------------------------
+    # Core Algorithm Methods - Must be implemented by subclasses
+    # ----------------------------------------------------------
+
+    def step(self) -> float:
         """
-        Check if method has converged based on error tolerance or max iterations.
+        Perform one iteration of the method.
+
+        Each step should improve the approximation toward the solution according to
+        the specific algorithm's approach.
 
         Returns:
-            bool: True if converged, False otherwise
+            float: Current approximation (root for root-finding, minimum for optimization)
+
+        Raises:
+            NotImplementedError: If not implemented by subclass
         """
-        return self._converged
+        raise NotImplementedError("Subclasses must implement step()")
 
-    def estimate_derivative(self, x: float) -> float:
+    def get_current_x(self) -> float:
         """
-        Estimate derivative using central finite differences.
+        Get current x value (current approximation).
 
-        The central difference approximation is given by:
-        f'(x) ≈ [f(x + h) - f(x - h)] / (2h)
-
-        This provides O(h²) accuracy compared to O(h) for forward/backward differences.
-
-        Args:
-            x: Point at which to estimate derivative
+        This method must be implemented by subclasses to provide the
+        current approximation.
 
         Returns:
-            float: Estimated derivative f'(x)
-        """
-        h = self.finite_diff_step
-        return (self.func(x + h) - self.func(x - h)) / (2 * h)
+            float: Current approximation
 
-    def estimate_gradient_norm(self, x: float) -> float:
+        Raises:
+            NotImplementedError: If not implemented by subclass
         """
-        Estimate gradient norm for derivative-free methods.
+        raise NotImplementedError("Subclasses must implement get_current_x()")
 
-        For single-variable functions, this is simply |f'(x)|.
-        For multivariate functions, this would compute ||∇f(x)||.
+    def compute_descent_direction(
+        self, x: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the descent direction at the current point.
+
+        The descent direction depends on the specified method:
+        - steepest_descent: -∇f(x)
+        - newton: -H(x)^(-1)∇f(x)
+        - bfgs, l_bfgs, dfp, sr1: Quasi-Newton approximations
+        - conjugate_gradient: Conjugate directions
+        - etc.
+
+        This method should be implemented by concrete optimization classes
+        to provide the appropriate descent direction based on the
+        descent_direction_method specified in the configuration.
 
         Args:
             x: Current point
 
         Returns:
-            float: Estimated gradient norm
+            Union[float, np.ndarray]: Descent direction at x
         """
-        grad = self.estimate_derivative(x)
-        return abs(grad)
+        raise NotImplementedError(
+            "Subclasses must implement compute_descent_direction()"
+        )
+
+    def compute_step_length(
+        self, x: Union[float, np.ndarray], direction: Union[float, np.ndarray]
+    ) -> float:
+        """
+        Compute the step length using the specified line search method.
+
+        The step length is determined based on the current point, descent direction,
+        and the specified line search method.
+
+        Args:
+            x: Current point
+            direction: Descent direction
+
+        Returns:
+            float: Step length (alpha)
+        """
+        raise NotImplementedError("Subclasses must implement compute_step_length()")
+
+    # ---------------------
+    # State Access Methods
+    # ---------------------
 
     def get_error(self) -> float:
         """
@@ -323,20 +372,28 @@ class BaseNumericalMethod:
                 # Fallback to finite differences
                 return abs(self.estimate_derivative(x))
 
-    def get_current_x(self) -> float:
+    def has_converged(self) -> bool:
         """
-        Get current x value (current approximation).
-
-        This method must be implemented by subclasses to provide the
-        current approximation.
+        Check if method has converged based on error tolerance or max iterations.
 
         Returns:
-            float: Current approximation
-
-        Raises:
-            NotImplementedError: If not implemented by subclass
+            bool: True if converged, False otherwise
         """
-        raise NotImplementedError("Subclasses must implement get_current_x()")
+        return self._converged
+
+    @property
+    def name(self) -> str:
+        """
+        Get method name based on class name.
+
+        Returns:
+            str: Name of the method
+        """
+        return self.__class__.__name__
+
+    # -------------------------
+    # History Tracking Methods
+    # -------------------------
 
     def add_iteration(
         self, x_old: float, x_new: float, details: Dict[str, Any]
@@ -385,57 +442,40 @@ class BaseNumericalMethod:
         """
         return self._history[-1] if self._history else None
 
-    @property
-    def name(self) -> str:
+    # ----------------
+    # Utility Methods
+    # ----------------
+
+    def estimate_derivative(self, x: float) -> float:
         """
-        Get method name based on class name.
+        Estimate derivative using central finite differences.
+
+        The central difference approximation is given by:
+        f'(x) ≈ [f(x + h) - f(x - h)] / (2h)
+
+        This provides O(h²) accuracy compared to O(h) for forward/backward differences.
+
+        Args:
+            x: Point at which to estimate derivative
 
         Returns:
-            str: Name of the method
+            float: Estimated derivative f'(x)
         """
-        return self.__class__.__name__
+        h = self.finite_diff_step
+        return (self.func(x + h) - self.func(x - h)) / (2 * h)
 
-    def compute_descent_direction(
-        self, x: Union[float, np.ndarray]
-    ) -> Union[float, np.ndarray]:
+    def estimate_gradient_norm(self, x: float) -> float:
         """
-        Compute the descent direction at the current point.
+        Estimate gradient norm for derivative-free methods.
 
-        The descent direction depends on the specified method:
-        - steepest_descent: -∇f(x)
-        - newton: -H(x)^(-1)∇f(x)
-        - bfgs, l_bfgs, dfp, sr1: Quasi-Newton approximations
-        - conjugate_gradient: Conjugate directions
-        - etc.
-
-        This method should be implemented by concrete optimization classes
-        to provide the appropriate descent direction based on the
-        descent_direction_method specified in the configuration.
+        For single-variable functions, this is simply |f'(x)|.
+        For multivariate functions, this would compute ||∇f(x)||.
 
         Args:
             x: Current point
 
         Returns:
-            Union[float, np.ndarray]: Descent direction at x
+            float: Estimated gradient norm
         """
-        raise NotImplementedError(
-            "Subclasses must implement compute_descent_direction()"
-        )
-
-    def compute_step_length(
-        self, x: Union[float, np.ndarray], direction: Union[float, np.ndarray]
-    ) -> float:
-        """
-        Compute the step length using the specified line search method.
-
-        The step length is determined based on the current point, descent direction,
-        and the specified line search method.
-
-        Args:
-            x: Current point
-            direction: Descent direction
-
-        Returns:
-            float: Step length (alpha)
-        """
-        raise NotImplementedError("Subclasses must implement compute_step_length()")
+        grad = self.estimate_derivative(x)
+        return abs(grad)

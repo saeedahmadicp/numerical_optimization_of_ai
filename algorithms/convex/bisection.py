@@ -49,6 +49,9 @@ class BisectionMethod(BaseNumericalMethod):
     signs at the endpoints. The midpoint of the interval is computed at each step,
     and the interval is updated to maintain the sign change property.
 
+    This class implements the NumericalMethod protocol defined in protocols.py
+    by extending BaseNumericalMethod and implementing all required methods.
+
     Mathematical guarantee:
     The error after n iterations is at most (b-a)/2^n, where [a,b] is the
     initial interval. This provides a predictable convergence rate, making
@@ -157,14 +160,9 @@ class BisectionMethod(BaseNumericalMethod):
             }
             self.add_iteration(x_old=a, x_new=self.x, details=initial_details)
 
-    def get_current_x(self) -> float:
-        """
-        Get current x value (midpoint of the current interval).
-
-        Returns:
-            float: Current approximation of the solution
-        """
-        return self.x
+    # -----------------------
+    # Core Algorithm Methods
+    # -----------------------
 
     def step(self) -> float:
         """
@@ -356,6 +354,68 @@ class BisectionMethod(BaseNumericalMethod):
 
         return self.x
 
+    def get_current_x(self) -> float:
+        """
+        Get current x value (midpoint of the current interval).
+
+        Returns:
+            float: Current approximation of the solution
+        """
+        return self.x
+
+    def compute_descent_direction(self, x: Union[float, float]) -> Union[float, float]:
+        """
+        Compute the descent direction at the current point.
+
+        This method is implemented for interface compatibility, but is not used
+        by the bisection method which doesn't use gradient information.
+
+        For bisection method, we don't use descent directions because we're
+        bracketing the solution rather than following a gradient.
+
+        Args:
+            x: Current point
+
+        Returns:
+            Union[float, float]: Direction (always 0 for bisection)
+
+        Raises:
+            NotImplementedError: This method is not applicable for bisection method
+        """
+        raise NotImplementedError(
+            "Bisection method doesn't use descent directions - it uses interval bisection"
+        )
+
+    def compute_step_length(
+        self, x: Union[float, float], direction: Union[float, float]
+    ) -> float:
+        """
+        Compute the step length.
+
+        This method is implemented for interface compatibility, but is not used
+        by the bisection method which doesn't use step lengths.
+
+        The bisection method always uses half the current interval width as its
+        effective step size.
+
+        Args:
+            x: Current point
+            direction: Descent direction (not used)
+
+        Returns:
+            float: Step length (always half the interval width)
+
+        Raises:
+            NotImplementedError: This method is not applicable for bisection method
+        """
+        raise NotImplementedError(
+            "Bisection method doesn't use step lengths - it uses interval bisection"
+        )
+
+    # ---------------------
+    # State Access Methods
+    # ---------------------
+
     def get_error(self) -> float:
         """
         Calculate the error estimate for the current solution.
@@ -368,6 +428,18 @@ class BisectionMethod(BaseNumericalMethod):
         """
         x = self.get_current_x()
         return abs(self.target_func(x))
+
+    def has_converged(self) -> bool:
+        """
+        Check if method has converged based on error tolerance or max iterations.
+
+        This implementation satisfies the NumericalMethod protocol requirement
+        for checking convergence status.
+
+        Returns:
+            bool: True if converged, False otherwise
+        """
+        return self._converged
 
     def get_convergence_rate(self) -> Optional[float]:
         """
