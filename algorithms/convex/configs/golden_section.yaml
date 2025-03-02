@@ -1,0 +1,63 @@
+# configs/golden_section.yaml
+
+# Configuration for Golden Section Method - suitable for both optimization and root-finding
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: cubic_polynomial  # f(x) = x^3 - 2x^2 - 5x + 6, roots at x = {-2, 1, 3}
+  
+  # Initial bracket - must contain a root
+  a: 2.0
+  b: 4.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 3.0
+  
+  # Visualization settings
+  xrange: [1, 5]
+  no_viz: true
+
+# Optimization configuration
+optimize:
+  # Function with known minimum
+  function: parabola  # f(x) = x^2, minimum at x = 0
+  
+  # Initial bracket - must contain the minimum
+  a: -1.0
+  b: 1.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_minimum: 0.0
+  
+  # Visualization settings
+  xrange: [-2, 2]
+  no_viz: true
+
+# More challenging optimization
+optimize_challenging:
+  # Function with multiple local minima
+  function: complex_function  # f(x) = sin(x) + 0.1*x^2, multiple local minima
+  
+  # Initial bracket (must be precise for unimodal function within this interval)
+  a: 4.0
+  b: 7.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome - local minimum in the interval
+  expected_minimum: 6.0  # Approximate value
+  
+  # Visualization settings
+  xrange: [3, 8]
+  no_viz: true 

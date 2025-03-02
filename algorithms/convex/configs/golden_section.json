@@ -1,0 +1,32 @@
+{
+  "root": {
+    "function": "cubic_polynomial",
+    "a": 2.0,
+    "b": 4.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "expected_root": 3.0,
+    "xrange": [1, 5],
+    "no_viz": true
+  },
+  "optimize": {
+    "function": "parabola",
+    "a": -1.0,
+    "b": 1.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "expected_minimum": 0.0,
+    "xrange": [-2, 2],
+    "no_viz": true
+  },
+  "optimize_challenging": {
+    "function": "complex_function",
+    "a": 4.0,
+    "b": 7.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "expected_minimum": 6.0,
+    "xrange": [3, 8],
+    "no_viz": true
+  }
+} 

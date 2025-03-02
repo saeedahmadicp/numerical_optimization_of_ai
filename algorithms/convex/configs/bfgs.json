@@ -1,0 +1,37 @@
+{
+  "root": {
+    "function": "trigonometric",
+    "x0": 2.5,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "expected_root": 3.14159265358979,
+    "xrange": [0, 6.3],
+    "no_viz": true
+  },
+  "optimize": {
+    "function": "quadratic_with_linear",
+    "x0": 0.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "step_length_method": "strong_wolfe",
+    "step_length_params": {
+      "c1": 1.0e-4,
+      "c2": 0.1,
+      "alpha_init": 1.0
+    },
+    "expected_minimum": 2.0,
+    "xrange": [-1, 5],
+    "no_viz": true
+  },
+  "optimize_2d": {
+    "function": "himmelblau",
+    "x0": [2.5, 1.5],
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "expected_minimum": [3.0, 2.0],
+    "xrange": [-6, 6],
+    "yrange": [-6, 6],
+    "viz_3d": true,
+    "no_viz": true
+  }
+} 

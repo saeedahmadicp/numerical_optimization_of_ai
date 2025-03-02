@@ -1,0 +1,56 @@
+{
+  "root": {
+    "function": "cubic_polynomial",
+    "x0": 2.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "update_method": "broyden",
+    "expected_root": 3.0,
+    "xrange": [-3, 4],
+    "no_viz": true
+  },
+  "optimize": {
+    "function": "quadratic",
+    "x0": 0.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "update_method": "bfgs",
+    "step_length_method": "wolfe",
+    "step_length_params": {
+      "c1": 1.0e-4,
+      "c2": 0.9,
+      "alpha_init": 1.0
+    },
+    "expected_minimum": -2.0,
+    "xrange": [-4, 2],
+    "no_viz": true
+  },
+  "optimize_dfp": {
+    "function": "exponential_bowl",
+    "x0": 1.0,
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "update_method": "dfp",
+    "step_length_method": "strong_wolfe",
+    "step_length_params": {
+      "c1": 1.0e-4,
+      "c2": 0.1,
+      "alpha_init": 1.0
+    },
+    "expected_minimum": 0.0,
+    "xrange": [-2, 2],
+    "no_viz": true
+  },
+  "optimize_2d": {
+    "function": "rosenbrock",
+    "x0": [0.0, 0.0],
+    "tol": 1.0e-8,
+    "max_iter": 100,
+    "update_method": "sr1",
+    "expected_minimum": [1.0, 1.0],
+    "xrange": [-2, 2],
+    "yrange": [-1, 3],
+    "viz_3d": true,
+    "no_viz": true
+  }
+} 

@@ -1,0 +1,63 @@
+# configs/bisection.yaml
+
+# Configuration for Bisection Method - specifically for root-finding
+
+# Root-finding configuration
+root:
+  # Function with known roots
+  function: cubic_polynomial  # f(x) = x^3 - 2x^2 - 5x + 6, roots at x = {-2, 1, 3}
+  
+  # Initial bracket - must contain a root
+  a: -3.0
+  b: -1.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: -2.0
+  
+  # Visualization settings
+  xrange: [-4, 4]
+  no_viz: true
+
+# Another root-finding test case
+root_alt:
+  # Function with known roots - using the same function but different bracket
+  function: cubic_polynomial
+  
+  # Initial bracket targeting another root
+  a: 0.0
+  b: 2.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 1.0
+  
+  # Visualization settings
+  xrange: [-1, 4]
+  no_viz: true
+
+# Root-finding with challenging function
+root_challenging:
+  # Function with discontinuities
+  function: rational_function  # f(x) = 1/(x-0.5) + x - 1.5, steep near x=0.5
+  
+  # Initial bracket
+  a: 0.6
+  b: 2.0
+  
+  # Algorithm parameters
+  tol: 1.0e-8
+  max_iter: 100
+  
+  # Expected outcome
+  expected_root: 1.0  # Approximate solution
+  
+  # Visualization settings
+  xrange: [0.6, 2.0]
+  no_viz: true 

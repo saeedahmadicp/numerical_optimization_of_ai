@@ -1,0 +1,35 @@
+{
+  "optimize": {
+    "function": "parabola",
+    "x0": -1.0,
+    "x1": 0.5,
+    "x2": 2.0,
+    "tol": 1.0e-8,
+    "max_iter": 50,
+    "expected_minimum": 0.0,
+    "xrange": [-2, 3],
+    "no_viz": true
+  },
+  "optimize_asymmetric": {
+    "function": "cubic",
+    "x0": 0.0,
+    "x1": 1.5,
+    "x2": 3.0,
+    "tol": 1.0e-8,
+    "max_iter": 50,
+    "expected_minimum": 1.0,
+    "xrange": [-1, 4],
+    "no_viz": true
+  },
+  "optimize_challenging": {
+    "function": "multi_modal",
+    "x0": 0.0,
+    "x1": 2.0,
+    "x2": 3.5,
+    "tol": 1.0e-8,
+    "max_iter": 75,
+    "expected_minimum": 3.0,
+    "xrange": [-1, 4],
+    "no_viz": true
+  }
+} 
