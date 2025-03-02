@@ -31,6 +31,36 @@ import numpy as np
 # Define valid method types
 MethodType = Literal["root", "optimize"]
 
+# Define valid step length methods
+StepLengthMethod = Literal[
+    "fixed",
+    "backtracking",
+    "wolfe",
+    "strong_wolfe",
+    "goldstein",
+    "barzilai_borwein",
+    "diminishing",
+    "polyak",
+    "trust_region",
+]
+
+# Define valid descent direction methods
+DescentDirectionMethod = Literal[
+    "steepest_descent",
+    "newton",
+    "bfgs",
+    "l_bfgs",
+    "dfp",
+    "sr1",
+    "conjugate_gradient",
+    "momentum",
+    "nesterov",
+    "coordinate_descent",
+    "frank_wolfe",
+    "subgradient",
+    "proximal_gradient",
+]
+
 # Type variable for scalar functions
 T = TypeVar("T", float, np.ndarray)
 
@@ -149,6 +179,11 @@ class NumericalMethodConfig:
         use_derivative_free: Whether to use derivative-free approach even if derivative is provided
         finite_diff_step: Step size for finite differences when approximating derivatives
         is_2d: Whether the function is multivariate (2D visualization support)
+        step_length_method: Method to use for determining step length in optimization
+        descent_direction_method: Method to use for determining descent direction in optimization
+        step_length_params: Additional parameters for the step length method
+        descent_direction_params: Additional parameters for the descent direction method
+        initial_step_size: Initial step size for line search methods
     """
 
     func: Callable[[Union[float, np.ndarray]], float]
@@ -165,6 +200,11 @@ class NumericalMethodConfig:
     use_derivative_free: bool = False
     finite_diff_step: float = 1e-7
     is_2d: bool = False
+    step_length_method: Optional[StepLengthMethod] = None
+    descent_direction_method: Optional[DescentDirectionMethod] = None
+    step_length_params: Dict[str, Any] = None
+    descent_direction_params: Dict[str, Any] = None
+    initial_step_size: float = 1.0
 
 
 class BaseNumericalMethod:
@@ -196,6 +236,11 @@ class BaseNumericalMethod:
         self.hessian = config.hessian
         self.use_derivative_free = config.use_derivative_free
         self.finite_diff_step = config.finite_diff_step
+        self.step_length_method = config.step_length_method
+        self.descent_direction_method = config.descent_direction_method
+        self.step_length_params = config.step_length_params or {}
+        self.descent_direction_params = config.descent_direction_params or {}
+        self.initial_step_size = config.initial_step_size
         self._converged = False
         self.iterations = 0
         self._history: List[IterationData] = []
@@ -349,3 +394,48 @@ class BaseNumericalMethod:
             str: Name of the method
         """
         return self.__class__.__name__
+
+    def compute_descent_direction(
+        self, x: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the descent direction at the current point.
+
+        The descent direction depends on the specified method:
+        - steepest_descent: -∇f(x)
+        - newton: -H(x)^(-1)∇f(x)
+        - bfgs, l_bfgs, dfp, sr1: Quasi-Newton approximations
+        - conjugate_gradient: Conjugate directions
+        - etc.
+
+        This method should be implemented by concrete optimization classes
+        to provide the appropriate descent direction based on the
+        descent_direction_method specified in the configuration.
+
+        Args:
+            x: Current point
+
+        Returns:
+            Union[float, np.ndarray]: Descent direction at x
+        """
+        raise NotImplementedError(
+            "Subclasses must implement compute_descent_direction()"
+        )
+
+    def compute_step_length(
+        self, x: Union[float, np.ndarray], direction: Union[float, np.ndarray]
+    ) -> float:
+        """
+        Compute the step length using the specified line search method.
+
+        The step length is determined based on the current point, descent direction,
+        and the specified line search method.
+
+        Args:
+            x: Current point
+            direction: Descent direction
+
+        Returns:
+            float: Step length (alpha)
+        """
+        raise NotImplementedError("Subclasses must implement compute_step_length()")
