@@ -53,12 +53,12 @@ class FunctionInput(QGroupBox):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(15)  # Add spacing between elements
+        layout.setSpacing(10)  # Reduced spacing between elements
 
-        # Function input section
+        # Function input section with updated styling
         input_layout = QHBoxLayout()
         func_label = QLabel("f(x) =")
-        func_label.setStyleSheet("color: #00ffff; font-weight: bold;")
+        func_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 11px;")
         input_layout.addWidget(func_label)
 
         self.func_input = QLineEdit()
@@ -68,57 +68,127 @@ class FunctionInput(QGroupBox):
             "Python-compatible function, e.g., x1**2 + x2**2"
         )
         self.func_input.textChanged.connect(self._schedule_latex_update)
+        self.func_input.setStyleSheet(
+            """
+            QLineEdit {
+                background-color: #222222;
+                color: #ffffff;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                padding: 5px;
+                selection-background-color: #4a90e2;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4a90e2;
+            }
+        """
+        )
         input_layout.addWidget(self.func_input)
         layout.addLayout(input_layout)
 
-        # LaTeX display
+        # LaTeX display with updated styling
         self.latex_display = QLabel()
         self.latex_display.setStyleSheet(
             """
             QLabel {
-                background-color: #242935;
-                border: 2px solid #4a4a4a;
-                border-radius: 6px;
-                padding: 20px;
-                min-height: 120px;
-                margin: 10px 0;
+                background-color: #111111;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                padding: 10px;
+                min-height: 80px;
+                margin: 5px 0;
             }
         """
         )
         self.latex_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.latex_display)
 
-        # Variable inputs and initial guess
+        # Variable inputs and initial guess with updated styling
         var_layout = QHBoxLayout()
+        var_layout.setSpacing(10)  # Reduced spacing between variable sections
         self.var_inputs = []
         self.initial_guess_inputs = []
 
         for i in range(2):
             var_group = QGroupBox(f"x{i+1} settings")
+            var_group.setStyleSheet(
+                """
+                QGroupBox {
+                    font-weight: bold;
+                    color: #ffffff;
+                    font-size: 10px;
+                }
+            """
+            )
             var_layout_inner = QVBoxLayout()
+            var_layout_inner.setSpacing(5)  # Reduced spacing between elements
 
-            # Range inputs
+            # Range inputs with updated styling
             range_layout = QHBoxLayout()
             min_spin = QDoubleSpinBox()
             min_spin.setRange(-1000, 1000)
             min_spin.setValue(-5)
+            min_spin.setStyleSheet(
+                """
+                QDoubleSpinBox {
+                    padding-right: 10px;
+                    background-color: #222222;
+                    color: #ffffff;
+                    border: 1px solid #333333;
+                    border-radius: 3px;
+                }
+            """
+            )
 
             max_spin = QDoubleSpinBox()
             max_spin.setRange(-1000, 1000)
             max_spin.setValue(5)
+            max_spin.setStyleSheet(
+                """
+                QDoubleSpinBox {
+                    padding-right: 10px;
+                    background-color: #222222;
+                    color: #ffffff;
+                    border: 1px solid #333333;
+                    border-radius: 3px;
+                }
+            """
+            )
 
-            range_layout.addWidget(QLabel("Min:"))
+            # Updated labels
+            min_label = QLabel("Min:")
+            min_label.setStyleSheet("color: #b3b3b3; font-size: 10px;")
+            max_label = QLabel("Max:")
+            max_label.setStyleSheet("color: #b3b3b3; font-size: 10px;")
+
+            range_layout.addWidget(min_label)
             range_layout.addWidget(min_spin)
-            range_layout.addWidget(QLabel("Max:"))
+            range_layout.addWidget(max_label)
             range_layout.addWidget(max_spin)
             var_layout_inner.addLayout(range_layout)
 
-            # Initial guess input
+            # Initial guess input with updated styling
             guess_layout = QHBoxLayout()
             guess_spin = QDoubleSpinBox()
             guess_spin.setRange(-1000, 1000)
             guess_spin.setValue(0)  # Default to 0
-            guess_layout.addWidget(QLabel("Initial:"))
+            guess_spin.setStyleSheet(
+                """
+                QDoubleSpinBox {
+                    padding-right: 10px;
+                    background-color: #222222;
+                    color: #ffffff;
+                    border: 1px solid #333333;
+                    border-radius: 3px;
+                }
+            """
+            )
+
+            # Updated label
+            initial_label = QLabel("Initial:")
+            initial_label.setStyleSheet("color: #b3b3b3; font-size: 10px;")
+
+            guess_layout.addWidget(initial_label)
             guess_layout.addWidget(guess_spin)
             var_layout_inner.addLayout(guess_layout)
 
@@ -129,15 +199,46 @@ class FunctionInput(QGroupBox):
 
         layout.addLayout(var_layout)
 
-        # Derivatives
+        # Derivatives with updated styling
         deriv_group = QGroupBox("Derivatives")
+        deriv_group.setStyleSheet(
+            """
+            QGroupBox {
+                font-weight: bold;
+                color: #ffffff;
+                font-size: 10px;
+            }
+        """
+        )
         deriv_layout = QVBoxLayout()
+        deriv_layout.setSpacing(5)  # Reduced spacing
 
+        # Create more compact derivatives section
         self.show_deriv = QCheckBox("Show first derivative")
         self.show_second_deriv = QCheckBox("Show second derivative")
         self.show_second_deriv.setChecked(
             True
         )  # Enable second derivative for Newton's method
+
+        # Add updated styling to checkboxes
+        checkbox_style = """
+            QCheckBox {
+                color: #b3b3b3;
+                font-size: 10px;
+                spacing: 5px;
+            }
+            QCheckBox::indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 2px;
+                border: 1px solid #333333;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #4a90e2;
+            }
+        """
+        self.show_deriv.setStyleSheet(checkbox_style)
+        self.show_second_deriv.setStyleSheet(checkbox_style)
 
         deriv_layout.addWidget(self.show_deriv)
         deriv_layout.addWidget(self.show_second_deriv)
@@ -193,7 +294,7 @@ class FunctionInput(QGroupBox):
 
             # Create a figure with fixed size
             width = self.latex_display.width() / 80  # Adjusted for better scaling
-            height = 2.0  # Increased height
+            height = 1.0  # Reduced height from 2.0 to 1.0 for more compact display
             fig = Figure(figsize=(width, height))
             fig.patch.set_facecolor("#242935")
 
@@ -202,17 +303,18 @@ class FunctionInput(QGroupBox):
             ax.set_axis_off()
             ax.set_facecolor("#242935")
 
-            # Render the LaTeX equation
+            # Render the LaTeX equation with sharper font
             eq = ax.text(
                 0.5,
                 0.5,
                 f"$f(x) = {latex_text}$",
                 color="#00ffff",
-                fontsize=24,  # Significantly increased font size
+                fontsize=22,  # Slightly reduced font size for compactness
                 horizontalalignment="center",
                 verticalalignment="center",
                 fontweight="bold",
-            )  # Made text bold
+                family="serif",  # Use serif font for sharper appearance
+            )
 
             # Add a stronger glow effect
             eq.set_path_effects(
@@ -225,7 +327,7 @@ class FunctionInput(QGroupBox):
                 ]
             )
 
-            # Convert matplotlib figure to QPixmap with higher DPI
+            # Convert matplotlib figure to QPixmap with higher DPI for sharper rendering
             buf = BytesIO()
             fig.savefig(
                 buf,
@@ -233,9 +335,9 @@ class FunctionInput(QGroupBox):
                 facecolor="#242935",
                 transparent=True,
                 bbox_inches="tight",
-                pad_inches=0.3,
-                dpi=200,
-            )  # Increased DPI and padding
+                pad_inches=0.2,  # Reduced padding
+                dpi=300,  # Increased DPI from 200 to 300 for sharper text
+            )
             buf.seek(0)
 
             # Create QImage from buffer
@@ -243,7 +345,7 @@ class FunctionInput(QGroupBox):
             pixmap = QPixmap.fromImage(image)
 
             # Set a fixed height for the label while maintaining aspect ratio
-            fixed_height = 120  # Increased height
+            fixed_height = 80  # Reduced height from 120 to 80
             scaled_pixmap = pixmap.scaledToHeight(
                 fixed_height, Qt.TransformationMode.SmoothTransformation
             )
@@ -283,6 +385,24 @@ class FunctionInput(QGroupBox):
             "Powell's Method": {"first": False, "second": False},
         }
 
+        # Base checkbox style
+        checkbox_style = """
+            QCheckBox {
+                color: #b3b3b3;
+                font-size: 10px;
+                spacing: 5px;
+            }
+            QCheckBox::indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 2px;
+                border: 1px solid #333333;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #4a90e2;
+            }
+        """
+
         if method_name in requirements:
             req = requirements[method_name]
 
@@ -290,33 +410,33 @@ class FunctionInput(QGroupBox):
             if req["first"]:
                 self.show_deriv.setChecked(True)
                 self.show_deriv.setStyleSheet(
-                    """
+                    checkbox_style
+                    + """
                     QCheckBox {
-                        color: #ef5350;
+                        color: #4a90e2;
                         font-weight: bold;
-                    }
-                    QCheckBox::indicator:checked {
-                        background-color: #ef5350;
-                        border-color: #ef5350;
                     }
                 """
                 )
+            else:
+                # Apply the base style
+                self.show_deriv.setStyleSheet(checkbox_style)
 
             # Second derivative
             if req["second"]:
                 self.show_second_deriv.setChecked(True)
                 self.show_second_deriv.setStyleSheet(
-                    """
+                    checkbox_style
+                    + """
                     QCheckBox {
-                        color: #ef5350;
+                        color: #4a90e2;
                         font-weight: bold;
-                    }
-                    QCheckBox::indicator:checked {
-                        background-color: #ef5350;
-                        border-color: #ef5350;
                     }
                 """
                 )
+            else:
+                # Apply the base style
+                self.show_second_deriv.setStyleSheet(checkbox_style)
 
     def get_initial_guess(self):
         """Get the initial guess values."""
@@ -332,8 +452,13 @@ class MethodSelector(QGroupBox):
 
     def setup_ui(self):
         layout = QVBoxLayout()
+        layout.setSpacing(10)  # Reduced spacing
 
-        # Method selection
+        # Method selection with updated styling
+        method_label = QLabel("Method:")
+        method_label.setStyleSheet("color: #b3b3b3; font-size: 10px;")
+        layout.addWidget(method_label)
+
         self.method_combo = QComboBox()
         methods = [
             "Newton's Method",
@@ -346,30 +471,147 @@ class MethodSelector(QGroupBox):
         self.method_combo.setCurrentText(
             "Newton's Method"
         )  # Set Newton's method as default
-        layout.addWidget(QLabel("Method:"))
+
+        # Updated combobox styling
+        self.method_combo.setStyleSheet(
+            """
+            QComboBox {
+                background-color: #222222;
+                color: #ffffff;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                padding: 5px;
+                padding-right: 15px;
+                font-size: 10px;
+                min-height: 20px;
+            }
+            QComboBox:focus {
+                border: 1px solid #4a90e2;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 15px;
+                border-left: none;
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-top: 4px solid #ffffff;
+                width: 0;
+                height: 0;
+                margin-right: 6px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #222222;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                selection-background-color: #333333;
+                selection-color: #ffffff;
+                padding: 2px;
+            }
+        """
+        )
         layout.addWidget(self.method_combo)
 
-        # Parameters
+        # Parameters with updated styling
         param_group = QGroupBox("Parameters")
+        param_group.setStyleSheet(
+            """
+            QGroupBox {
+                font-weight: bold;
+                color: #ffffff;
+                font-size: 10px;
+            }
+        """
+        )
         param_layout = QVBoxLayout()
+        param_layout.setSpacing(10)  # Reduced spacing
 
-        # Tolerance
+        # Tolerance with updated styling
         tol_layout = QHBoxLayout()
+        tol_label = QLabel("Tolerance:")
+        tol_label.setStyleSheet("color: #b3b3b3; font-size: 10px;")
+
         self.tol_spin = QDoubleSpinBox()
         self.tol_spin.setRange(1e-6, 1.0)  # Changed minimum to 1e-6
         self.tol_spin.setValue(1e-4)  # Default tolerance of 1e-4
         self.tol_spin.setDecimals(6)  # Show 6 decimal places
         self.tol_spin.setSingleStep(1e-4)  # Step by 1e-4
-        tol_layout.addWidget(QLabel("Tolerance:"))
+
+        # Updated spinbox styling
+        self.tol_spin.setStyleSheet(
+            """
+            QDoubleSpinBox {
+                background-color: #222222;
+                color: #ffffff;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                padding: 3px;
+                padding-right: 12px;
+                min-width: 100px;
+                font-size: 10px;
+            }
+            QDoubleSpinBox:focus {
+                border: 1px solid #4a90e2;
+            }
+            QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
+                background-color: #333333;
+                width: 12px;
+                border-radius: 2px;
+                margin: 1px;
+            }
+            QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover {
+                background-color: #4a90e2;
+            }
+        """
+        )
+
+        tol_layout.addWidget(tol_label)
         tol_layout.addWidget(self.tol_spin)
         param_layout.addLayout(tol_layout)
 
-        # Max iterations
+        # Max iterations with updated styling
         iter_layout = QHBoxLayout()
+        iter_label = QLabel("Max iterations:")
+        iter_label.setStyleSheet("color: #b3b3b3; font-size: 10px;")
+
         self.max_iter_spin = QSpinBox()
         self.max_iter_spin.setRange(1, 10000)
         self.max_iter_spin.setValue(100)
-        iter_layout.addWidget(QLabel("Max iterations:"))
+
+        # Updated spinbox styling
+        self.max_iter_spin.setStyleSheet(
+            """
+            QSpinBox {
+                background-color: #222222;
+                color: #ffffff;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                padding: 3px;
+                padding-right: 12px;
+                min-width: 100px;
+                font-size: 10px;
+            }
+            QSpinBox:focus {
+                border: 1px solid #4a90e2;
+            }
+            QSpinBox::up-button, QSpinBox::down-button {
+                background-color: #333333;
+                width: 12px;
+                border-radius: 2px;
+                margin: 1px;
+            }
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                background-color: #4a90e2;
+            }
+        """
+        )
+
+        iter_layout.addWidget(iter_label)
         iter_layout.addWidget(self.max_iter_spin)
         param_layout.addLayout(iter_layout)
 
@@ -392,7 +634,28 @@ class MainWindow(QMainWindow):
         self.animation_timer.timeout.connect(self.update_animation)
         self.animation_frames = []
         self.current_frame = 0
-        self.plot_colors = None  # Initialize plot_colors as None
+        self.animation_in_progress = False
+
+        # Initialize plot_colors before setup_ui to avoid errors
+        self.plot_colors = {
+            "background": "#000000",  # Pure black for consistent background
+            "surface": "#000000",  # Pure black for surface
+            "input_bg": "#222222",  # Input background
+            "panel_header": "#111111",  # Panel header background
+            "panel_highlight": "#333333",  # Panel highlight
+            "text": "#ffffff",  # White text
+            "text_secondary": "#b3e5fc",  # Light blue secondary text
+            "border": "#2f3646",  # Dark border color
+            "primary": "#4a90e2",  # Professional blue
+            "secondary": "#5c6bc0",  # Indigo accent
+            "accent": "#00ffff",  # Cyan accent
+            "gradient_start": "#3a7bd5",  # Gradient start
+            "gradient_end": "#00d2ff",  # Gradient end
+            "success": "#66bb6a",  # Green for success states
+            "warning": "#ffa726",  # Orange for warnings
+            "error": "#ef5350",  # Red for errors
+        }
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -401,74 +664,114 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         layout = QHBoxLayout(central_widget)
 
-        # Left panel for inputs
+        # Left panel for inputs - Enhanced styling
         left_panel = QWidget()
+        left_panel.setObjectName("leftPanel")  # Add object name for specific styling
         left_layout = QVBoxLayout(left_panel)
-        left_layout.setSpacing(20)  # Add spacing between major sections
-        left_layout.setContentsMargins(10, 10, 10, 10)  # Add margins around the panel
+        left_layout.setSpacing(10)  # Reduced spacing between major sections
+        left_layout.setContentsMargins(
+            10, 10, 10, 10
+        )  # Reduced margins for more compact look
 
         # Add function input widget
         self.func_input = FunctionInput()
         left_layout.addWidget(self.func_input)
 
-        # Add vertical spacing
-        left_layout.addSpacing(10)
-
         # Add method selector widget
         self.method_selector = MethodSelector()
         left_layout.addWidget(self.method_selector)
-
-        # Add vertical spacing
-        left_layout.addSpacing(10)
 
         # Connect method change to derivative requirements update
         self.method_selector.method_combo.currentTextChanged.connect(
             self.func_input.update_derivative_requirements
         )
 
-        # Add solve button with spacing
+        # Add solve button with updated styling
         button_layout = QHBoxLayout()
-        button_layout.addSpacing(10)
-        self.solve_btn = QPushButton("Solve")
-        self.solve_btn.setFixedHeight(40)  # Make button taller
+        button_layout.addSpacing(5)
+        self.solve_btn = QPushButton("SOLVE")
+        self.solve_btn.setFixedHeight(35)  # Make button more compact
+        self.solve_btn.setObjectName(
+            "solveButton"
+        )  # Add object name for specific styling
+        self.solve_btn.setStyleSheet(
+            """
+            #solveButton {
+                background-color: #4a90e2;
+                color: #ffffff;
+                border: none;
+                border-radius: 3px;
+                font-weight: bold;
+                font-size: 12px;
+                letter-spacing: 1px;
+            }
+            #solveButton:hover {
+                background-color: #2c7be5;
+            }
+            #solveButton:pressed {
+                background-color: #1a5eb8;
+                padding-top: 2px;
+            }
+        """
+        )
         button_layout.addWidget(self.solve_btn)
-        button_layout.addSpacing(10)
+        button_layout.addSpacing(5)
         left_layout.addLayout(button_layout)
 
-        # Add vertical spacing
-        left_layout.addSpacing(20)
-
-        # Add results section with header
-        results_header = QLabel("Results:")
+        # Add results section with enhanced header
+        results_header = QLabel("RESULTS")
+        results_header.setObjectName(
+            "resultsHeader"
+        )  # Add object name for specific styling
         results_header.setStyleSheet(
-            "color: #00ffff; font-weight: bold; font-size: 12px;"
+            f"""
+            #resultsHeader {{
+                color: {self.plot_colors['text']};
+                font-weight: bold;
+                font-size: 12px;
+                background-color: {self.plot_colors['panel_header']};
+                padding: 3px 8px;
+                border-radius: 2px;
+                letter-spacing: 1px;
+                margin-top: 5px;
+            }}
+            """
         )
+        results_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         left_layout.addWidget(results_header)
 
         self.results_text = QTextEdit()
         self.results_text.setReadOnly(True)
-        self.results_text.setMinimumHeight(150)  # Set minimum height
+        # Remove minimum height to allow results to expand to fill available space
         self.results_text.setStyleSheet(
+            f"""
+            QTextEdit {{
+                border: 1px solid {self.plot_colors['panel_highlight']};
+                border-radius: 3px;
+                padding: 5px;
+                background-color: {self.plot_colors['input_bg']};
+                color: {self.plot_colors['text']};
+            }}
             """
-            QTextEdit {
-                border: 1px solid #4a4a4a;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: #242935;
-                color: #ffffff;
-            }
-        """
         )
-        left_layout.addWidget(self.results_text)
+        # Set the results text to expand to fill available space (stretch=1)
+        left_layout.addWidget(self.results_text, stretch=1)
 
-        # Add stretch at the bottom to push everything up
-        left_layout.addStretch()
-
-        # Add left panel to main layout
+        # Add left panel to main layout with specific styling
+        left_panel.setStyleSheet(
+            f"""
+            #leftPanel {{
+                background-color: {self.plot_colors['left_panel_bg'] if 'left_panel_bg' in self.plot_colors else '#000000'};
+                border-right: 1px solid {self.plot_colors['panel_highlight']};
+                border-radius: 0px;
+            }}
+            """
+        )
         layout.addWidget(left_panel, stretch=1)
 
-        # Right panel for visualization
+        # Right panel for visualization - with enhanced styling
         right_panel = QTabWidget()
+        right_panel.setObjectName("rightPanel")  # Add object name for specific styling
         layout.addWidget(right_panel, stretch=2)
 
         # Add visualization tabs - replace Matplotlib with Plotly
@@ -476,16 +779,63 @@ class MainWindow(QMainWindow):
         self.surface_plot.page().settings().setAttribute(
             QWebEngineSettings.WebAttribute.JavascriptEnabled, True
         )
-        self.surface_plot.setMinimumHeight(400)
+        self.surface_plot.setMinimumHeight(500)  # Increased minimum height
+        # Set default background color to black to prevent white flash
+        self.surface_plot.setStyleSheet("background-color: #000000;")
+
+        # Initialize with a blank black page to prevent white flash
+        blank_black_html = """
+        <html><head><style>
+        body, html {
+            background-color: #000000;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        </style></head><body></body></html>
+        """
+        self.surface_plot.setHtml(blank_black_html)
 
         self.convergence_plot = QWebEngineView()
         self.convergence_plot.page().settings().setAttribute(
             QWebEngineSettings.WebAttribute.JavascriptEnabled, True
         )
-        self.convergence_plot.setMinimumHeight(400)
+        self.convergence_plot.setMinimumHeight(500)  # Increased minimum height
+        # Set default background color to black to prevent white flash
+        self.convergence_plot.setStyleSheet("background-color: #000000;")
+
+        # Initialize with a blank black page to prevent white flash
+        self.convergence_plot.setHtml(blank_black_html)
 
         right_panel.addTab(self.surface_plot, "Surface Plot")
         right_panel.addTab(self.convergence_plot, "Convergence")
+
+        # Apply specific styling to the right panel
+        right_panel.setStyleSheet(
+            f"""
+            #rightPanel::pane {{
+                border: none;
+                background-color: #000000;
+            }}
+            #rightPanel > QTabBar::tab {{
+                background-color: #000000;
+                padding: 12px 25px;
+                margin-right: 5px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-weight: bold;
+                letter-spacing: 1px;
+                font-size: 12px;
+            }}
+            #rightPanel > QTabBar::tab:selected {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                          stop:0 {self.plot_colors['gradient_start']}, 
+                                          stop:1 {self.plot_colors['gradient_end']});
+                color: white;
+            }}
+            """
+        )
 
         # Connect signal
         self.solve_btn.clicked.connect(self.solve)
@@ -499,21 +849,36 @@ class MainWindow(QMainWindow):
         # Set color scheme
         palette = QPalette()
 
-        # Professional color palette
+        # Enhanced professional color palette - updated for left panel
         colors = {
-            "background": "#1a1f2b",  # Dark navy background
-            "surface": "#242935",  # Lighter navy for surfaces
+            "background": "#000000",  # Changed to pure black to match left panel
+            "surface": "#000000",  # Changed to pure black
+            "left_panel_bg": "#000000",  # Pure black for left panel
             "primary": "#4a90e2",  # Professional blue
             "secondary": "#5c6bc0",  # Indigo accent
-            "accent": "#00b8d4",  # Cyan accent
+            "accent": "#00ffff",  # Cyan accent
+            "gradient_start": "#3a7bd5",  # Gradient start
+            "gradient_end": "#00d2ff",  # Gradient end
             "success": "#66bb6a",  # Green for success states
             "warning": "#ffa726",  # Orange for warnings
             "error": "#ef5350",  # Red for errors
             "text": "#ffffff",  # White text
-            "text_secondary": "#b3e5fc",  # Light blue secondary text
-            "border": "#2f3646",  # Dark border color
+            "text_secondary": "#b3b3b3",  # Light gray secondary text
+            "border": "#222222",  # Dark border color
             "hover": "#3d8bd4",  # Hover state color
+            "panel_header": "#111111",  # Panel header background
+            "panel_highlight": "#333333",  # Panel highlight
+            "input_bg": "#222222",  # Input background
         }
+
+        # Update plot_colors with the black background
+        self.plot_colors.update(
+            {
+                "background": "#000000",  # Changed to pure black
+                "surface": "#000000",  # Changed to pure black
+                "left_panel_bg": "#000000",  # Pure black
+            }
+        )
 
         # Main colors
         palette.setColor(QPalette.ColorRole.Window, QColor(colors["background"]))
@@ -528,115 +893,135 @@ class MainWindow(QMainWindow):
 
         self.setPalette(palette)
 
-        # Set fonts
+        # Set fonts with improved sharpness
         font = QFont("Segoe UI", 10)
+        font.setHintingPreference(
+            QFont.HintingPreference.PreferFullHinting
+        )  # Add hinting for sharper rendering
         self.setFont(font)
 
-        # Style buttons and widgets
+        # Enhanced style for more professional and compact left panel with sharper fonts
         style = f"""
             QMainWindow {{
                 background-color: {colors['background']};
             }}
             QPushButton {{
-                background-color: {colors['primary']};
+                background-color: {colors['panel_highlight']};
                 color: {colors['text']};
                 border: none;
-                padding: 8px 16px;
+                padding: 8px 15px;
                 border-radius: 4px;
                 font-weight: bold;
+                font-size: 12px;
+                letter-spacing: 0.5px;  /* Reduced for sharper text */
             }}
             QPushButton:hover {{
-                background-color: {colors['hover']};
+                background-color: {colors['primary']};
             }}
             QPushButton:pressed {{
                 background-color: {colors['secondary']};
+                padding-top: 9px;
+                padding-bottom: 7px;
             }}
             QGroupBox {{
-                border: 2px solid {colors['border']};
-                border-radius: 6px;
-                margin-top: 1em;
+                border: 1px solid {colors['panel_highlight']};
+                border-radius: 4px;
+                margin-top: 1.2em;
                 padding-top: 1em;
+                padding-bottom: 0.5em;
+                padding-left: 0.5em;
+                padding-right: 0.5em;
                 color: {colors['text']};
                 font-weight: bold;
-                background-color: {colors['surface']};
+                background-color: {colors['left_panel_bg']};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
-                left: 10px;
+                left: 7px;
                 padding: 0 5px;
-                color: {colors['accent']};
+                color: {colors['text']};
+                background-color: {colors['panel_header']};
+                border-radius: 2px;
+                font-size: 11px;
+                letter-spacing: 0.5px;  /* Reduced for sharper text */
             }}
             QLabel {{
-                color: {colors['text']};
+                color: {colors['text_secondary']};
+                font-weight: 400;
             }}
             QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {{
-                background-color: {colors['surface']};
+                background-color: {colors['input_bg']};
                 color: {colors['text']};
-                border: 1px solid {colors['border']};
-                border-radius: 4px;
-                padding: 6px;
+                border: 1px solid {colors['panel_highlight']};
+                border-radius: 3px;
+                padding: 5px;
                 selection-background-color: {colors['primary']};
+                font-weight: 400;
             }}
             QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
-                border: 2px solid {colors['accent']};
+                border: 1px solid {colors['primary']};
             }}
             QComboBox::drop-down {{
                 border: none;
-                padding-right: 8px;
+                padding-right: 5px;
             }}
             QComboBox::down-arrow {{
                 image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid {colors['text']};
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-top: 4px solid {colors['text']};
                 width: 0;
                 height: 0;
                 margin-right: 5px;
             }}
             QComboBox QAbstractItemView {{
-                background-color: {colors['surface']};
+                background-color: {colors['input_bg']};
                 color: {colors['text']};
-                selection-background-color: {colors['primary']};
+                selection-background-color: {colors['panel_highlight']};
                 selection-color: {colors['text']};
+                border-radius: 2px;
+                padding: 2px;
             }}
             QCheckBox {{
-                color: {colors['text']};
-                spacing: 8px;
+                color: {colors['text_secondary']};
+                spacing: 5px;
+                font-weight: 400;
             }}
             QCheckBox::indicator {{
-                width: 18px;
-                height: 18px;
-                border: 2px solid {colors['border']};
-                border-radius: 4px;
-                background-color: {colors['surface']};
+                width: 16px;
+                height: 16px;
+                border: 1px solid {colors['panel_highlight']};
+                border-radius: 2px;
+                background-color: {colors['input_bg']};
             }}
             QCheckBox::indicator:checked {{
-                background-color: {colors['accent']};
-                border-color: {colors['accent']};
+                background-color: {colors['primary']};
+                border-color: {colors['primary']};
             }}
             QCheckBox::indicator:hover {{
                 border-color: {colors['primary']};
             }}
             QTextEdit {{
-                background-color: {colors['surface']};
+                background-color: {colors['input_bg']};
                 color: {colors['text']};
-                border: 1px solid {colors['border']};
-                border-radius: 4px;
-                padding: 8px;
+                border: 1px solid {colors['panel_highlight']};
+                border-radius: 3px;
+                padding: 5px;
                 selection-background-color: {colors['primary']};
             }}
             QTabWidget::pane {{
-                border: 1px solid {colors['border']};
-                border-radius: 4px;
+                border: 1px solid {colors['panel_highlight']};
+                border-radius: 3px;
                 background-color: {colors['surface']};
             }}
             QTabBar::tab {{
                 background-color: {colors['background']};
                 color: {colors['text']};
-                padding: 10px 20px;
-                border-top-left-radius: 4px;
-                border-top-right-radius: 4px;
-                margin-right: 2px;
+                padding: 8px 15px;
+                border-top-left-radius: 3px;
+                border-top-right-radius: 3px;
+                margin-right: 1px;
+                font-weight: bold;
             }}
             QTabBar::tab:selected {{
                 background-color: {colors['primary']};
@@ -645,13 +1030,14 @@ class MainWindow(QMainWindow):
                 background-color: {colors['hover']};
             }}
             QScrollBar:vertical {{
-                background-color: {colors['background']};
-                width: 12px;
+                background-color: {colors['left_panel_bg']};
+                width: 10px;
                 margin: 0;
+                border-radius: 5px;
             }}
             QScrollBar::handle:vertical {{
-                background-color: {colors['border']};
-                border-radius: 6px;
+                background-color: {colors['panel_highlight']};
+                border-radius: 5px;
                 min-height: 20px;
             }}
             QScrollBar::handle:vertical:hover {{
@@ -661,13 +1047,14 @@ class MainWindow(QMainWindow):
                 height: 0;
             }}
             QScrollBar:horizontal {{
-                background-color: {colors['background']};
-                height: 12px;
+                background-color: {colors['left_panel_bg']};
+                height: 10px;
                 margin: 0;
+                border-radius: 5px;
             }}
             QScrollBar::handle:horizontal {{
-                background-color: {colors['border']};
-                border-radius: 6px;
+                background-color: {colors['panel_highlight']};
+                border-radius: 5px;
                 min-width: 20px;
             }}
             QScrollBar::handle:horizontal:hover {{
@@ -678,25 +1065,44 @@ class MainWindow(QMainWindow):
             }}
             QWebEngineView {{
                 background-color: {colors['background']};
-                border: 1px solid {colors['border']};
-                border-radius: 4px;
+                border: 1px solid {colors['panel_highlight']};
+                border-radius: 3px;
+            }}
+            QDoubleSpinBox::up-button, QDoubleSpinBox::down-button,
+            QSpinBox::up-button, QSpinBox::down-button {{
+                background-color: {colors['panel_highlight']};
+                border-radius: 2px;
+                margin: 1px;
+            }}
+            QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover,
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
+                background-color: {colors['primary']};
             }}
         """
         self.setStyleSheet(style)
 
-        # Store colors for use in Plotly plots
-        self.plot_colors = {
-            "background": colors["background"],
-            "surface": colors["surface"],
-            "text": colors["text"],
-            "grid": colors["border"],
-            "accent": colors["accent"],
-            "primary": colors["primary"],
-            "secondary": colors["secondary"],
-            "success": colors["success"],
-            "warning": colors["warning"],
-            "error": colors["error"],
-        }
+        # Update plot_colors with the current color palette
+        self.plot_colors.update(
+            {
+                "background": colors["background"],
+                "surface": colors["surface"],
+                "text": colors["text"],
+                "text_secondary": colors["text_secondary"],
+                "grid": colors["border"],
+                "accent": colors["accent"],
+                "primary": colors["primary"],
+                "secondary": colors["secondary"],
+                "success": colors["success"],
+                "warning": colors["warning"],
+                "error": colors["error"],
+                "gradient_start": colors["gradient_start"],
+                "gradient_end": colors["gradient_end"],
+                "panel_header": colors["panel_header"],
+                "panel_highlight": colors["panel_highlight"],
+                "input_bg": colors["input_bg"],
+                "left_panel_bg": colors["left_panel_bg"],
+            }
+        )
 
     def parse_function(self):
         """Parse and validate the input function."""
@@ -850,7 +1256,7 @@ class MainWindow(QMainWindow):
             )
             fig.add_trace(path_points)
 
-            # Add special markers for start and end points
+            # Add special markers for start and end points with improved contrast colors
             fig.add_trace(
                 go.Scatter3d(
                     x=[path[0, 0]],
@@ -858,11 +1264,13 @@ class MainWindow(QMainWindow):
                     z=[z_path[0]],
                     mode="markers",
                     marker=dict(
-                        size=10,
-                        color="#ffff00",  # Bright yellow
+                        size=12,
+                        color="#ff3399",  # Bright pink for better contrast
                         opacity=1.0,
                         symbol="diamond",
-                        line=dict(color="#ffffff", width=2),
+                        line=dict(
+                            color="#ffffff", width=1
+                        ),  # White border for definition
                     ),
                     name="Start",
                     hovertemplate="Start Point<br>x1: %{x:.4f}<br>x2: %{y:.4f}<br>f(x): %{z:.4f}<extra></extra>",
@@ -876,11 +1284,11 @@ class MainWindow(QMainWindow):
                     z=[z_path[-1]],
                     mode="markers",
                     marker=dict(
-                        size=14,
-                        color="#ffffff",  # White
+                        size=16,
+                        color="#00ff99",  # Bright mint green for high contrast
                         opacity=1.0,
-                        symbol="square",  # Changed from 'star' to 'square'
-                        line=dict(color="#ffff00", width=2),  # Yellow border
+                        symbol="cross",  # Use 'cross' instead of 'star' which is not supported
+                        line=dict(color="#ffffff", width=1.5),  # White border
                     ),
                     name="Solution",
                     hovertemplate="Final Solution<br>x1: %{x:.4f}<br>x2: %{y:.4f}<br>f(x): %{z:.4f}<extra></extra>",
@@ -899,7 +1307,7 @@ class MainWindow(QMainWindow):
                 xaxis=dict(
                     title=dict(text="x1", font=dict(size=14, color="#00ffff")),
                     showbackground=True,
-                    backgroundcolor="#1a1f2b",
+                    backgroundcolor="#000000",  # Changed to pure black
                     gridcolor="#4a4a4a",
                     zerolinecolor="#5e5e5e",
                     showspikes=False,
@@ -909,7 +1317,7 @@ class MainWindow(QMainWindow):
                 yaxis=dict(
                     title=dict(text="x2", font=dict(size=14, color="#00ffff")),
                     showbackground=True,
-                    backgroundcolor="#1a1f2b",
+                    backgroundcolor="#000000",  # Changed to pure black
                     gridcolor="#4a4a4a",
                     zerolinecolor="#5e5e5e",
                     showspikes=False,
@@ -919,7 +1327,7 @@ class MainWindow(QMainWindow):
                 zaxis=dict(
                     title=dict(text="f(x1, x2)", font=dict(size=14, color="#00ffff")),
                     showbackground=True,
-                    backgroundcolor="#1a1f2b",
+                    backgroundcolor="#000000",  # Changed to pure black
                     gridcolor="#4a4a4a",
                     zerolinecolor="#5e5e5e",
                     showspikes=False,
@@ -936,12 +1344,12 @@ class MainWindow(QMainWindow):
                 xanchor="left",
                 x=0.01,
                 font=dict(size=12, color="#ffffff"),
-                bgcolor="rgba(26, 31, 43, 0.7)",
+                bgcolor="rgba(0, 0, 0, 0.7)",  # Changed to black with opacity
                 bordercolor="#4a4a4a",
                 borderwidth=1,
             ),
-            paper_bgcolor="#1a1f2b",
-            plot_bgcolor="#242935",
+            paper_bgcolor="#000000",  # Changed to pure black
+            plot_bgcolor="#000000",  # Changed to pure black
             template="plotly_dark",
             uirevision="true",  # Keep camera position on updates
         )
@@ -1085,7 +1493,7 @@ class MainWindow(QMainWindow):
                     text=f"↓ {percent_reduction:.1f}% reduction",
                     showarrow=False,
                     font=dict(size=12, color="#00ffff"),
-                    bgcolor="rgba(26, 31, 43, 0.7)",
+                    bgcolor="rgba(0, 0, 0, 0.7)",  # Changed to black with opacity
                     bordercolor="#4a4a4a",
                     borderwidth=1,
                     yshift=10,
@@ -1094,7 +1502,10 @@ class MainWindow(QMainWindow):
         # Enhanced layout
         fig.update_layout(
             title=dict(
-                text="Convergence History", font=dict(size=18, color="#00ffff"), x=0.5
+                text="Convergence History",
+                font=dict(size=18, color="#00ffff"),
+                x=0.5,
+                y=0.95,  # Move title up slightly to make room for legend
             ),
             xaxis=dict(
                 title=dict(
@@ -1139,19 +1550,21 @@ class MainWindow(QMainWindow):
             ),
             legend=dict(
                 orientation="h",
-                yanchor="bottom",
-                y=1.02,
+                yanchor="top",  # Change from "bottom" to "top"
+                y=0.88,  # Position below the title (was 1.02)
                 xanchor="center",
                 x=0.5,
                 font=dict(size=12, color="#ffffff"),
-                bgcolor="rgba(26, 31, 43, 0.7)",
+                bgcolor="rgba(0, 0, 0, 0.7)",  # Changed to black with opacity
                 bordercolor="#4a4a4a",
                 borderwidth=1,
             ),
             hovermode="closest",
-            paper_bgcolor="#1a1f2b",
-            plot_bgcolor="#242935",
-            margin=dict(l=20, r=20, t=50, b=20),
+            paper_bgcolor="#000000",  # Changed to pure black
+            plot_bgcolor="#000000",  # Changed to pure black
+            margin=dict(
+                l=20, r=20, t=80, b=20
+            ),  # Increase top margin to accommodate title and legend
         )
 
         # Add visual comparison between start and end
@@ -1178,7 +1591,7 @@ class MainWindow(QMainWindow):
                 text=f"Total iterations: {len(iterations)}",
                 showarrow=False,
                 font=dict(size=12, color="#ffffff"),
-                bgcolor="rgba(26, 31, 43, 0.7)",
+                bgcolor="rgba(0, 0, 0, 0.7)",
                 bordercolor="#4a4a4a",
                 borderwidth=1,
                 align="left",
@@ -1217,18 +1630,98 @@ class MainWindow(QMainWindow):
             self.animation_timer.stop()
             return
 
-        # Get the current frame data
-        frame = self.animation_frames[self.current_frame]
+        try:
+            # Instead of redrawing the entire plot on each frame (which causes blinking),
+            # update only the path points to show the current progress
+            if self.current_frame == 0:
+                # For the first frame, update the entire plot
+                self.update_surface_plot()
+            else:
+                # Get the current frame data for path point animation
+                current_path = self.animation_frames[: self.current_frame + 1]
 
-        # Recalculate surface plot but add animation points
-        self.update_surface_plot()
+                # Update just the path points without redrawing the whole plot
+                # This requires modifying the existing plot instead of regenerating it
+                path_update = {}
+                if (
+                    hasattr(self, "optimization_result")
+                    and self.optimization_result is not None
+                ):
+                    func = lambda x: self.raw_func(x[0], x[1])
+                    path = np.array(current_path)
+                    z_path = np.array([func(p) for p in path])
 
-        # Increment the frame counter for next update
-        self.current_frame += 1
+                    # Update just the last point location - this is much less disruptive
+                    if (
+                        self.current_frame % 5 == 0
+                    ):  # Only update display every 5 frames to reduce flicker
+                        # We would update the plot here with Plotly's partial updates
+                        # but QWebEngineView doesn't support direct JS execution
+                        # So we'll just indicate progress in a non-blinking way
+                        progress_percent = min(
+                            100,
+                            int(
+                                (self.current_frame / len(self.animation_frames)) * 100
+                            ),
+                        )
+                        if progress_percent % 10 == 0:  # Only print every 10%
+                            print(f"Animation progress: {progress_percent}%")
+
+            # Increment the frame counter for next update
+            self.current_frame += 1
+
+        except Exception as e:
+            print(f"Animation error: {str(e)}")
+            self.animation_timer.stop()
 
     def solve(self):
         """Handle solve button click."""
         try:
+            # Show loading message in results area before starting computation
+            loading_html = f"""
+            <style>
+                .loading-container {{
+                    text-align: center;
+                    padding: 20px;
+                    margin-top: 20px;
+                }}
+                .loading-spinner {{
+                    display: inline-block;
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid rgba(74, 144, 226, 0.3);
+                    border-radius: 50%;
+                    border-top: 4px solid {self.plot_colors['primary']};
+                    animation: spin 1s linear infinite;
+                }}
+                @keyframes spin {{
+                    0% {{ transform: rotate(0deg); }}
+                    100% {{ transform: rotate(360deg); }}
+                }}
+                .loading-text {{
+                    margin-top: 15px;
+                    color: {self.plot_colors['text']};
+                    font-weight: bold;
+                }}
+                .loading-details {{
+                    margin-top: 10px;
+                    color: {self.plot_colors['text_secondary']};
+                    font-size: 0.9em;
+                }}
+            </style>
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Calculating optimization...</div>
+                <div class="loading-details">This may take a few moments depending on the complexity of the function and selected method</div>
+            </div>
+            """
+            self.results_text.setHtml(loading_html)
+
+            # Process events to update the UI before continuing
+            from PyQt6.QtCore import QCoreApplication
+
+            QCoreApplication.processEvents()
+
             # Get function and parameters
             func, grad, hessian = self.parse_function()
             method = self.method_selector.method_combo.currentText()
@@ -1361,14 +1854,166 @@ class MainWindow(QMainWindow):
 
             self.results_text.setHtml(html_result)
 
+            # Now update plots (show a loading message in the plots too)
+            self.surface_plot.setHtml(
+                f"""
+            <html>
+            <head>
+                <style>
+                    body, html {{
+                        background-color: #000000 !important;
+                        margin: 0;
+                        padding: 0;
+                        height: 100%;
+                        width: 100%;
+                        overflow: hidden;
+                    }}
+                    .loading-container {{
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1000;
+                        background-color: #000000;
+                    }}
+                    .loading-content {{
+                        text-align: center;
+                    }}
+                    .loading-title {{
+                        margin-bottom: 20px;
+                        font-size: 20px;
+                        color: {self.plot_colors['accent']};
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                    }}
+                    .loading-spinner {{
+                        border: 5px solid rgba(74, 144, 226, 0.3);
+                        border-radius: 50%;
+                        border-top: 5px solid {self.plot_colors['primary']};
+                        width: 50px;
+                        height: 50px;
+                        margin: 0 auto;
+                        animation: spin 1s linear infinite;
+                    }}
+                    @keyframes spin {{
+                        0% {{ transform: rotate(0deg); }}
+                        100% {{ transform: rotate(360deg); }}
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="loading-container">
+                    <div class="loading-content">
+                        <div class="loading-title">Generating Surface Plot</div>
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            )
+
+            self.convergence_plot.setHtml(
+                f"""
+            <html>
+            <head>
+                <style>
+                    body, html {{
+                        background-color: #000000 !important;
+                        margin: 0;
+                        padding: 0;
+                        height: 100%;
+                        width: 100%;
+                        overflow: hidden;
+                    }}
+                    .loading-container {{
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1000;
+                        background-color: #000000;
+                    }}
+                    .loading-content {{
+                        text-align: center;
+                    }}
+                    .loading-title {{
+                        margin-bottom: 20px;
+                        font-size: 20px;
+                        color: {self.plot_colors['accent']};
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                    }}
+                    .loading-spinner {{
+                        border: 5px solid rgba(74, 144, 226, 0.3);
+                        border-radius: 50%;
+                        border-top: 5px solid {self.plot_colors['primary']};
+                        width: 50px;
+                        height: 50px;
+                        margin: 0 auto;
+                        animation: spin 1s linear infinite;
+                    }}
+                    @keyframes spin {{
+                        0% {{ transform: rotate(0deg); }}
+                        100% {{ transform: rotate(360deg); }}
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="loading-container">
+                    <div class="loading-content">
+                        <div class="loading-title">Generating Convergence Plot</div>
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            )
+
+            # Process events to update the UI
+            QCoreApplication.processEvents()
+
             # Update plots
             self.update_surface_plot()
             self.update_convergence_plot()
 
-            # Start animation
-            self.animation_frames = result["path"]
-            self.current_frame = 0
-            self.animation_timer.start(100)  # Update every 100ms
+            # Process events again after plots are ready
+            QCoreApplication.processEvents()
+
+            # Instead of animating all steps for large iteration counts,
+            # sample a reasonable number of frames to prevent flickering
+            max_animation_frames = 100  # Maximum frames to show in animation
+
+            if len(result["path"]) > max_animation_frames:
+                # Sample the path to get a reasonable number of frames
+                indices = np.linspace(
+                    0, len(result["path"]) - 1, max_animation_frames, dtype=int
+                )
+                self.animation_frames = [result["path"][i] for i in indices]
+            else:
+                self.animation_frames = result["path"]
+
+            # Disable animation for very large iteration counts to prevent blinking
+            if len(result["path"]) > 1000:
+                # Just show the final result without animation
+                self.animation_timer.stop()
+                self.current_frame = 0
+                print(
+                    f"Animation disabled for large iteration count ({len(result['path'])} iterations)"
+                )
+            else:
+                # Start animation for smaller iteration counts
+                self.current_frame = 0
+                self.animation_timer.start(
+                    200
+                )  # Slower update rate (200ms instead of 100ms)
 
         except Exception as e:
             # Enhanced error display

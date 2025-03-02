@@ -94,7 +94,7 @@ def run_optimization(
     hessian: Optional[Callable[[np.ndarray], np.ndarray]] = None,
     x0: Union[float, List[float], np.ndarray] = 0.0,
     tol: float = 1e-6,
-    max_iter: int = 100,
+    max_iter: int = 100000,
     bounds: Optional[List[Tuple[float, float]]] = None,
     step_length_method: str = "backtracking",
     step_length_params: Optional[Dict[str, Any]] = None,
