@@ -1,4 +1,4 @@
-# configs/elimination.yaml
+# algorithms/convex/configs/elimination.yaml
 
 # Configuration for Elimination Method - for both optimization and root-finding
 

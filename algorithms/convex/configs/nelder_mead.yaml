@@ -1,4 +1,4 @@
-# configs/nelder_mead.yaml
+# algorithms/convex/configs/nelder_mead.yaml
 
 # Configuration for Nelder-Mead Method - specifically for optimization (no root-finding mode)
 

@@ -1,4 +1,4 @@
-# configs/secant.yaml
+# algorithms/convex/configs/secant.yaml
 
 # Configuration for Secant Method - primarily for root-finding but can be adapted for optimization
 

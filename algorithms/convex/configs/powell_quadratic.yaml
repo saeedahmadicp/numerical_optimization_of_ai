@@ -1,4 +1,4 @@
-# configs/powell_quadratic.yaml
+# algorithms/convex/configs/powell_quadratic.yaml
 
 # Configuration for Powell's Quadratic Interpolation Method - for one-dimensional optimization
 

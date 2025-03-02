@@ -1,4 +1,4 @@
-# configs/golden_section.yaml
+# algorithms/convex/configs/golden_section.yaml
 
 # Configuration for Golden Section Method - suitable for both optimization and root-finding
 

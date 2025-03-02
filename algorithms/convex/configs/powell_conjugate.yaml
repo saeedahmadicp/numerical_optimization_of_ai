@@ -1,4 +1,4 @@
-# configs/powell_conjugate.yaml
+# algorithms/convex/configs/powell_conjugate.yaml
 
 # Configuration for Powell's Conjugate Direction Method - specifically for multidimensional optimization
 

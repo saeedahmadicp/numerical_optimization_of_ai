@@ -1,4 +1,4 @@
-# configs/newton.yaml
+# algorithms/convex/configs/newton.yaml
 
 # Configuration for Newton's method - handles both root-finding and optimization
 

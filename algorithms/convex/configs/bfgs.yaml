@@ -1,4 +1,4 @@
-# configs/bfgs.yaml
+# algorithms/convex/configs/bfgs.yaml
 
 # Configuration for BFGS Method - handles both root-finding and optimization
 

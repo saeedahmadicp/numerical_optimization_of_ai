@@ -15,7 +15,6 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QDoubleSpinBox,
     QCheckBox,
-    QMessageBox,
     QGroupBox,
     QTextEdit,
 )
@@ -23,13 +22,20 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap, QImage
 import numpy as np
 from sympy import sympify, symbols, diff, lambdify
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
 import traceback
-import matplotlib.pyplot as plt
-from matplotlib import patheffects
 import re
 from io import BytesIO
+
+# Plotly imports for interactive visualizations
+import plotly.graph_objects as go
+from plotly.offline import plot
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebEngineCore import QWebEngineSettings
+
+# Matplotlib imports needed for LaTeX rendering
+from matplotlib.figure import Figure
+from matplotlib import patheffects
+import matplotlib.pyplot as plt
 
 from .optimization import METHOD_MAP, run_optimization
 
@@ -465,11 +471,18 @@ class MainWindow(QMainWindow):
         right_panel = QTabWidget()
         layout.addWidget(right_panel, stretch=2)
 
-        # Add visualization tabs
-        self.surface_plot = FigureCanvasQTAgg(Figure())
-        self.convergence_plot = FigureCanvasQTAgg(Figure())
-        self.surface_ax = self.surface_plot.figure.add_subplot(111, projection="3d")
-        self.convergence_ax = self.convergence_plot.figure.add_subplot(111)
+        # Add visualization tabs - replace Matplotlib with Plotly
+        self.surface_plot = QWebEngineView()
+        self.surface_plot.page().settings().setAttribute(
+            QWebEngineSettings.WebAttribute.JavascriptEnabled, True
+        )
+        self.surface_plot.setMinimumHeight(400)
+
+        self.convergence_plot = QWebEngineView()
+        self.convergence_plot.page().settings().setAttribute(
+            QWebEngineSettings.WebAttribute.JavascriptEnabled, True
+        )
+        self.convergence_plot.setMinimumHeight(400)
 
         right_panel.addTab(self.surface_plot, "Surface Plot")
         right_panel.addTab(self.convergence_plot, "Convergence")
@@ -663,67 +676,27 @@ class MainWindow(QMainWindow):
             QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
                 width: 0;
             }}
+            QWebEngineView {{
+                background-color: {colors['background']};
+                border: 1px solid {colors['border']};
+                border-radius: 4px;
+            }}
         """
         self.setStyleSheet(style)
 
-        # Update matplotlib style for plots
-        self.plot_colors = {  # Store as instance variable
+        # Store colors for use in Plotly plots
+        self.plot_colors = {
             "background": colors["background"],
             "surface": colors["surface"],
             "text": colors["text"],
             "grid": colors["border"],
             "accent": colors["accent"],
+            "primary": colors["primary"],
+            "secondary": colors["secondary"],
+            "success": colors["success"],
+            "warning": colors["warning"],
+            "error": colors["error"],
         }
-
-        # Surface plot styling
-        self.surface_ax.set_facecolor(self.plot_colors["background"])
-        self.surface_ax.grid(
-            True, color=self.plot_colors["grid"], alpha=0.2, linestyle="--"
-        )
-        self.surface_ax.xaxis.label.set_color(self.plot_colors["text"])
-        self.surface_ax.yaxis.label.set_color(self.plot_colors["text"])
-        self.surface_ax.zaxis.label.set_color(self.plot_colors["text"])
-        self.surface_ax.tick_params(colors=self.plot_colors["text"])
-        self.surface_plot.figure.patch.set_facecolor(self.plot_colors["background"])
-
-        # Set 3D plot pane colors
-        self.surface_ax.xaxis.set_pane_color(
-            (
-                *[
-                    int(self.plot_colors["surface"][i : i + 2], 16) / 255
-                    for i in (1, 3, 5)
-                ],
-                0.95,
-            )
-        )
-        self.surface_ax.yaxis.set_pane_color(
-            (
-                *[
-                    int(self.plot_colors["surface"][i : i + 2], 16) / 255
-                    for i in (1, 3, 5)
-                ],
-                0.95,
-            )
-        )
-        self.surface_ax.zaxis.set_pane_color(
-            (
-                *[
-                    int(self.plot_colors["surface"][i : i + 2], 16) / 255
-                    for i in (1, 3, 5)
-                ],
-                0.95,
-            )
-        )
-
-        # Convergence plot styling
-        self.convergence_ax.set_facecolor(self.plot_colors["background"])
-        self.convergence_ax.grid(
-            True, color=self.plot_colors["grid"], alpha=0.2, linestyle="--"
-        )
-        self.convergence_ax.xaxis.label.set_color(self.plot_colors["text"])
-        self.convergence_ax.yaxis.label.set_color(self.plot_colors["text"])
-        self.convergence_ax.tick_params(colors=self.plot_colors["text"])
-        self.convergence_plot.figure.patch.set_facecolor(self.plot_colors["background"])
 
     def parse_function(self):
         """Parse and validate the input function."""
@@ -794,16 +767,7 @@ class MainWindow(QMainWindow):
         return bounds
 
     def update_surface_plot(self, func=None):
-        """Update the surface plot with the current function."""
-        self.surface_ax.clear()
-        self.surface_plot.figure.clear()  # Clear the entire figure to prevent legend duplication
-        self.surface_ax = self.surface_plot.figure.add_subplot(111, projection="3d")
-
-        # Reapply styling after clearing
-        self.surface_ax.set_facecolor(self.plot_colors["background"])
-        self.surface_ax.tick_params(colors=self.plot_colors["text"])
-        self.surface_plot.figure.patch.set_facecolor(self.plot_colors["background"])
-
+        """Update the surface plot with the current function using Plotly."""
         # Use raw function for plotting surface and wrapped function for optimization path
         plot_func = self.raw_func if func is None else func
         opt_func = func if func is not None else (lambda x: self.raw_func(x[0], x[1]))
@@ -812,218 +776,454 @@ class MainWindow(QMainWindow):
         x1_min, x1_max = bounds[0]
         x2_min, x2_max = bounds[1]
 
-        # Reduce mesh resolution for better performance
-        x1 = np.linspace(x1_min, x1_max, 50)  # Reduced from 150 to 50
-        x2 = np.linspace(x2_min, x2_max, 50)
+        # Create mesh for surface
+        resolution = 50  # Reduced from original 150 for better performance
+        x1 = np.linspace(x1_min, x1_max, resolution)
+        x2 = np.linspace(x2_min, x2_max, resolution)
         X1, X2 = np.meshgrid(x1, x2)
         Z = plot_func(X1, X2)
 
-        # Add simplified contour plot with more vibrant colors
-        offset = np.min(Z) - 0.2 * (np.max(Z) - np.min(Z))
-        contours = self.surface_ax.contour(
-            X1,
-            X2,
-            Z,
-            zdir="z",
-            offset=offset,
-            levels=15,
-            cmap="plasma",  # Match surface colormap
-            alpha=0.7,  # Increased visibility
-            linewidths=1.5,  # Slightly thicker lines
+        # Create figure with better sizing
+        fig = go.Figure()
+
+        # Add surface with enhanced styling
+        surface = go.Surface(
+            x=X1,
+            y=X2,
+            z=Z,
+            colorscale="Plasma",
+            opacity=0.9,
+            showscale=True,
+            lighting=dict(
+                ambient=0.6, diffuse=0.8, fresnel=0.2, roughness=0.9, specular=1.0
+            ),
+            colorbar=dict(
+                title=dict(text="Function Value", font=dict(color="#00ffff", size=14)),
+                tickfont=dict(color="#ffffff"),
+                thickness=20,
+                len=0.8,
+                outlinewidth=0,
+            ),
+            contours=dict(
+                x=dict(show=True, width=2, color="#444444"),
+                y=dict(show=True, width=2, color="#444444"),
+                z=dict(show=True, width=2, color="#444444"),
+            ),
+            hoverinfo="x+y+z",
+        )
+        fig.add_trace(surface)
+
+        # Add contour at bottom for better effect
+        contour = go.Contour(
+            x=x1,
+            y=x2,
+            z=Z.min() * np.ones_like(Z),
+            contours=dict(start=Z.min(), end=Z.max(), size=(Z.max() - Z.min()) / 15),
+            colorscale="Plasma",
+            showscale=False,
+            opacity=0.7,
+            line=dict(width=2),
+            hoverinfo="none",
         )
 
-        # Plot surface with optimized parameters
-        surf = self.surface_ax.plot_surface(
-            X1,
-            X2,
-            Z,
-            cmap="plasma",  # Changed from viridis to plasma for more vibrant colors
-            alpha=0.8,
-            linewidth=0,
-            antialiased=True,
-            rcount=30,
-            ccount=30,
-        )
-
-        # Enhanced colorbar
-        cbar = self.surface_plot.figure.colorbar(surf, shrink=0.8, aspect=15, pad=0.1)
-        cbar.ax.tick_params(colors=self.plot_colors["text"], labelsize=10)
-        cbar.set_label(
-            "Function Value", color="#00ffff", fontsize=12, weight="bold"
-        )  # Bright cyan
-
-        # Initialize empty lists for legend handles and labels
-        legend_handles = []
-        legend_labels = []
-
+        # Add path and points if optimization has been run
         if self.optimization_result is not None:
             path = np.array(self.optimization_result["path"])
             z_path = np.array([opt_func(p) for p in path])
 
-            # Plot optimization path with enhanced visibility
-            path_points = self.surface_ax.scatter(
-                path[:, 0],
-                path[:, 1],
-                z_path,
-                color="#ffffff",  # Fixed white color instead of colormap
-                s=60,  # Increased point size
-                alpha=1.0,  # Full opacity
-                zorder=100,  # Ensure points are drawn on top
+            # Add path line with gradient color
+            path_points = go.Scatter3d(
+                x=path[:, 0],
+                y=path[:, 1],
+                z=z_path,
+                mode="lines+markers",
+                line=dict(color="#ffffff", width=5),
+                marker=dict(
+                    size=4,
+                    color=np.arange(len(path)),  # Color points by steps
+                    colorscale="Turbo",
+                    opacity=0.8,
+                    symbol="circle",
+                ),
+                name="Optimization Path",
+                hovertemplate="x1: %{x:.4f}<br>x2: %{y:.4f}<br>f(x): %{z:.4f}<br>Step: %{marker.color}<extra></extra>",
             )
-            legend_handles.append(path_points)
-            legend_labels.append("Optimization path")
+            fig.add_trace(path_points)
 
-            # Add path lines with gradient color
-            for i in range(len(path) - 1):
-                # Calculate color based on progress
-                progress = i / (len(path) - 1)
-                color = plt.cm.magma(progress)
-                self.surface_ax.plot3D(
-                    [path[i, 0], path[i + 1, 0]],
-                    [path[i, 1], path[i + 1, 1]],
-                    [z_path[i], z_path[i + 1]],
-                    color="#ffffff",  # White color for path lines
-                    linewidth=3,  # Thicker lines
-                    alpha=0.9,  # More visible
-                    zorder=99,  # Draw lines below points but above surface
+            # Add special markers for start and end points
+            fig.add_trace(
+                go.Scatter3d(
+                    x=[path[0, 0]],
+                    y=[path[0, 1]],
+                    z=[z_path[0]],
+                    mode="markers",
+                    marker=dict(
+                        size=10,
+                        color="#ffff00",  # Bright yellow
+                        opacity=1.0,
+                        symbol="diamond",
+                        line=dict(color="#ffffff", width=2),
+                    ),
+                    name="Start",
+                    hovertemplate="Start Point<br>x1: %{x:.4f}<br>x2: %{y:.4f}<br>f(x): %{z:.4f}<extra></extra>",
                 )
-
-            # Highlight start and end points with more prominent markers
-            start_point = self.surface_ax.scatter(
-                path[0, 0],
-                path[0, 1],
-                z_path[0],
-                color="#ffff00",  # Bright yellow
-                s=200,  # Larger marker
-                marker="^",
-                linewidth=2,
-                edgecolor="white",
-                zorder=101,  # Ensure start point is on top
-                label="Start",
             )
-            end_point = self.surface_ax.scatter(
-                path[-1, 0],
-                path[-1, 1],
-                z_path[-1],
-                color="#ffffff",  # Bright white
-                s=200,  # Larger marker
-                marker="*",
-                linewidth=2,
-                edgecolor="#ffff00",  # Yellow edge for contrast
-                zorder=101,  # Ensure end point is on top
-                label="End",
-            )
-            legend_handles.extend([start_point, end_point])
-            legend_labels.extend(["Start", "End"])
 
-        # Enhanced axis labels
-        self.surface_ax.set_xlabel(
-            "x1", labelpad=10, color="#00ffff", fontsize=12, weight="bold"
-        )  # Bright cyan
-        self.surface_ax.set_ylabel(
-            "x2", labelpad=10, color="#00ffff", fontsize=12, weight="bold"
-        )  # Bright cyan
-        self.surface_ax.set_zlabel(
-            "f(x1, x2)", labelpad=10, color="#00ffff", fontsize=12, weight="bold"
-        )  # Bright cyan
-
-        # Enhanced tick labels
-        self.surface_ax.tick_params(colors="#00ffff", labelsize=10)  # Bright cyan
-
-        # Enhanced grid
-        self.surface_ax.grid(
-            True, linestyle="--", alpha=0.3, color="#4a4a4a"
-        )  # Brighter grid
-
-        # Enhanced axis panes
-        for axis in [
-            self.surface_ax.xaxis,
-            self.surface_ax.yaxis,
-            self.surface_ax.zaxis,
-        ]:
-            axis.pane.fill = False
-            axis.pane.set_edgecolor("#4a4a4a")  # Brighter pane edges
-            axis.pane.set_alpha(0.3)
-            axis.label.set_color("#00ffff")  # Bright cyan
-
-        # Enhanced legend with better visibility
-        if legend_handles:
-            legend = self.surface_ax.legend(
-                legend_handles,
-                legend_labels,
-                loc="upper center",  # Position at the top center
-                bbox_to_anchor=(0.5, 1.15),  # Move above the plot
-                facecolor=self.plot_colors["surface"],
-                edgecolor="#4a4a4a",  # Brighter edge
-                labelcolor="#ffffff",  # Changed to bright white for better visibility
-                fontsize=12,  # Larger font
-                framealpha=0.8,  # More opaque background
-                borderpad=2,  # More padding
-                handletextpad=2,  # More space between handles and text
-                markerscale=1.5,  # Larger legend markers
-                ncol=3,  # Display items in 3 columns for better horizontal layout
-            )
-            # Add a bright border around legend text
-            for text in legend.get_texts():
-                text.set_path_effects(
-                    [
-                        patheffects.withStroke(
-                            linewidth=3, foreground=self.plot_colors["background"]
-                        )
-                    ]
+            fig.add_trace(
+                go.Scatter3d(
+                    x=[path[-1, 0]],
+                    y=[path[-1, 1]],
+                    z=[z_path[-1]],
+                    mode="markers",
+                    marker=dict(
+                        size=14,
+                        color="#ffffff",  # White
+                        opacity=1.0,
+                        symbol="square",  # Changed from 'star' to 'square'
+                        line=dict(color="#ffff00", width=2),  # Yellow border
+                    ),
+                    name="Solution",
+                    hovertemplate="Final Solution<br>x1: %{x:.4f}<br>x2: %{y:.4f}<br>f(x): %{z:.4f}<extra></extra>",
                 )
+            )
 
-        # Adjust layout to accommodate legend at the top
-        self.surface_plot.figure.subplots_adjust(
-            top=0.85
-        )  # Make room for legend at top
+        # Update layout with enhanced styling
+        fig.update_layout(
+            title=dict(
+                text="Objective Function Surface Plot",
+                font=dict(size=18, color="#00ffff"),
+                x=0.5,
+                y=0.97,
+            ),
+            scene=dict(
+                xaxis=dict(
+                    title=dict(text="x1", font=dict(size=14, color="#00ffff")),
+                    showbackground=True,
+                    backgroundcolor="#1a1f2b",
+                    gridcolor="#4a4a4a",
+                    zerolinecolor="#5e5e5e",
+                    showspikes=False,
+                    ticks="outside",
+                    tickfont=dict(color="#ffffff"),
+                ),
+                yaxis=dict(
+                    title=dict(text="x2", font=dict(size=14, color="#00ffff")),
+                    showbackground=True,
+                    backgroundcolor="#1a1f2b",
+                    gridcolor="#4a4a4a",
+                    zerolinecolor="#5e5e5e",
+                    showspikes=False,
+                    ticks="outside",
+                    tickfont=dict(color="#ffffff"),
+                ),
+                zaxis=dict(
+                    title=dict(text="f(x1, x2)", font=dict(size=14, color="#00ffff")),
+                    showbackground=True,
+                    backgroundcolor="#1a1f2b",
+                    gridcolor="#4a4a4a",
+                    zerolinecolor="#5e5e5e",
+                    showspikes=False,
+                    ticks="outside",
+                    tickfont=dict(color="#ffffff"),
+                ),
+                aspectratio=dict(x=1, y=1, z=0.8),
+                camera=dict(eye=dict(x=1.5, y=-1.5, z=1), up=dict(x=0, y=0, z=1)),
+            ),
+            margin=dict(l=0, r=0, t=40, b=0),
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+                font=dict(size=12, color="#ffffff"),
+                bgcolor="rgba(26, 31, 43, 0.7)",
+                bordercolor="#4a4a4a",
+                borderwidth=1,
+            ),
+            paper_bgcolor="#1a1f2b",
+            plot_bgcolor="#242935",
+            template="plotly_dark",
+            uirevision="true",  # Keep camera position on updates
+        )
 
-        # Enable mouse rotation with instant feedback
-        self.surface_plot.figure.canvas.draw_idle()
-        self.surface_plot.draw()
+        # Add annotations for a more professional look
+        if self.optimization_result is not None:
+            # Use a 3D text instead of annotation since annotations don't support z-axis
+            fig.add_trace(
+                go.Scatter3d(
+                    x=[path[-1, 0]],
+                    y=[path[-1, 1]],
+                    z=[z_path[-1] + (Z.max() - Z.min()) * 0.1],
+                    mode="text",
+                    text=[f"Minimum: {z_path[-1]:.6f}"],
+                    textposition="top center",
+                    textfont=dict(color="#00ffff", size=12),
+                    showlegend=False,
+                    hoverinfo="none",
+                )
+            )
+
+        # Convert to HTML and display in the QWebEngineView
+        html_str = plot(
+            fig, output_type="div", include_plotlyjs="cdn", config={"responsive": True}
+        )
+
+        # Set HTML content in the WebEngineView
+        self.surface_plot.setHtml(html_str)
 
     def update_convergence_plot(self):
-        """Update the convergence plot with optimization history."""
+        """Update the convergence plot with optimization history using Plotly."""
         if self.optimization_result is None:
             return
 
-        self.convergence_ax.clear()
-
-        iterations = range(len(self.optimization_result["function_values"]))
+        iterations = list(range(len(self.optimization_result["function_values"])))
         values = self.optimization_result["function_values"]
 
-        self.convergence_ax.plot(iterations, values, "b-", label="Function value")
-        self.convergence_ax.set_xlabel("Iteration")
-        self.convergence_ax.set_ylabel("Function Value")
-        self.convergence_ax.set_yscale("log")
-        self.convergence_ax.grid(True)
-        self.convergence_ax.legend()
+        # Create a more visually appealing figure
+        fig = go.Figure()
 
-        self.convergence_plot.draw()
+        # Add line chart with gradient color and markers
+        fig.add_trace(
+            go.Scatter(
+                x=iterations,
+                y=values,
+                mode="lines+markers",
+                line=dict(
+                    color="#4a90e2",
+                    width=3,
+                    shape="spline",  # Smooth lines
+                    smoothing=1.3,
+                    dash="solid",
+                ),
+                marker=dict(
+                    size=8,
+                    color=iterations,  # Already converted to list
+                    colorscale="Turbo",
+                    line=dict(color="#ffffff", width=1),
+                    opacity=0.8,
+                ),
+                name="Function Value",
+                hovertemplate="Iteration: %{x}<br>Value: %{y:.6f}<extra></extra>",
+            )
+        )
+
+        # Add markers for key points
+        if len(values) > 0:
+            # Mark starting point
+            fig.add_trace(
+                go.Scatter(
+                    x=[0],
+                    y=[values[0]],
+                    mode="markers",
+                    marker=dict(
+                        symbol="diamond",
+                        size=14,
+                        color="#ffff00",
+                        line=dict(color="#ffffff", width=1),
+                    ),
+                    name="Start",
+                    hovertemplate="Start<br>Value: %{y:.6f}<extra></extra>",
+                )
+            )
+
+            # Mark final point
+            fig.add_trace(
+                go.Scatter(
+                    x=[len(values) - 1],
+                    y=[values[-1]],
+                    mode="markers",
+                    marker=dict(
+                        symbol="diamond",
+                        size=16,
+                        color="#00ffff",
+                        line=dict(color="#ffffff", width=1),
+                    ),
+                    name="Final",
+                    hovertemplate="Final<br>Value: %{y:.6f}<extra></extra>",
+                )
+            )
+
+            # Mark minimum point if different from final
+            min_idx = np.argmin(values)
+            if min_idx != len(values) - 1:
+                fig.add_trace(
+                    go.Scatter(
+                        x=[min_idx],
+                        y=[values[min_idx]],
+                        mode="markers",
+                        marker=dict(
+                            symbol="circle",
+                            size=12,
+                            color="#66bb6a",
+                            line=dict(color="#ffffff", width=1),
+                        ),
+                        name="Minimum",
+                        hovertemplate="Minimum<br>Iteration: %{x}<br>Value: %{y:.6f}<extra></extra>",
+                    )
+                )
+
+        # Add horizontal and vertical indicator lines for final value
+        if len(values) > 1:
+            final_value = values[-1]
+            fig.add_trace(
+                go.Scatter(
+                    x=[0, len(iterations) - 1],
+                    y=[final_value, final_value],
+                    mode="lines",
+                    line=dict(color="#ffffff", width=1, dash="dash"),
+                    name="Final Value",
+                    hoverinfo="none",
+                )
+            )
+
+            # Add trend indicator annotations
+            if values[0] > values[-1]:
+                percent_reduction = (values[0] - values[-1]) / values[0] * 100
+                fig.add_annotation(
+                    x=len(iterations) * 0.5,
+                    y=final_value,
+                    text=f"↓ {percent_reduction:.1f}% reduction",
+                    showarrow=False,
+                    font=dict(size=12, color="#00ffff"),
+                    bgcolor="rgba(26, 31, 43, 0.7)",
+                    bordercolor="#4a4a4a",
+                    borderwidth=1,
+                    yshift=10,
+                )
+
+        # Enhanced layout
+        fig.update_layout(
+            title=dict(
+                text="Convergence History", font=dict(size=18, color="#00ffff"), x=0.5
+            ),
+            xaxis=dict(
+                title=dict(
+                    text="Iteration",
+                    font=dict(size=14, color="#ffffff"),
+                ),
+                showgrid=True,
+                gridcolor="#444444",
+                griddash="dot",
+                zeroline=True,
+                zerolinecolor="#5e5e5e",
+                zerolinewidth=1.5,
+                showline=True,
+                linecolor="#ffffff",
+                tickfont=dict(color="#ffffff"),
+                showspikes=True,
+                spikethickness=1,
+                spikecolor="#ffffff",
+                spikemode="across",
+            ),
+            yaxis=dict(
+                title=dict(
+                    text="Function Value",
+                    font=dict(size=14, color="#ffffff"),
+                ),
+                type=(
+                    "log" if min(values) > 0 else "linear"
+                ),  # Use log scale if all values are positive
+                showgrid=True,
+                gridcolor="#444444",
+                griddash="dot",
+                zeroline=True,
+                zerolinecolor="#5e5e5e",
+                zerolinewidth=1.5,
+                showline=True,
+                linecolor="#ffffff",
+                tickfont=dict(color="#ffffff"),
+                showspikes=True,
+                spikethickness=1,
+                spikecolor="#ffffff",
+                spikemode="across",
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=12, color="#ffffff"),
+                bgcolor="rgba(26, 31, 43, 0.7)",
+                bordercolor="#4a4a4a",
+                borderwidth=1,
+            ),
+            hovermode="closest",
+            paper_bgcolor="#1a1f2b",
+            plot_bgcolor="#242935",
+            margin=dict(l=20, r=20, t=50, b=20),
+        )
+
+        # Add visual comparison between start and end
+        if len(values) > 1:
+            # Add gradient shading to show progress
+            fig.add_trace(
+                go.Scatter(
+                    x=iterations,
+                    y=values,
+                    fill="tozeroy",
+                    fillcolor="rgba(0, 184, 212, 0.1)",
+                    line=dict(color="rgba(0,0,0,0)"),
+                    showlegend=False,
+                    hoverinfo="none",
+                )
+            )
+
+            # Add annotation for total iterations
+            fig.add_annotation(
+                x=0.02,
+                y=0.98,
+                xref="paper",
+                yref="paper",
+                text=f"Total iterations: {len(iterations)}",
+                showarrow=False,
+                font=dict(size=12, color="#ffffff"),
+                bgcolor="rgba(26, 31, 43, 0.7)",
+                bordercolor="#4a4a4a",
+                borderwidth=1,
+                align="left",
+            )
+
+        # Add grid lines
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="rgba(74, 74, 74, 0.3)")
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="rgba(74, 74, 74, 0.3)")
+
+        # Configure interactive features
+        config = {
+            "displayModeBar": True,
+            "responsive": True,
+            "displaylogo": False,
+            "modeBarButtonsToRemove": ["lasso2d", "select2d"],
+            "toImageButtonOptions": {
+                "format": "png",
+                "filename": "convergence_plot",
+                "height": 800,
+                "width": 1200,
+                "scale": 2,
+            },
+        }
+
+        # Convert to HTML and display in the QWebEngineView
+        html_str = plot(fig, output_type="div", include_plotlyjs="cdn", config=config)
+
+        # Set HTML content in the WebEngineView
+        self.convergence_plot.setHtml(html_str)
 
     def update_animation(self):
-        """Update animation frame for optimization visualization."""
+        """Update animation frame for optimization visualization using Plotly."""
         if not self.animation_frames or self.current_frame >= len(
             self.animation_frames
         ):
             self.animation_timer.stop()
             return
 
+        # Get the current frame data
         frame = self.animation_frames[self.current_frame]
-        self.surface_ax.clear()
+
+        # Recalculate surface plot but add animation points
         self.update_surface_plot()
 
-        # Plot current position
-        self.surface_ax.scatter(
-            frame[0],
-            frame[1],
-            self.optimization_result["function_values"][self.current_frame],
-            color="red",
-            s=100,
-            marker="*",
-        )
-
-        self.surface_plot.draw()
+        # Increment the frame counter for next update
         self.current_frame += 1
 
     def solve(self):
@@ -1063,16 +1263,103 @@ class MainWindow(QMainWindow):
             # Store result and update display
             self.optimization_result = result
 
-            # Update results text
+            # Update results text with enhanced formatting and more details
             status = "Success" if result["success"] else "Failed"
-            message = (
-                f"Optimization {status}\n"
-                f"Final value: {result['fun']:.6f}\n"
-                f"Solution: x1={result['x'][0]:.6f}, x2={result['x'][1]:.6f}\n"
-                f"Iterations: {result['nit']}\n"
-                f"Message: {result['message']}"
-            )
-            self.results_text.setText(message)
+            status_color = "#66bb6a" if result["success"] else "#ef5350"  # Green or red
+
+            html_result = f"""
+            <style>
+                table {{ border-collapse: collapse; width: 100%; margin-top: 10px; }}
+                th, td {{ padding: 8px; text-align: left; border-bottom: 1px solid #4a4a4a; }}
+                th {{ background-color: #242935; color: #00ffff; font-weight: bold; }}
+                .status-badge {{ 
+                    display: inline-block; 
+                    padding: 4px 8px; 
+                    border-radius: 4px; 
+                    background-color: {status_color}; 
+                    color: white;
+                    font-weight: bold;
+                }}
+                .highlight {{ color: #00ffff; font-weight: bold; }}
+                .section-header {{ 
+                    margin-top: 15px; 
+                    margin-bottom: 5px; 
+                    color: #4a90e2; 
+                    font-weight: bold; 
+                    border-bottom: 1px solid #4a90e2;
+                    padding-bottom: 3px;
+                }}
+            </style>
+            
+            <div class="section-header">Optimization Result</div>
+            <div><span class="status-badge">{status}</span> after {result['nit']} iterations</div>
+            
+            <div class="section-header">Solution</div>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>x<sub>1</sub></td>
+                    <td class="highlight">{result['x'][0]:.6f}</td>
+                </tr>
+                <tr>
+                    <td>x<sub>2</sub></td>
+                    <td class="highlight">{result['x'][1]:.6f}</td>
+                </tr>
+                <tr>
+                    <td>Function Value</td>
+                    <td class="highlight">{result['fun']:.8f}</td>
+                </tr>
+            </table>
+            
+            <div class="section-header">Method Details</div>
+            <table>
+                <tr>
+                    <td>Method</td>
+                    <td>{method}</td>
+                </tr>
+                <tr>
+                    <td>Iterations</td>
+                    <td>{result['nit']}</td>
+                </tr>
+                <tr>
+                    <td>Tolerance</td>
+                    <td>{tol:.8f}</td>
+                </tr>
+                <tr>
+                    <td>Message</td>
+                    <td>{result['message']}</td>
+                </tr>
+            </table>
+            
+            <div class="section-header">Performance</div>
+            <table>
+                <tr>
+                    <td>Function Evaluations</td>
+                    <td>{result.get('nfev', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td>Gradient Evaluations</td>
+                    <td>{result.get('njev', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td>Initial Value</td>
+                    <td>{result['function_values'][0]:.6f}</td>
+                </tr>
+                <tr>
+                    <td>Final Value</td>
+                    <td>{result['fun']:.6f}</td>
+                </tr>
+                <tr>
+                    <td>Improvement</td>
+                    <td>{((result['function_values'][0] - result['fun']) / result['function_values'][0] * 100):.2f}%</td>
+                </tr>
+            </table>
+            """
+
+            self.results_text.setHtml(html_result)
 
             # Update plots
             self.update_surface_plot()
@@ -1084,7 +1371,43 @@ class MainWindow(QMainWindow):
             self.animation_timer.start(100)  # Update every 100ms
 
         except Exception as e:
-            QMessageBox.warning(self, "Error", str(e))
+            # Enhanced error display
+            error_html = f"""
+            <style>
+                .error-box {{ 
+                    background-color: rgba(239, 83, 80, 0.1); 
+                    padding: 10px; 
+                    border-left: 4px solid #ef5350; 
+                    margin: 10px 0;
+                    border-radius: 4px;
+                }}
+                .error-title {{
+                    color: #ef5350;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }}
+                .error-message {{
+                    color: #ffffff;
+                }}
+                .error-details {{
+                    font-family: monospace;
+                    background-color: #1a1f2b;
+                    padding: 8px;
+                    margin-top: 10px;
+                    border-radius: 4px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    white-space: pre-wrap;
+                }}
+            </style>
+            
+            <div class="error-box">
+                <div class="error-title">Error</div>
+                <div class="error-message">{str(e)}</div>
+                <div class="error-details">{traceback.format_exc()}</div>
+            </div>
+            """
+            self.results_text.setHtml(error_html)
             traceback.print_exc()
 
     def visualize(self):

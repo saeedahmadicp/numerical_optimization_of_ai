@@ -1,4 +1,4 @@
-# configs/quasi_newton.yaml
+# algorithms/convex/configs/quasi_newton.yaml
 
 # Configuration for Quasi-Newton Method - handles both root-finding and optimization
 

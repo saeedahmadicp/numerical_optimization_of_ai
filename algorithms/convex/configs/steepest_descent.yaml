@@ -1,4 +1,4 @@
-# configs/steepest_descent.yaml
+# algorithms/convex/configs/steepest_descent.yaml
 
 # Configuration for Steepest Descent Method - primarily for optimization
 

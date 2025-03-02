@@ -1,4 +1,4 @@
-# configs/regula_falsi.yaml
+# algorithms/convex/configs/regula_falsi.yaml
 
 # Configuration for Regula Falsi Method - specifically for root-finding
 
