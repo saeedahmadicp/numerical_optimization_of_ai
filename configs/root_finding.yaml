@@ -1,27 +1,30 @@
 # configs/root_finding.yaml
 
-# Example configuration for root finding methods
-# This can be used with: python find_roots.py --config configs/root_finding.yaml
+# Configuration for the Himmelblau function - a classic 2D test function
+# The function has 4 known minima at:
+# (3.0, 2.0), (-2.805118, 3.131312), (-3.779310, -3.283186), and (3.584428, -1.848126)
 
-# Function to find roots for
-function: multiple_roots
+# Function to optimize
+function: 2d_himmelblau
 
-# Methods to compare (comment out methods you don't want to use)
+# Methods that handle 2D optimization well
 methods:
-  - newton
-  - newton_hessian
   - bfgs
-  # - secant
-  # - bisection
-  # - regula_falsi
+  # - newton
+  # - newton_hessian
 
-# Initial points
-x0: [0.5]  # Single starting point
-# x1: [1.0]  # Optional second point for methods that need it
+# Initial points - starting near but not at one of the minima
+x0: [2.5, 1.5]
 
-# Algorithm parameters
-tol: 1.0e-6
-max_iter: 100
+# Algorithm parameters - tighter tolerance for precise results
+tol: 1.0e-10
+max_iter: 75
 
-# Visualization range
-xrange: [-3, 2]  # Customize the plot range 
+# Visualization settings
+xrange: [-6, 6]  # Covers the range where all minima exist
+viz_3d: false     # Enable 3D visualization since this is a 2D function
+no_viz: true      
+
+# Step length parameters - using a more sophisticated line search
+step_length_method: wolfe
+step_length_params: {"c1": 1.0e-4, "c2": 0.9, "alpha_init": 1.0} 
