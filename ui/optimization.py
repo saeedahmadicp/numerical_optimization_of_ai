@@ -96,8 +96,11 @@ def run_optimization(
     tol: float = 1e-6,
     max_iter: int = 100000,
     bounds: Optional[List[Tuple[float, float]]] = None,
-    step_length_method: str = "backtracking",
+    step_length_method: Optional[str] = None,
     step_length_params: Optional[Dict[str, Any]] = None,
+    descent_direction_method: Optional[str] = None,
+    descent_direction_params: Optional[Dict[str, Any]] = None,
+    initial_step_size: float = 1.0,
     callback: Optional[Callable[[Dict[str, Any]], None]] = None,
 ) -> Dict[str, Any]:
     """
@@ -117,6 +120,9 @@ def run_optimization(
         bounds: List of (min, max) bounds for each dimension
         step_length_method: Method for determining step size
         step_length_params: Parameters for the step length method
+        descent_direction_method: Method for determining descent direction
+        descent_direction_params: Parameters for the descent direction method
+        initial_step_size: Initial step size for line search methods
         callback: Optional callback function called after each iteration
 
     Returns:
@@ -162,9 +168,28 @@ def run_optimization(
     x_range = bounds[0] if bounds else (-10, 10)
     y_range = bounds[1] if len(bounds) > 1 else (-10, 10)
 
-    # Set up step length parameters
+    # Set up parameters for optimization methods
     if step_length_params is None:
         step_length_params = {}
+
+    if descent_direction_params is None:
+        descent_direction_params = {}
+
+    # Set default step length method if not provided
+    if method_class == NewtonMethod and step_length_method is None:
+        step_length_method = "backtracking"
+    elif method_class == BFGSMethod and step_length_method is None:
+        step_length_method = "wolfe"
+    elif method_class == SteepestDescentMethod and step_length_method is None:
+        step_length_method = "backtracking"
+
+    # Set default descent direction method if not provided
+    if method_class == NewtonMethod and descent_direction_method is None:
+        descent_direction_method = "newton"
+    elif method_class == BFGSMethod and descent_direction_method is None:
+        descent_direction_method = "bfgs"
+    elif method_class == SteepestDescentMethod and descent_direction_method is None:
+        descent_direction_method = "steepest_descent"
 
     # Create configuration
     config = NumericalMethodConfig(
@@ -178,6 +203,9 @@ def run_optimization(
         is_2d=len(bounds) > 1,
         step_length_method=step_length_method,
         step_length_params=step_length_params,
+        descent_direction_method=descent_direction_method,
+        descent_direction_params=descent_direction_params,
+        initial_step_size=initial_step_size,
     )
 
     # Initialize method
