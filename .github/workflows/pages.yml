@@ -1,12 +1,13 @@
 # Deploys the static web portal (web/dist) to GitHub Pages.
 #
-# Optional. To use it: Settings → Pages → Source: "GitHub Actions". Then run it by hand
-# (Actions → Pages → Run workflow), or add `push: branches: [main]` under `on:` to deploy on
-# every push to main. The build uses a relative base and a hash router, so it works from the
-# https://<user>.github.io/<repo>/ sub-path without changes.
+# Setup (once): Settings → Pages → Source: "GitHub Actions". After that, every push to main
+# deploys, and Actions → Pages → Run workflow deploys by hand. The build uses a relative base
+# and a hash router, so it works from the https://<user>.github.io/<repo>/ sub-path.
 name: Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,6 +36,9 @@ jobs:
       # The build reads only committed files: web/src/generated/{registry,problems}.json and
       # research/. It does not need Python.
       - run: npm run build
+        env:
+          # Absolute og:image / twitter:image URLs for link previews (see web/vite/catalog.ts).
+          SITE_URL: https://saeedahmadicp.github.io/numerical_optimization_of_ai/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
