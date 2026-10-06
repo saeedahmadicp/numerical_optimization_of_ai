@@ -1,0 +1,41 @@
+.card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.copy {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+}
+.pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--color-text);
+  border-radius: inherit;
+}
+.line {
+  display: block;
+  white-space: pre;
+}
+.prompt {
+  color: var(--color-text-3);
+  user-select: none;
+}
+.kw {
+  color: var(--color-text-2);
+}
+.fn {
+  color: var(--color-accent);
+}
+.str {
+  color: var(--color-text-2);
+}
+.out {
+  color: var(--color-text-2);
+}

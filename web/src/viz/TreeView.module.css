@@ -1,0 +1,103 @@
+.scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-3);
+  background: var(--chart-surface);
+}
+.canvas {
+  position: relative;
+  margin: 0 auto;
+}
+.edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.edge {
+  fill: none;
+  stroke: var(--chart-axis);
+  stroke-width: 1.25;
+}
+.edge[data-status='pruned'],
+.edge[data-status='infeasible'] {
+  stroke-dasharray: 3 3;
+}
+.edgeLabel {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0 4px;
+  border-radius: var(--radius-xs);
+  background: var(--chart-surface);
+  font-size: var(--text-2xs);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  text-align: left;
+  font: inherit;
+  line-height: 1.25;
+  overflow: hidden;
+}
+button.node {
+  cursor: pointer;
+}
+button.node:hover {
+  background: color-mix(in srgb, var(--color-surface-raised) 80%, var(--color-hover));
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--color-text-3);
+  white-space: nowrap;
+}
+.detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status {
+  flex: none;
+}
+.node[data-status='open'] {
+  border-style: dashed;
+}
+.node[data-status='pruned'],
+.node[data-status='infeasible'] {
+  background: var(--color-sunken);
+  color: var(--color-text-3);
+}
+.node[data-status='pruned'] .label {
+  text-decoration: line-through;
+}
+.node[data-status='incumbent'],
+.node[data-status='optimal'] {
+  border: 3px double var(--color-text);
+}
+.node[data-current] {
+  box-shadow:
+    0 0 0 2px var(--chart-surface),
+    0 0 0 4px var(--color-accent);
+}

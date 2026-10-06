@@ -1,0 +1,362 @@
+/* Combinatorial lab. Tokens only; layout one-offs are commented. */
+
+/* ── Rail ──────────────────────────────────────────────────────────────── */
+.formulaBox {
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 16.5px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.desc,
+.hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  line-height: var(--leading-snug);
+}
+.hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.hint svg {
+  flex: none;
+  margin-top: 1px;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+/* ── Stage header ──────────────────────────────────────────────────────── */
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+/* ── TSP panels ────────────────────────────────────────────────────────── */
+.tspGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  background: var(--chart-surface);
+}
+.tspGrid:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.panel {
+  container-type: inline-size;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--chart-surface);
+  /* Hairlines between panels (an empty grid cell stays surface-colored). */
+  box-shadow: 0.5px 0.5px 0 0.5px var(--color-border);
+}
+.panelHead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 8px 12px 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.panelName {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.nameShort {
+  display: none;
+}
+.panelNums {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+}
+/* Narrow panels: the name on the first line, the numbers on a second line, smaller (never cut;
+   the full text is in the table and card). */
+@container (max-width: 300px) {
+  .panelHead {
+    flex-wrap: wrap;
+    row-gap: 1px;
+    padding: 6px 8px 0;
+  }
+  .panelName {
+    flex: 1 1 0;
+    min-width: 2em;
+  }
+  /* Phones: the name without its parenthetical, so it is never cut ("Ant System"). */
+  .nameFull {
+    display: none;
+  }
+  .nameShort {
+    display: inline;
+  }
+  .panelNums {
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    gap: 10px;
+    margin-left: 0;
+    font-size: var(--text-2xs);
+    white-space: nowrap;
+  }
+  .panelNums > :first-child {
+    display: none;
+  }
+}
+/* A readout number in a box as wide as its widest value over the run (set inline, in ch). */
+.numBox {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.numBox[data-align='right'] {
+  text-align: right;
+}
+.subBest[data-hidden] {
+  visibility: hidden;
+}
+.panelNums i {
+  font-family: KaTeX_Math, serif;
+  font-size: 13px;
+}
+.panelCanvas {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  touch-action: pan-y;
+  display: block;
+}
+.panelCanvas[data-hover] {
+  cursor: grab;
+}
+.panelCanvas[data-dragging] {
+  cursor: grabbing;
+  touch-action: none;
+}
+.panelError {
+  margin: auto;
+  max-width: 28em;
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  text-align: center;
+}
+
+/* ── Knapsack ──────────────────────────────────────────────────────────── */
+.knapsackStage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  background: var(--chart-surface);
+}
+.knapsackStage[data-view='both'][data-detail] {
+  /* Items on top, the method detail (table or tree) below. */
+  grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.05fr);
+}
+.itemsBox,
+.detailBox {
+  position: relative;
+  min-height: 0;
+}
+.detailBox {
+  border-top: 1px solid var(--color-border);
+}
+.itemsCanvas,
+.dpCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+.itemsCanvas:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.hoverNote {
+  position: absolute;
+  right: 12px;
+  top: 34px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 92%, transparent);
+  box-shadow: 0 0 0 1px var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-2);
+  pointer-events: none;
+}
+.dpBox {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dpBox .dpCanvas {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.dpNote {
+  flex: none;
+  min-height: 34px;
+  padding: 4px 12px 8px;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--color-text-2);
+}
+
+.tree {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.treeScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.treeScroll svg {
+  display: block;
+}
+.treeRule {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+.treeRowLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  fill: var(--color-text-3);
+}
+.treeEdge {
+  stroke: var(--chart-axis);
+  stroke-width: 1.3;
+}
+.treeEdge[data-zero] {
+  stroke-dasharray: 3 3;
+}
+.treeEdge[data-pruned] {
+  opacity: 0.6;
+}
+.treePruned {
+  fill: var(--chart-surface);
+  stroke: var(--color-text-3);
+  stroke-width: 1.3;
+}
+.treePrunedBar {
+  stroke: var(--color-text-3);
+  stroke-width: 1.5;
+}
+.treeLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  fill: var(--color-text-2);
+  paint-order: stroke;
+  stroke: var(--chart-halo);
+  stroke-width: 3px;
+}
+.treeLabelBg {
+  fill: var(--chart-surface);
+  opacity: 0.92;
+}
+.treeLabel[data-strong] {
+  fill: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+.treeNode {
+  outline: none;
+}
+.treeFocus {
+  fill: none;
+  stroke: var(--color-focus);
+  stroke-width: 2;
+}
+.treeLegend {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 6px 12px 8px;
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-2);
+}
+.treeLegend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.treeLegendNote {
+  color: var(--color-text-3);
+}
+.treeInfo {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+/* ── Insights ──────────────────────────────────────────────────────────── */
+.chartBox {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px 6px 8px;
+}
+/* The reference and its provenance: wraps rather than being cut (it is fixed per instance, so
+   the chart height does not change during playback). */
+.chartCaption {
+  flex: none;
+  padding: 0 0 2px 6px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.chartArea {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.chartArea > * {
+  position: absolute;
+  inset: 0;
+}
+.tableBox {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Stage error (error boundary) ──────────────────────────────────────── */
+.stageError {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--chart-surface);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  text-align: center;
+}

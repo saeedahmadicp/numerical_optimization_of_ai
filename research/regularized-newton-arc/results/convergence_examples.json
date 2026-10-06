@@ -1,0 +1,404 @@
+{
+ "lse": {
+  "x0": [
+   -10.5,
+   7.5
+  ],
+  "ARC": {
+   "n_hev": 17,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 3.1132242254768926e-12
+  },
+  "RegN-AdaN": {
+   "n_hev": 12,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 3.771224722359558e-09
+  },
+  "RegN-SU": {
+   "n_hev": 11,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.6081207276819314e-09
+  },
+  "RegN-fixed": {
+   "n_hev": 19,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 2.1739072097694809e-10
+  },
+  "trust_region_exact": {
+   "n_hev": 11,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 3.53940517124653e-14
+  },
+  "trust_region_steihaug": {
+   "n_hev": 11,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 8.270019907302458e-10
+  },
+  "damped_newton": {
+   "n_hev": 11,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 9.320183853295116e-13
+  },
+  "modified_newton": {
+   "n_hev": 11,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 5.742922089525684e-13
+  },
+  "pure_newton": {
+   "n_hev": 2,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 1.019803902718557
+  }
+ },
+ "sqrt1p": {
+  "x0": [
+   -10.5,
+   7.5
+  ],
+  "ARC": {
+   "n_hev": 17,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 2.8533616664371445e-09
+  },
+  "RegN-AdaN": {
+   "n_hev": 12,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 4.845103998899336e-10
+  },
+  "RegN-SU": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.940802957125372e-15
+  },
+  "RegN-fixed": {
+   "n_hev": 15,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.7407328116890287e-09
+  },
+  "trust_region_exact": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 7.265004149045452e-10
+  },
+  "trust_region_steihaug": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 7.265004153834819e-10
+  },
+  "damped_newton": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 7.33962434154183e-19
+  },
+  "modified_newton": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 7.337901255827119e-19
+  },
+  "pure_newton": {
+   "n_hev": 3,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 1.0
+  }
+ },
+ "logistic_ridge": {
+  "x0": [
+   -10.5,
+   7.5
+  ],
+  "ARC": {
+   "n_hev": 25,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 6.196089101224367e-09
+  },
+  "RegN-AdaN": {
+   "n_hev": 17,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 2.215269620987754e-09
+  },
+  "RegN-SU": {
+   "n_hev": 12,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 3.0167240386090216e-10
+  },
+  "RegN-fixed": {
+   "n_hev": 34,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.2024313852483378e-09
+  },
+  "trust_region_exact": {
+   "n_hev": 11,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 2.2625594159213863e-12
+  },
+  "trust_region_steihaug": {
+   "n_hev": 10,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.7666042862844127e-12
+  },
+  "damped_newton": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.3267815767954802e-10
+  },
+  "modified_newton": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.3267816970749592e-10
+  },
+  "pure_newton": {
+   "n_hev": 501,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 0.9586774744407005
+  }
+ },
+ "logistic_sep": {
+  "x0": [
+   -10.5,
+   7.5
+  ],
+  "ARC": {
+   "n_hev": 97,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.0178860946021315e-08
+  },
+  "RegN-AdaN": {
+   "n_hev": 35,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.0874767089513108e-08
+  },
+  "RegN-SU": {
+   "n_hev": 25,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 9.617649397972044e-09
+  },
+  "RegN-fixed": {
+   "n_hev": 501,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 2.9228477331556218e-05
+  },
+  "trust_region_exact": {
+   "n_hev": 21,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 8.795360073894207e-09
+  },
+  "trust_region_steihaug": {
+   "n_hev": 21,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 5.489373379520805e-09
+  },
+  "damped_newton": {
+   "n_hev": 21,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 5.543557652335963e-09
+  },
+  "modified_newton": {
+   "n_hev": 21,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 5.543557652335963e-09
+  },
+  "pure_newton": {
+   "n_hev": 2,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 0.48621625846941813
+  }
+ },
+ "himmelblau": {
+  "x0": [
+   -1.25,
+   0.0
+  ],
+  "ARC": {
+   "n_hev": 7,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 9.940787125875175e-11
+  },
+  "RegN-AdaN": {
+   "n_hev": 9,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 2.5469453115568827e-12
+  },
+  "RegN-SU": {
+   "n_hev": 7,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 4.114075269545432e-13
+  },
+  "trust_region_exact": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.4820696709730836e-13
+  },
+  "trust_region_steihaug": {
+   "n_hev": 10,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.1382160920850535e-10
+  },
+  "damped_newton": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 4.963938091742977e-11
+  },
+  "modified_newton": {
+   "n_hev": 8,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 9.297032022104971e-10
+  },
+  "pure_newton": {
+   "n_hev": 6,
+   "converged": false,
+   "outcome": "saddle",
+   "final_grad_norm": 7.197896111970882e-12
+  }
+ },
+ "six_hump_camel": {
+  "x0": [
+   0.0,
+   -0.6
+  ],
+  "ARC": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.1102230246251565e-16
+  },
+  "RegN-AdaN": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 8.813522455628091e-13
+  },
+  "RegN-SU": {
+   "n_hev": 5,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 3.2304971166679997e-11
+  },
+  "trust_region_exact": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.790097847822056e-08
+  },
+  "trust_region_steihaug": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.3581225307859971e-08
+  },
+  "damped_newton": {
+   "n_hev": 5,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 1.790097847822056e-08
+  },
+  "modified_newton": {
+   "n_hev": 5,
+   "converged": false,
+   "outcome": "fail",
+   "final_grad_norm": 1.790097847822056e-08
+  },
+  "pure_newton": {
+   "n_hev": 6,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 1.790097847822056e-08
+  }
+ },
+ "quartic_saddle": {
+  "x0": [
+   3.0,
+   0.0
+  ],
+  "ARC": {
+   "n_hev": 7,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 6.872410912448075e-15
+  },
+  "RegN-AdaN": {
+   "n_hev": 9,
+   "converged": false,
+   "outcome": "saddle",
+   "final_grad_norm": 3.1567012815860783e-13
+  },
+  "RegN-SU": {
+   "n_hev": 6,
+   "converged": false,
+   "outcome": "saddle",
+   "final_grad_norm": 4.420890845242831e-12
+  },
+  "trust_region_exact": {
+   "n_hev": 7,
+   "converged": true,
+   "outcome": "min",
+   "final_grad_norm": 2.3137238791548498e-09
+  },
+  "trust_region_steihaug": {
+   "n_hev": 3,
+   "converged": true,
+   "outcome": "saddle",
+   "final_grad_norm": 4.0
+  },
+  "damped_newton": {
+   "n_hev": 2,
+   "converged": false,
+   "outcome": "saddle",
+   "final_grad_norm": 6.0
+  },
+  "modified_newton": {
+   "n_hev": 31,
+   "converged": false,
+   "outcome": "saddle",
+   "final_grad_norm": 5.62998668967001e-09
+  },
+  "pure_newton": {
+   "n_hev": 2,
+   "converged": false,
+   "outcome": "saddle",
+   "final_grad_norm": 6.0
+  }
+ }
+}

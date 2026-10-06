@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="numopt">
+<title>numopt</title>
+<mask id="cut-mono-white-64" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><polyline points="9.300,12.893 18.352,12.893 18.352,22.251 25.037,22.251 25.037,27.026 28.447,27.026 28.447,29.462 30.187,29.462" fill="none" stroke="#000" stroke-width="5.200" stroke-linejoin="miter"/><circle cx="5.250" cy="12.893" r="6.400" fill="#000"/><circle cx="32.000" cy="32.000" r="5.800" fill="#000"/></mask>
+<g mask="url(#cut-mono-white-64)"><ellipse cx="32.000" cy="32.000" rx="35.024" ry="14.298" transform="rotate(45.00 32.000 32.000)" fill="none" stroke="#ffffff" stroke-width="1.147"/><ellipse cx="32.000" cy="32.000" rx="25.017" ry="10.213" transform="rotate(45.00 32.000 32.000)" fill="none" stroke="#ffffff" stroke-width="1.147"/><ellipse cx="32.000" cy="32.000" rx="17.869" ry="7.295" transform="rotate(45.00 32.000 32.000)" fill="none" stroke="#ffffff" stroke-width="1.147"/></g>
+<polyline points="9.300,12.893 18.352,12.893 18.352,22.251 25.037,22.251 25.037,27.026 28.447,27.026 28.447,29.462 30.187,29.462" fill="none" stroke="#ffffff" stroke-width="2.600" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"/>
+<circle cx="5.250" cy="12.893" r="3.300" fill="none" stroke="#ffffff" stroke-width="1.900"/>
+<circle cx="32.000" cy="32.000" r="4.200" fill="#ffffff"/>
+</svg>

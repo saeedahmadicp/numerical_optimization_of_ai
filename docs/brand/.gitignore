@@ -1,0 +1,4 @@
+# Raster fallbacks of the README hero (PNG, play-once WebP): rebuilt by scripts/build.sh,
+# kept out of git history. Publish them with a release or GitHub Pages if a host needs them.
+build/
+scripts/__pycache__/

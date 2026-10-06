@@ -1,0 +1,181 @@
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.chartActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 10px 12px 6px 8px;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+}
+
+/* ── Stage: the plot, and the key as a caption strip under it (never over the domain) ───── */
+.stageFill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.legend {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  padding: 6px 12px 7px;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.lineSample {
+  flex: none;
+  color: var(--color-text);
+}
+.legendText {
+  color: var(--color-text-2);
+}
+.legendTitle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+/* The basin computation state ("computing…", "refining · 64 × 64", "128 × 128 starts") keeps
+   one width while it updates. */
+.legendState {
+  display: inline-block;
+  min-width: 17ch;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+}
+.chipSwatch {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+.chipNone {
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 2px,
+    var(--color-border-strong) 2px 3px
+  );
+}
+.legendNote {
+  color: var(--color-text-2);
+}
+
+/* Narrow stages: the model key is in the step panel; the strip keeps the curves and roots. */
+@container stage (max-width: 560px) {
+  .legend {
+    gap: 2px 12px;
+    padding: 5px 10px 6px;
+  }
+  .modelKey,
+  .legendNote {
+    display: none !important;
+  }
+}
+
+/* ── Step panel ───────────────────────────────────────────────────────────────────── */
+.stepPanel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 14px 10px;
+  overflow: auto;
+}
+.stepHead {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+.stepK {
+  font-weight: 400;
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+.stepFormula {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 2px 0;
+  overflow: hidden;
+}
+.stepFormula :global(.katex-display) {
+  margin: 0;
+  text-align: left;
+}
+.stepHead,
+.stepCaptionBox {
+  flex: none;
+}
+/* The caption and, invisibly in the same cell, the run's longest captions: the panel keeps one
+   height while the playback steps (no layout shift). */
+.stepCaptionBox {
+  display: grid;
+}
+.stepCaptionBox > * {
+  grid-area: 1 / 1;
+}
+.stepCaptionBox > [data-sizer] {
+  visibility: hidden;
+}
+.stepCaption {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.stepEmpty {
+  margin: auto 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+.crossSample {
+  display: inline-block;
+  width: 26px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--color-text);
+}

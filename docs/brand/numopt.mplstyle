@@ -1,0 +1,65 @@
+# numopt figure style for matplotlib (brand.md, "Charts and figures").
+#   import matplotlib.pyplot as plt
+#   plt.style.use("docs/brand/numopt.mplstyle")
+# Light theme. Method colors follow the four validated slots: blue, orange, aqua, plum. A figure
+# shows at most four methods (the same limit as the web lab); split a larger comparison into panels.
+# Math uses Computer Modern (matches KaTeX in the web app and LaTeX in papers).
+
+figure.facecolor      : fcfcfb
+figure.dpi            : 110
+savefig.dpi           : 220
+savefig.facecolor     : fcfcfb
+savefig.bbox          : tight
+savefig.pad_inches    : 0.08
+
+font.family           : sans-serif
+font.sans-serif       : Inter, Inter Variable, Helvetica Neue, Arial, DejaVu Sans
+font.size             : 10.5
+mathtext.fontset      : cm
+axes.unicode_minus    : True
+axes.formatter.use_mathtext : True
+
+axes.facecolor        : fcfcfb
+axes.edgecolor        : c6c6c3
+axes.linewidth        : 0.8
+axes.grid             : True
+axes.grid.which       : major
+axes.axisbelow        : True
+axes.spines.top       : False
+axes.spines.right     : False
+axes.labelcolor       : 52514e
+axes.labelsize        : 10.5
+axes.titlesize        : 11.5
+axes.titleweight      : 600
+axes.titlelocation    : left
+axes.titlepad         : 10
+axes.prop_cycle       : cycler('color', ['2a78d6', 'eb6834', '1baf7a', '882892'])
+
+grid.color            : ececea
+grid.linewidth        : 0.7
+
+xtick.color           : 6b6963
+ytick.color           : 6b6963
+xtick.labelcolor      : 6b6963
+ytick.labelcolor      : 6b6963
+xtick.direction       : out
+ytick.direction       : out
+xtick.major.size      : 3
+ytick.major.size      : 3
+xtick.major.width     : 0.8
+ytick.major.width     : 0.8
+xtick.minor.visible   : False
+ytick.minor.visible   : False
+
+lines.linewidth       : 1.8
+lines.markersize      : 4.5
+lines.solid_capstyle  : round
+lines.solid_joinstyle : round
+
+legend.frameon        : False
+legend.fontsize       : 9.5
+legend.handlelength   : 1.6
+legend.labelcolor     : 141413
+
+image.cmap            : cividis
+contour.linewidth     : 0.6

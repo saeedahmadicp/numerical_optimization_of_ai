@@ -1,0 +1,51 @@
+{
+ "labels": [
+  "AA(1)-GD",
+  "AA(3)-GD",
+  "AA(5)-GD",
+  "AA(10)-GD",
+  "L-BFGS(1)",
+  "L-BFGS(3)",
+  "L-BFGS(5)",
+  "L-BFGS(10)",
+  "Nesterov",
+  "GD fixed \u03b1"
+ ],
+ "performance_rho_at_1": {
+  "AA(1)-GD": 0.0,
+  "AA(3)-GD": 0.0,
+  "AA(5)-GD": 0.0,
+  "AA(10)-GD": 0.5,
+  "L-BFGS(1)": 0.0,
+  "L-BFGS(3)": 0.0,
+  "L-BFGS(5)": 0.05,
+  "L-BFGS(10)": 0.5,
+  "Nesterov": 0.0,
+  "GD fixed \u03b1": 0.0
+ },
+ "performance_rho_at_2": {
+  "AA(1)-GD": 0.0,
+  "AA(3)-GD": 0.0,
+  "AA(5)-GD": 0.15,
+  "AA(10)-GD": 0.5,
+  "L-BFGS(1)": 0.6,
+  "L-BFGS(3)": 1.0,
+  "L-BFGS(5)": 1.0,
+  "L-BFGS(10)": 1.0,
+  "Nesterov": 0.0,
+  "GD fixed \u03b1": 0.0
+ },
+ "solved_fraction": {
+  "AA(1)-GD": 0.6,
+  "AA(3)-GD": 0.8,
+  "AA(5)-GD": 0.8,
+  "AA(10)-GD": 0.55,
+  "L-BFGS(1)": 1.0,
+  "L-BFGS(3)": 1.0,
+  "L-BFGS(5)": 1.0,
+  "L-BFGS(10)": 1.0,
+  "Nesterov": 0.5,
+  "GD fixed \u03b1": 0.5
+ },
+ "criterion": "first \u2016\u2207f\u2016\u2082 \u2264 1e-6 at a point with a positive definite Hessian"
+}

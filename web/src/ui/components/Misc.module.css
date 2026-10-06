@@ -1,0 +1,95 @@
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  background: var(--color-sunken);
+  color: var(--color-text-2);
+  box-shadow: var(--ring-inset);
+}
+.badge.good {
+  background: var(--color-good-soft);
+  color: var(--color-good);
+  box-shadow: none;
+}
+.badge.warn {
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+  box-shadow: none;
+}
+.badge.bad {
+  background: var(--color-bad-soft);
+  color: var(--color-bad);
+  box-shadow: none;
+}
+.badge.accent {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  box-shadow: none;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 44px;
+}
+.panelTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  letter-spacing: -0.005em;
+}
+.panelBody {
+  padding: var(--space-4);
+}
+.flush {
+  padding: 0;
+}
+
+.sectionLabel {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-3);
+}

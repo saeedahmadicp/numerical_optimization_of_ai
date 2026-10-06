@@ -1,0 +1,26 @@
+{
+ "gtol": 1e-08,
+ "max_iter": 500,
+ "eig_tol": 1e-08,
+ "convex_starts": "8x8 grid on [-10.5, 10.5]^2",
+ "nonconvex_starts": "9x9 grid on the plotting domain minus stationary starts",
+ "method_params": {
+  "ARC": "sigma0=1, eta1=0.1, eta2=0.9, gamma=2 (CGT 2011 \u00a77)",
+  "RegN-AdaN": "H0=1",
+  "RegN-SU": "H0=1, alpha=1",
+  "RegN-fixed": "H = L2_hat/2 (per problem)",
+  "baselines": "numopt defaults except gtol=1e-8, max_iter=500"
+ },
+ "sensitivity_grid": [
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0
+ ],
+ "runtime_s": 67.8
+}

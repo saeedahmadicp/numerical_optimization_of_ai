@@ -1,0 +1,94 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 18px;
+}
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  min-width: 0;
+}
+.tex {
+  color: var(--color-text);
+  font-size: 13px;
+}
+.label {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+/* A 13-px icon with a 25 × 25 hit area (::after), so the tap target meets 24 × 24 without
+   changing the row's layout. Tap or click opens the help (a toggletip). */
+.help {
+  position: relative;
+  display: inline-flex;
+  color: var(--color-text-3);
+  cursor: help;
+  border: 0;
+  background: none;
+  padding: 0;
+  border-radius: 50%;
+}
+.help::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+.help:hover,
+.help[aria-expanded='true'] {
+  color: var(--color-text);
+}
+.control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.num {
+  width: 84px;
+  flex: none;
+}
+.inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.reset {
+  position: relative;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  border-radius: var(--radius-xs);
+}
+/* ≥ 24-px target without changing the head's height. */
+.reset::after {
+  content: '';
+  position: absolute;
+  inset: -4px -6px;
+}
+.reset:hover {
+  color: var(--color-text);
+}
+.vector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 6px;
+}

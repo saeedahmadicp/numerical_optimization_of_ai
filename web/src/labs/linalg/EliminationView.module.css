@@ -1,0 +1,343 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-4);
+  overflow: auto;
+  background: var(--chart-surface);
+}
+
+.wrap > * {
+  flex-shrink: 0;
+}
+
+/* ── Caption ───────────────────────────────────────────────────────────── */
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px var(--space-3);
+  min-height: 30px;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.stepNo {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.lead {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.tex {
+  display: inline-block;
+  padding: 2px 0;
+  line-height: 1.5;
+  color: var(--color-text-2);
+  max-width: 100%;
+}
+.bad {
+  color: var(--color-bad);
+}
+
+/* ── Body: matrix + factors ────────────────────────────────────────────── */
+.body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+.fig {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+.grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-x: auto;
+  padding: 2px 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+.row {
+  display: grid;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+.row[data-active='true'] {
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+}
+.colHead {
+  height: 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 8px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-text-3);
+}
+.colHead i,
+.rowHead i {
+  font-family: var(--font-serif);
+}
+.rowHead {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.1;
+  color: var(--color-text-3);
+  text-align: left;
+  padding-left: 2px;
+}
+/* The original equation of a row that a swap has moved. */
+.eqTag {
+  font-size: 9px;
+  letter-spacing: -0.02em;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+.stepNext {
+  color: var(--color-accent);
+}
+.chipCell {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 6px;
+  min-width: 0;
+}
+.chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: chip-in var(--duration-base) var(--ease-out);
+}
+/* A fade only: no entry slide (brand §7, ui/motion.ts). */
+@keyframes chip-in {
+  from {
+    opacity: 0;
+  }
+}
+.grid[data-size='l'] {
+  --cell-h: 42px;
+  --cell-fs: 15.5px;
+}
+.grid[data-size='m'] {
+  --cell-h: 34px;
+  --cell-fs: 13.5px;
+}
+.grid[data-size='s'] {
+  --cell-h: 28px;
+  --cell-fs: 11.5px;
+}
+.cell {
+  position: relative;
+  height: var(--cell-h, 30px);
+  padding: 0 calc(8px * var(--fit, 1));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: calc(var(--cell-fs, 12.5px) * var(--fit, 1));
+  color: var(--color-text);
+  white-space: nowrap;
+}
+.cell[data-zero='true'] {
+  color: var(--color-text-3);
+  opacity: 0.55;
+}
+.cell[data-band='true'] {
+  background: var(--color-hover);
+}
+.cell[data-changed='true'] {
+  animation: cell-flash var(--duration-base) var(--ease-out);
+}
+.cell[data-pivot='true'] {
+  background: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+.cell[data-pivot='bad'] {
+  background: var(--color-bad-soft, color-mix(in srgb, var(--color-bad) 12%, transparent));
+  box-shadow: inset 0 0 0 1.5px var(--color-bad);
+  color: var(--color-bad);
+  font-weight: var(--weight-semibold);
+}
+@keyframes cell-flash {
+  from {
+    background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+  to {
+    background: transparent;
+  }
+}
+.sepCol {
+  border-left: 1px dashed var(--color-border-strong);
+  margin-left: 4px;
+}
+.figcap {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  padding-left: 28px;
+}
+
+/* ── Factors ───────────────────────────────────────────────────────────── */
+.factors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-5);
+  padding-top: 20px;
+}
+.factor {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.factorLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.small {
+  display: grid;
+  gap: 1px;
+  padding: 4px 6px;
+  border-left: 1.5px solid var(--color-text-3);
+  border-right: 1.5px solid var(--color-text-3);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.smallCell {
+  height: 24px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+.smallCell[data-unknown='true'] {
+  color: var(--color-text-3);
+  opacity: 0.6;
+}
+.smallCell[data-zero='true'] {
+  color: var(--color-text-3);
+  opacity: 0.45;
+}
+.smallCell[data-new='true'] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  animation: cell-flash var(--duration-base) var(--ease-out);
+}
+.perm {
+  flex-basis: 100%;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Solution ──────────────────────────────────────────────────────────── */
+.solutionEmpty {
+  min-height: 1px;
+}
+.solution {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  background: var(--color-surface);
+}
+.solution[data-tone='good'] {
+  box-shadow:
+    inset 0 0 0 1px var(--color-border),
+    inset 3px 0 0 var(--color-good);
+}
+.solution[data-tone='bad'] {
+  box-shadow:
+    inset 0 0 0 1px var(--color-border),
+    inset 3px 0 0 var(--color-bad);
+}
+.solRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px var(--space-4);
+  overflow-x: auto;
+}
+.solMeta,
+.solStats {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.solStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-4);
+}
+.solFail {
+  font-size: var(--text-sm);
+  color: var(--color-bad);
+  line-height: var(--leading-snug);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .cell[data-changed='true'],
+  .smallCell[data-new='true'] {
+    animation: none;
+  }
+}
+@container stage (max-width: 560px) {
+  .wrap {
+    padding: var(--space-3);
+  }
+}
+/* Phones: the outcome (x and its backward error, or the zero-pivot report) comes right under
+   the caption, above the matrix and the factors that scroll below it. */
+@container stage (max-width: 560px) {
+  .caption {
+    order: 0;
+  }
+  .solution,
+  .solutionEmpty {
+    order: 1;
+    margin-top: 0;
+  }
+  .body {
+    order: 2;
+  }
+}

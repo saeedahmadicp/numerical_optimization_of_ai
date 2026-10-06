@@ -1,0 +1,465 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--insight-width);
+  grid-template-areas: 'rail main insights';
+  gap: var(--space-3);
+  padding: var(--space-3);
+  height: calc(100dvh - var(--header-height));
+  min-height: 600px;
+}
+
+/* ── Rail ─────────────────────────────────────────────────────────────── */
+.rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.railScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.railIntro {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+.railTitle {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: var(--tracking-serif);
+  font-variant-numeric: lining-nums;
+}
+.railPitch {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: var(--leading-snug);
+}
+.section {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 20px;
+}
+.sectionTitle {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-3);
+}
+.mobileIntro {
+  display: none;
+}
+
+/* ── Main stage ───────────────────────────────────────────────────────── */
+.main {
+  grid-area: main;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.stageCard:focus-visible {
+  outline-offset: -2px;
+}
+.stageCard {
+  container: stage / inline-size;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+/*
+ * The stage head has one constant height, so the plot never grows or shrinks when the problem,
+ * the methods or a run's status change. Its content stays on one row and never scrolls: the run
+ * summary (RunSummary) fits itself to the row (names give way to swatches, never runs or badges).
+ */
+.stageHead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 10px 0 var(--space-4);
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+}
+.stageTitle {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-3);
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* Zero specificity: a child that fits itself to the row (the run summary) sets its own flex. */
+:where(.stageTitle) > * {
+  flex: none;
+}
+.stageToolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.stage[data-pending] > :first-child {
+  opacity: 0.5;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+/* "Recomputing…": an overlay on the stage (never part of the head's layout). */
+.pending {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.pending[data-on] {
+  opacity: 1;
+}
+.stageNotice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  pointer-events: none;
+}
+.stageNotice > div {
+  max-width: 30em;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface-raised) 88%, transparent);
+  box-shadow: 0 0 0 1px var(--color-border);
+  color: var(--color-text-3);
+  font-size: var(--text-sm);
+  text-align: center;
+  pointer-events: auto;
+}
+/*
+ * The stage hint ("Click the plot to set 𝐱₀"): one line at the plot's bottom-left, over the plot
+ * (absolutely positioned, so it never moves anything); it fades out after the first click.
+ */
+.stageHint {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  max-width: calc(100% - 20px);
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface-raised) 90%, transparent);
+  box-shadow: 0 0 0 1px var(--color-border);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+.stageHint[data-seen] {
+  opacity: 0;
+}
+.stageFoot {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+}
+.stageFootMain {
+  flex: 1;
+  min-width: 0;
+}
+.dockControls {
+  display: none;
+}
+
+/* ── Insights ─────────────────────────────────────────────────────────── */
+.insights {
+  grid-area: insights;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.insight {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.insight[data-grow='true'] {
+  flex: 1;
+}
+.insightHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 6px 10px 6px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.insightTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.insightActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.insightBody {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* ── Mobile sheet ─────────────────────────────────────────────────────── */
+.fab {
+  display: none;
+}
+.sheetBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  /* Light at half height: the plot above the sheet stays readable. */
+  background: rgba(10, 10, 10, 0.12);
+}
+.sheetBackdrop[data-full] {
+  background: rgba(10, 10, 10, 0.32);
+}
+.sheet {
+  position: fixed;
+  z-index: var(--z-sheet);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-3);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transition: height var(--duration-slow) var(--ease-out);
+}
+.sheet[data-full] {
+  height: 86dvh;
+}
+.sheetHandle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 22px 10px 6px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.sheetTitle {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+.grabber {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 64px;
+  height: 24px;
+  margin-left: -32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-sm);
+}
+.grabber span {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border-strong);
+}
+
+/* ── Breakpoints ──────────────────────────────────────────────────────── */
+@media (max-width: 1279px) {
+  /* Rail + stage share the first screen; the insights flow below across the full width. */
+  .body {
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+    grid-template-areas:
+      'rail main'
+      'insights insights';
+    grid-template-rows: calc(100dvh - var(--header-height) - 2 * var(--space-3)) auto;
+    height: auto;
+    min-height: calc(100dvh - var(--header-height));
+  }
+  .rail {
+    min-height: 520px;
+  }
+  .main {
+    min-height: 520px;
+  }
+  .insights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .insight {
+    height: 380px;
+  }
+  .insight[data-wide='true'] {
+    grid-column: 1 / -1;
+    height: auto;
+  }
+}
+
+@media (max-width: 899px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'main'
+      'insights';
+    grid-template-rows: auto auto;
+    padding: var(--space-2) var(--space-2) calc(env(safe-area-inset-bottom, 0px) + var(--space-6));
+    gap: var(--space-2);
+  }
+  .rail {
+    display: none;
+  }
+  /* The lab's name and pitch above the stage card (the rail with its h1 is a sheet here). */
+  .mobileIntro {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-1) var(--space-2) 0;
+  }
+  .mobileTitle {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: var(--tracking-serif);
+    font-variant-numeric: lining-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobilePitch {
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    color: var(--color-text-2);
+  }
+  .main {
+    height: auto;
+    min-height: 0;
+  }
+  .stage {
+    flex: none;
+    height: var(--stage-h-narrow, min(78vw, 62dvh));
+    min-height: var(--stage-min-narrow, 300px);
+  }
+  .insights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .insight {
+    height: 320px;
+  }
+  .insight[data-wide='true'] {
+    height: auto;
+  }
+  .insight[data-grow='true'] {
+    height: 560px;
+  }
+  .fab {
+    display: inline-flex;
+    position: fixed;
+    z-index: var(--z-sticky);
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+    transform: translateX(-50%);
+    box-shadow: var(--shadow-3);
+  }
+  .stageHead {
+    padding-left: var(--space-3);
+  }
+  .dockControls {
+    display: inline-flex;
+    flex: none;
+    margin-right: var(--space-2);
+  }
+}
+
+/* Very narrow phones: the docked Controls button keeps only its icon (its name stays). */
+@media (max-width: 479px) {
+  .dockLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .dockControls {
+    padding: 0 8px;
+  }
+}

@@ -1,0 +1,193 @@
+/* The combinatorial MethodCard (same order and typography as the shared card). */
+.card > * {
+  flex-shrink: 0;
+}
+.card {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.headEnd {
+  /* Keeps its natural width; wraps under the chip when both do not fit on one line. */
+  flex: 0 0 auto;
+  max-width: 100%;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.rate {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-2);
+  /* Wraps to a second line rather than cutting the qualifier off. */
+  max-width: 220px;
+  text-align: right;
+  line-height: var(--leading-snug);
+}
+.rule {
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  overflow-x: auto;
+  color: var(--color-text);
+  text-align: center;
+}
+/* The current formula and the run's largest ones in one grid cell: the block keeps the height of
+   the tallest step for the whole run. */
+.filledStack {
+  display: grid;
+  align-items: center;
+}
+.filledStack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.sizer {
+  visibility: hidden;
+}
+.filledStack :global(.katex-display) {
+  margin: 0;
+}
+.live {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.liveCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px 9px;
+  background: var(--color-surface);
+  min-width: 0;
+  box-shadow: 0.5px 0.5px 0 0.5px var(--color-border);
+}
+.liveLabel {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.liveValue {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.statusBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+.status[data-tone='bad'] {
+  color: var(--color-bad);
+}
+/* Prose: proportional figures (tabular-nums would also space the hyphens of "2-opt"). */
+.evidence {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  line-height: var(--leading-snug);
+}
+.intuition {
+  font-size: 14.5px;
+  color: var(--color-text-2);
+  line-height: var(--leading-normal);
+}
+.proscons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.proscons h3 {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-3);
+  margin-bottom: 6px;
+}
+.proscons ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.proscons li {
+  position: relative;
+  padding-left: 14px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  line-height: var(--leading-snug);
+}
+.proscons li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 600;
+}
+.pro li::before {
+  content: '+';
+  color: var(--color-good);
+}
+.con li::before {
+  content: '−';
+  color: var(--color-bad);
+}
+.refs {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ref {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  /* The shared card's sources (blocks.module.css .ref): Inter, never Newsreader (brand §3). */
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.ref cite {
+  font-style: italic;
+}
+.refCopy {
+  flex: none;
+  opacity: 0.7;
+}
+.ref:hover .refCopy,
+.refCopy:focus-visible {
+  opacity: 1;
+}

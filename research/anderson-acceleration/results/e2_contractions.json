@@ -1,0 +1,1083 @@
+{
+ "tol": 1e-10,
+ "budget": 500,
+ "starts": [
+  [
+   -1.9531809873878956,
+   -1.7521669697016478
+  ],
+  [
+   1.90763053111732,
+   0.7961148228496313
+  ],
+  [
+   0.08578107412904501,
+   -0.3779132477939129
+  ],
+  [
+   -0.13506946992129087,
+   -1.0402992563322186
+  ],
+  [
+   0.21330241579562426,
+   0.9192883595824242
+  ],
+  [
+   -0.9687377559021115,
+   -1.3762065442278981
+  ],
+  [
+   1.0563595462590456,
+   0.07361018285155296
+  ],
+  [
+   -1.2114509595558047,
+   -0.5281656263396144
+  ],
+  [
+   -0.8270106483250856,
+   0.13895810209214687
+  ],
+  [
+   -0.8146790070459247,
+   1.9117844179272652
+  ]
+ ],
+ "maps": {
+  "C1": {
+   "A": [
+    [
+     0.5,
+     0.25
+    ],
+    [
+     0.25,
+     0.5
+    ]
+   ],
+   "x_star": [
+    0.8177471369380686,
+    0.8177471369380686
+   ],
+   "rho_g_prime": 0.43168323023560207,
+   "plain (AA(0))": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 28.0,
+    "max_F_evals": 30,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     30,
+     29,
+     29,
+     28,
+     28,
+     29,
+     28,
+     26,
+     28,
+     27
+    ]
+   },
+   "AA(1)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 13.0,
+    "max_F_evals": 14,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     12,
+     14,
+     13,
+     12,
+     13,
+     11,
+     14,
+     13,
+     13,
+     14
+    ]
+   },
+   "AA(2)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 7.0,
+    "max_F_evals": 10,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     10,
+     7,
+     7,
+     8,
+     7,
+     8,
+     7,
+     7,
+     8,
+     7
+    ]
+   },
+   "AA(3)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 8.5,
+    "max_F_evals": 11,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     11,
+     8,
+     8,
+     9,
+     8,
+     10,
+     8,
+     9,
+     9,
+     8
+    ]
+   },
+   "AA(5)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.0,
+    "max_F_evals": 13,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     13,
+     9,
+     10,
+     11,
+     9,
+     13,
+     9,
+     11,
+     10,
+     9
+    ]
+   },
+   "AA(10)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 14.0,
+    "max_F_evals": 20,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     17,
+     11,
+     14,
+     15,
+     9,
+     20,
+     9,
+     15,
+     14,
+     11
+    ]
+   },
+   "Broyden (exact J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 8.5,
+    "max_F_evals": 10,
+    "median_jacobians": 1.0,
+    "F_evals": [
+     9,
+     7,
+     8,
+     9,
+     7,
+     10,
+     7,
+     10,
+     9,
+     8
+    ]
+   },
+   "Broyden (FD J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 13.5,
+    "max_F_evals": 15,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     14,
+     12,
+     13,
+     14,
+     12,
+     15,
+     12,
+     15,
+     14,
+     13
+    ]
+   },
+   "Newton": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 5.5,
+    "max_F_evals": 10,
+    "median_jacobians": 4.5,
+    "F_evals": [
+     10,
+     5,
+     5,
+     6,
+     5,
+     6,
+     5,
+     6,
+     6,
+     5
+    ]
+   },
+   "SciPy anderson M=3": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 11.0,
+    "max_F_evals": 19,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     17,
+     7,
+     11,
+     18,
+     7,
+     16,
+     8,
+     19,
+     11,
+     9
+    ]
+   }
+  },
+  "C2": {
+   "A": [
+    [
+     0.9,
+     -0.6
+    ],
+    [
+     0.6,
+     0.9
+    ]
+   ],
+   "x_star": [
+    0.8871707786451536,
+    0.5313911043365822
+   ],
+   "rho_g_prime": 0.6762780497846778,
+   "plain (AA(0))": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 59.5,
+    "max_F_evals": 61,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     59,
+     61,
+     60,
+     52,
+     56,
+     60,
+     58,
+     60,
+     59,
+     61
+    ]
+   },
+   "AA(1)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 29.5,
+    "max_F_evals": 34,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     34,
+     31,
+     30,
+     26,
+     26,
+     24,
+     18,
+     29,
+     31,
+     33
+    ]
+   },
+   "AA(2)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 9.0,
+    "max_F_evals": 11,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     10,
+     9,
+     9,
+     7,
+     8,
+     9,
+     8,
+     9,
+     9,
+     11
+    ]
+   },
+   "AA(3)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.0,
+    "max_F_evals": 12,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     11,
+     10,
+     10,
+     9,
+     9,
+     11,
+     9,
+     9,
+     10,
+     12
+    ]
+   },
+   "AA(5)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 12.0,
+    "max_F_evals": 14,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     13,
+     12,
+     11,
+     12,
+     11,
+     14,
+     11,
+     12,
+     12,
+     13
+    ]
+   },
+   "AA(10)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 15.0,
+    "max_F_evals": 19,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     15,
+     16,
+     12,
+     14,
+     15,
+     19,
+     15,
+     15,
+     17,
+     18
+    ]
+   },
+   "Broyden (exact J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.5,
+    "max_F_evals": 14,
+    "median_jacobians": 1.0,
+    "F_evals": [
+     14,
+     8,
+     9,
+     10,
+     9,
+     11,
+     7,
+     14,
+     11,
+     11
+    ]
+   },
+   "Broyden (FD J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 15.5,
+    "max_F_evals": 19,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     19,
+     13,
+     14,
+     15,
+     14,
+     16,
+     12,
+     19,
+     16,
+     16
+    ]
+   },
+   "Newton": {
+    "solved": 8,
+    "of": 10,
+    "median_F_evals": 6.5,
+    "max_F_evals": 25,
+    "median_jacobians": 6.0,
+    "F_evals": [
+     6,
+     5,
+     7,
+     25,
+     6,
+     "inf",
+     5,
+     10,
+     7,
+     "inf"
+    ]
+   },
+   "SciPy anderson M=3": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 13.0,
+    "max_F_evals": 25,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     15,
+     8,
+     11,
+     16,
+     11,
+     11,
+     7,
+     18,
+     19,
+     25
+    ]
+   }
+  },
+  "C3": {
+   "A": [
+    [
+     1.0,
+     0.5
+    ],
+    [
+     0.2,
+     0.6
+    ]
+   ],
+   "x_star": [
+    0.5624313521949389,
+    0.8220831683809714
+   ],
+   "rho_g_prime": 0.9097138185279827,
+   "plain (AA(0))": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 237.0,
+    "max_F_evals": 243,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     235,
+     243,
+     242,
+     235,
+     235,
+     243,
+     195,
+     240,
+     238,
+     236
+    ]
+   },
+   "AA(1)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 17.0,
+    "max_F_evals": 21,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     21,
+     20,
+     16,
+     18,
+     15,
+     16,
+     15,
+     20,
+     16,
+     18
+    ]
+   },
+   "AA(2)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 8.5,
+    "max_F_evals": 10,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     10,
+     9,
+     8,
+     8,
+     8,
+     9,
+     8,
+     9,
+     9,
+     8
+    ]
+   },
+   "AA(3)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 9.0,
+    "max_F_evals": 12,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     12,
+     9,
+     9,
+     9,
+     8,
+     10,
+     9,
+     10,
+     11,
+     9
+    ]
+   },
+   "AA(5)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 11.0,
+    "max_F_evals": 13,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     13,
+     11,
+     11,
+     11,
+     9,
+     12,
+     9,
+     12,
+     13,
+     10
+    ]
+   },
+   "AA(10)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 14.5,
+    "max_F_evals": 18,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     18,
+     14,
+     14,
+     15,
+     9,
+     15,
+     10,
+     16,
+     15,
+     13
+    ]
+   },
+   "Broyden (exact J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.0,
+    "max_F_evals": 14,
+    "median_jacobians": 1.0,
+    "F_evals": [
+     11,
+     8,
+     9,
+     11,
+     6,
+     14,
+     7,
+     13,
+     11,
+     9
+    ]
+   },
+   "Broyden (FD J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 15.0,
+    "max_F_evals": 19,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     16,
+     13,
+     14,
+     16,
+     11,
+     19,
+     12,
+     18,
+     16,
+     14
+    ]
+   },
+   "Newton": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 7.0,
+    "max_F_evals": 75,
+    "median_jacobians": 6.0,
+    "F_evals": [
+     8,
+     5,
+     6,
+     8,
+     5,
+     9,
+     5,
+     11,
+     75,
+     5
+    ]
+   },
+   "SciPy anderson M=3": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 12.0,
+    "max_F_evals": 20,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     20,
+     8,
+     16,
+     18,
+     8,
+     18,
+     7,
+     13,
+     11,
+     10
+    ]
+   }
+  },
+  "C4": {
+   "A": [
+    [
+     1.05,
+     0.5
+    ],
+    [
+     0.2,
+     0.7
+    ]
+   ],
+   "x_star": [
+    0.5575087346673523,
+    0.7880605916819184
+   ],
+   "rho_g_prime": 0.9670089296150188,
+   "plain (AA(0))": {
+    "solved": 0,
+    "of": 10,
+    "median_F_evals": null,
+    "max_F_evals": null,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf"
+    ]
+   },
+   "AA(1)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 18.0,
+    "max_F_evals": 23,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     17,
+     23,
+     19,
+     15,
+     18,
+     17,
+     12,
+     22,
+     20,
+     18
+    ]
+   },
+   "AA(2)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 9.0,
+    "max_F_evals": 11,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     10,
+     9,
+     9,
+     8,
+     8,
+     9,
+     7,
+     9,
+     11,
+     8
+    ]
+   },
+   "AA(3)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.0,
+    "max_F_evals": 12,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     12,
+     9,
+     9,
+     10,
+     8,
+     10,
+     8,
+     10,
+     11,
+     10
+    ]
+   },
+   "AA(5)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 11.5,
+    "max_F_evals": 14,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     14,
+     11,
+     11,
+     11,
+     9,
+     12,
+     10,
+     12,
+     14,
+     13
+    ]
+   },
+   "AA(10)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 16.0,
+    "max_F_evals": 19,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     19,
+     14,
+     15,
+     16,
+     9,
+     16,
+     15,
+     18,
+     18,
+     19
+    ]
+   },
+   "Broyden (exact J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 9.5,
+    "max_F_evals": 15,
+    "median_jacobians": 1.0,
+    "F_evals": [
+     11,
+     8,
+     9,
+     10,
+     6,
+     15,
+     8,
+     13,
+     11,
+     9
+    ]
+   },
+   "Broyden (FD J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 14.5,
+    "max_F_evals": 20,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     16,
+     13,
+     14,
+     15,
+     11,
+     20,
+     13,
+     18,
+     16,
+     14
+    ]
+   },
+   "Newton": {
+    "solved": 8,
+    "of": 10,
+    "median_F_evals": 5.5,
+    "max_F_evals": 19,
+    "median_jacobians": 7.0,
+    "F_evals": [
+     "inf",
+     5,
+     6,
+     17,
+     5,
+     "inf",
+     5,
+     19,
+     10,
+     5
+    ]
+   },
+   "SciPy anderson M=3": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 13.0,
+    "max_F_evals": 25,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     25,
+     8,
+     16,
+     19,
+     8,
+     16,
+     7,
+     14,
+     12,
+     9
+    ]
+   }
+  },
+  "N1": {
+   "A": [
+    [
+     1.0,
+     0.5
+    ],
+    [
+     0.5,
+     1.0
+    ]
+   ],
+   "x_star": [
+    0.6099043189648242,
+    0.6099043189648242
+   ],
+   "rho_g_prime": 1.1887125909332,
+   "plain (AA(0))": {
+    "solved": 0,
+    "of": 10,
+    "median_F_evals": null,
+    "max_F_evals": null,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf",
+     "inf"
+    ]
+   },
+   "AA(1)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 22.0,
+    "max_F_evals": 24,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     23,
+     24,
+     23,
+     12,
+     21,
+     24,
+     21,
+     23,
+     14,
+     15
+    ]
+   },
+   "AA(2)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 9.0,
+    "max_F_evals": 16,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     16,
+     10,
+     9,
+     8,
+     8,
+     16,
+     8,
+     15,
+     9,
+     8
+    ]
+   },
+   "AA(3)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.5,
+    "max_F_evals": 21,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     15,
+     11,
+     10,
+     10,
+     8,
+     21,
+     9,
+     14,
+     11,
+     9
+    ]
+   },
+   "AA(5)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 12.5,
+    "max_F_evals": 22,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     18,
+     14,
+     12,
+     12,
+     9,
+     22,
+     9,
+     14,
+     13,
+     11
+    ]
+   },
+   "AA(10)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 17.5,
+    "max_F_evals": 29,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     24,
+     18,
+     17,
+     18,
+     8,
+     29,
+     11,
+     19,
+     17,
+     15
+    ]
+   },
+   "Broyden (exact J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 10.5,
+    "max_F_evals": 12,
+    "median_jacobians": 1.0,
+    "F_evals": [
+     12,
+     8,
+     10,
+     11,
+     7,
+     12,
+     7,
+     12,
+     11,
+     9
+    ]
+   },
+   "Broyden (FD J0)": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 15.5,
+    "max_F_evals": 17,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     17,
+     13,
+     15,
+     16,
+     12,
+     17,
+     12,
+     17,
+     16,
+     14
+    ]
+   },
+   "Newton": {
+    "solved": 7,
+    "of": 10,
+    "median_F_evals": 5.0,
+    "max_F_evals": 9,
+    "median_jacobians": 6.0,
+    "F_evals": [
+     7,
+     5,
+     7,
+     "inf",
+     5,
+     9,
+     5,
+     "inf",
+     "inf",
+     5
+    ]
+   },
+   "SciPy anderson M=3": {
+    "solved": 10,
+    "of": 10,
+    "median_F_evals": 16.5,
+    "max_F_evals": 65,
+    "median_jacobians": 0.0,
+    "F_evals": [
+     18,
+     8,
+     15,
+     45,
+     7,
+     65,
+     7,
+     53,
+     22,
+     8
+    ]
+   }
+  }
+ }
+}

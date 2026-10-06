@@ -1,0 +1,404 @@
+/* ── Stage ─────────────────────────────────────────────────────────────────────────── */
+.stageGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(96px, 31%);
+  background: var(--chart-surface);
+}
+.plot {
+  position: relative;
+  min-height: 0;
+  touch-action: pan-y;
+  cursor: copy;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.strip {
+  position: relative;
+  min-height: 0;
+  border-top: 1px solid var(--color-border);
+}
+.stripCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* A 24 × 24 hit target centered on each node (the dot itself is drawn on the canvas). */
+.handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+/* Nodes that move along f move in x only: a vertical swipe that starts on one scrolls the page. */
+.handle[data-axis='x'] {
+  touch-action: pan-y;
+}
+.handle:hover {
+  box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
+}
+.handle[data-dragging] {
+  cursor: grabbing;
+  box-shadow: inset 0 0 0 1.5px var(--color-text-2);
+}
+.handle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 0;
+}
+
+/* The full name, like every lab's: the header scrolls (LabShell .stageTitle), it never clips. */
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+
+/* ── Rail ──────────────────────────────────────────────────────────────────────────── */
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.nodeControls {
+  display: grid;
+  gap: var(--space-2);
+}
+.sliderRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 2.2em;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40px;
+}
+.sliderLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+.sliderValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+.hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.nodeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.copy {
+  font-size: var(--text-xs);
+}
+
+/* ── Insights ──────────────────────────────────────────────────────────────────────── */
+.chartPad {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 10px 12px 8px 8px;
+}
+.caption {
+  margin: 2px 0 0 8px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.empty {
+  margin: 0;
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+.tablePane {
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+.tableTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-3);
+}
+.tableNote {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--color-text-2);
+}
+.tableFormula {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+}
+.tableFormula :global(.katex-display) {
+  overflow: visible;
+}
+.tableFormula:focus-visible,
+.tablePane:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+/* Lower-triangular tables (divided differences, Neville). */
+.triWrap {
+  overflow: auto;
+  max-height: calc(100% - 64px);
+  border-radius: var(--radius-sm);
+}
+.triWrap:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.tri {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+.tri th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 8px;
+  background: var(--color-surface);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-2);
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+.tri tbody th {
+  position: sticky;
+  left: 0;
+  top: auto;
+  text-align: left;
+  border-bottom: 0;
+}
+.tri td {
+  padding: 3px 8px;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+.tri tr[data-future] td,
+.tri tr[data-future] th,
+.tri td[data-future],
+.tri thead th[data-future] {
+  color: var(--color-text-3);
+  opacity: 0.55;
+}
+/* Column mode (Neville): step k fills column k in every row. */
+.tri td[data-col] {
+  background: var(--color-accent-soft);
+}
+.tri thead th[data-current] {
+  background: var(--color-accent-soft);
+  box-shadow:
+    inset 0 2px 0 var(--color-accent),
+    inset 0 -1px 0 var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.tri tr[data-current] td,
+.tri tr[data-current] th {
+  background: var(--color-accent-soft);
+}
+.tri tr[data-current] th {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.tri td[data-diag] {
+  font-weight: 650;
+  box-shadow: inset 0 -1.5px 0 var(--color-accent);
+}
+.tri tbody tr {
+  cursor: pointer;
+}
+.triIndex {
+  min-width: 2rem;
+}
+
+/* Coefficient decay bars (Chebyshev). */
+.bar {
+  display: block;
+  width: 100%;
+  min-width: 60px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-sunken);
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-text-3);
+}
+
+@media (max-width: 899px) {
+  .stageGrid {
+    grid-template-rows: minmax(0, 1fr) minmax(84px, 32%);
+  }
+}
+
+/* Error vs n (SweepChart). */
+.sweep {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  height: 100%;
+}
+.sweepChart {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  cursor: pointer;
+}
+.sweepChart > canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legendLine {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--_c);
+}
+.legendLine[data-dashed] {
+  background: repeating-linear-gradient(90deg, var(--_c) 0 5px, transparent 5px 8px);
+}
+.legendNote {
+  color: var(--color-text-3);
+}
+.legendNote::before {
+  content: '· ';
+}
+.tooltip {
+  position: absolute;
+  z-index: var(--z-tooltip);
+  max-width: calc(100% - 70px);
+  padding: 6px 9px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--color-border-strong),
+    var(--shadow-2);
+  font-size: var(--text-xs);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tooltipTitle {
+  font-weight: var(--weight-semibold);
+  margin-bottom: 4px;
+  color: var(--color-text);
+}
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  color: var(--color-text-2);
+  line-height: 1.6;
+}
+.tooltipRow b {
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.tooltipKey {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tooltipHint {
+  margin-top: 4px;
+  color: var(--color-text-3);
+}
+
+/* A line under the stage chips (Chebyshev interpolation resamples f). */
+.titleNote {
+  flex-basis: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.titleDiamond {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg) translateY(-1px);
+  background: var(--_c);
+}
+
+/*
+ * The card's rules are set one clause per line so that they fit the column. KaTeX glyphs can
+ * still overhang the box by a pixel or two (italic corrections, big operators), which would make
+ * the display a keyboard-unreachable scroll region: let that overhang draw instead.
+ */
+.cardWrap {
+  display: contents;
+}
+.cardWrap :global(.katex-display),
+.cardWrap :has(> div > :global(.katex-display)) {
+  overflow: clip;
+  overflow-clip-margin: 6px;
+}

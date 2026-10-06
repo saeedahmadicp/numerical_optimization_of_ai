@@ -1,0 +1,255 @@
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.hint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.xy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Stage: landscape + caption (the live update rule) ─────────────────── */
+.stageGrid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.caption {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px var(--space-4) 10px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.captionHead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.captionName {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+.captionMeta {
+  font-variant-numeric: tabular-nums;
+}
+.metaCount,
+.metaEpoch {
+  display: inline-block;
+}
+.metaCount {
+  text-align: right;
+}
+.equation {
+  min-height: 52px;
+  color: var(--color-text);
+  font-size: 13px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.equation :global(.katex-display) {
+  margin: 0;
+}
+.captionNote {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+
+/* ── Insights ─────────────────────────────────────────────────────────── */
+.batchNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  white-space: nowrap;
+}
+.batchText {
+  display: inline-grid;
+}
+.batchText > * {
+  grid-area: 1 / 1;
+}
+.batchText > [data-ghost] {
+  visibility: hidden;
+}
+.dataWrap {
+  position: absolute;
+  inset: 0;
+  padding: 4px 8px 2px 4px;
+}
+.dataCanvas,
+.trainCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.trainWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 8px 4px 4px;
+}
+.trainCanvas {
+  flex: 1;
+  cursor: pointer;
+}
+/* The shared SeriesLegend, inset to line up with the plot. */
+.legend {
+  padding: 0 8px 0 12px;
+}
+
+.shortName {
+  display: none;
+}
+@media (max-width: 899px) {
+  .captionNote,
+  .captionExtra,
+  .longName {
+    display: none;
+  }
+  .shortName {
+    display: inline;
+  }
+  .caption {
+    padding: 6px var(--space-3) 6px;
+    gap: 2px;
+  }
+  .equation {
+    min-height: 0;
+    font-size: 11px;
+  }
+}
+
+/* Step lens: the current step magnified, floating over the landscape's top-right corner. */
+/* Top right, under the view toolbar (10 px + the 32-px bar + 8 px; StochasticLab LENS_TOP). */
+.lens {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  width: 196px;
+  height: 196px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-2);
+  pointer-events: none;
+}
+.lensCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@media (max-width: 899px) {
+  .lens {
+    width: 112px;
+    height: 112px;
+    top: 50px;
+    right: 6px;
+  }
+}
+
+/* A sideways-scrolling formula fades out at the edge where it continues. */
+.scrollFade {
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* The fade is the cue; a scrollbar that comes and goes would resize the landscape. */
+  scrollbar-width: none;
+}
+.scrollFade::-webkit-scrollbar {
+  display: none;
+}
+.scrollFade[data-fade-right] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.scrollFade[data-fade-left] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+.scrollFade[data-fade-left][data-fade-right] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 28px,
+    #000 calc(100% - 28px),
+    transparent
+  );
+}
+.scrollFade:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Phones: the caption notes are hidden; one line still names the marks. */
+.legendNarrow {
+  display: none;
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 899px) {
+  .legendNarrow {
+    display: block;
+  }
+}
+
+/* The caption keeps one height from k = 0 on, so the landscape is not resized (and its field
+   not resampled) when playback starts. */
+@media (min-width: 900px) {
+  .equation,
+  .equationSlot {
+    min-height: 62px;
+  }
+  .equationSlot {
+    display: flex;
+    align-items: center;
+  }
+  /* The tallest caption of any method (momentum's update with its underbraces): 148 px. */
+  .caption {
+    min-height: 150px;
+  }
+}
+@media (max-width: 899px) {
+  /* Phones: the tallest caption (momentum, Nesterov) is 130 px; k = 0 is 108 px. */
+  .caption {
+    min-height: 132px;
+  }
+  .equationSlot {
+    display: flex;
+    align-items: center;
+    min-height: 53px;
+  }
+}

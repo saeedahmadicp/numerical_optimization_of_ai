@@ -1,0 +1,243 @@
+/* Roots lab — local styles. Tokens only (src/ui/tokens.css). */
+
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Convergence insight actions: the k axis, then the measure; they wrap onto a second row
+   (right-aligned) when the column is narrow. */
+.chartActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+/* ── Rail ─────────────────────────────────────────────────────────────── */
+/* Math in a section heading: the heading's caps and tracking would print [A, B]. */
+.titleMath {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text-2);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.signs {
+  margin: var(--space-1-5) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.signs[data-bad] {
+  color: var(--color-bad);
+}
+.hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+/* The icon sits on the first line of a hint that wraps. */
+.hint svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* ── Stage ────────────────────────────────────────────────────────────── */
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.stageBody {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.plotWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.plot {
+  position: absolute;
+  inset: 0;
+  background: var(--chart-surface);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+.plot[data-dragging='pan'] {
+  cursor: grabbing;
+}
+.plotCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+.plotCanvas[data-pickable] {
+  cursor: crosshair;
+}
+.plot[data-dragging] .plotCanvas {
+  cursor: grabbing;
+}
+
+/* Handles a, b, x₀: pills under the frame, on the guide line they move. */
+.handle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-1);
+  color: var(--color-text);
+  font-family: var(--font-math);
+  font-size: 15px;
+  line-height: 1;
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 1;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+.handle i {
+  font-style: italic;
+}
+.handle sub {
+  font-size: 0.7em;
+  font-style: normal;
+  margin-left: 1px;
+  transform: translateY(0.25em);
+}
+.handle[data-kind='x0'] {
+  border-radius: var(--radius-full);
+}
+.handle:hover {
+  border-color: var(--color-text-3);
+}
+.handle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.handle[data-bad] {
+  border-color: var(--color-bad);
+  color: var(--color-bad);
+}
+.handle[data-off] {
+  color: var(--color-text-3);
+  border-style: dashed;
+}
+.plot[data-dragging] .handle {
+  transition: none;
+}
+
+.banner {
+  position: absolute;
+  left: 56px;
+  top: 10px;
+  max-width: min(440px, calc(100% - 210px));
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+  pointer-events: none;
+}
+.banner[role='status'] {
+  color: var(--color-bad);
+}
+
+/* Signed log-scale number line under the plot. */
+.line {
+  position: relative;
+  flex: none;
+  border-top: 1px solid var(--color-border);
+  background: var(--chart-surface);
+}
+.line canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Insights ─────────────────────────────────────────────────────────── */
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 10px 12px 6px 8px;
+  display: flex;
+  flex-direction: column;
+}
+.chartPad > :first-child {
+  flex: 1;
+  min-height: 0;
+}
+.chartNote {
+  flex: none;
+  margin: 2px 0 0 40px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+
+.digits {
+  color: var(--color-text-3);
+}
+.digitsOk {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+.probe {
+  margin-left: 1px;
+  color: var(--color-text-3);
+  font-family: var(--font-sans);
+}
+
+@media (max-width: 600px) {
+  .banner {
+    left: 10px;
+    max-width: calc(100% - 20px);
+    top: auto;
+    bottom: 62px;
+  }
+}
+
+.banner[data-place='bottom'] {
+  top: auto;
+  bottom: 54px;
+}

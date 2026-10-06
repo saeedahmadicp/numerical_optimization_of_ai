@@ -1,0 +1,243 @@
+.layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: start;
+}
+.toc {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+  font-size: var(--text-sm);
+}
+.toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--color-border);
+}
+.toc a {
+  display: block;
+  padding: 4px 0 4px 12px;
+  color: var(--color-text-3);
+}
+.toc a:hover {
+  color: var(--color-text);
+  text-decoration: none;
+}
+.body {
+  min-width: 0;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+.body section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.h2 {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-strong);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  letter-spacing: -0.012em;
+}
+.h2:focus {
+  outline: none;
+}
+.h3 {
+  margin-top: var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: 400;
+}
+.prose {
+  max-width: 46em;
+  font-size: var(--text-base);
+  line-height: 1.65;
+  color: var(--color-text-2);
+}
+.prose code,
+.pipeline code,
+.table code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  color: var(--color-text);
+}
+
+.apiGrid,
+.cliGrid {
+  display: grid;
+  border-top: 1px solid var(--color-border-strong);
+}
+.api,
+.cli {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+.api code,
+.cli code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border-top: 1px solid var(--color-border-strong);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.table th,
+.table td {
+  padding: 9px 16px 9px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-2);
+}
+.table thead th {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+.table tbody th {
+  font-weight: var(--weight-regular);
+  white-space: nowrap;
+}
+.type {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--color-text-3);
+}
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pipeline li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+.pipeline code {
+  overflow-wrap: anywhere;
+  font-size: max(12px, 0.92em);
+}
+.pipeHead {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border-strong);
+}
+.links li {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--weight-medium);
+}
+
+@media (max-width: 1080px) {
+  .pipeline {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+  .toc {
+    position: static;
+  }
+  .toc ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    border-left: 0;
+  }
+  .toc a {
+    padding: 2px 0;
+  }
+  .api,
+  .cli,
+  .links li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+/* Phones: each field is a stacked definition row (field and type on one line, the meaning below),
+   so the meaning is never squeezed into a 70-px column. */
+@media (max-width: 640px) {
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .table,
+  .table tbody {
+    display: block;
+  }
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .table tbody th,
+  .table tbody td {
+    padding: 0;
+    border: 0;
+  }
+  .table tbody td:last-child {
+    grid-column: 1 / -1;
+  }
+}

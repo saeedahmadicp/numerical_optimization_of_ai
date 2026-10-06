@@ -1,0 +1,117 @@
+{
+ "A": [
+  [
+   1.0,
+   0.95
+  ],
+  [
+   0.0,
+   0.15
+  ]
+ ],
+ "b": [
+  1.2,
+  -0.3
+ ],
+ "lam": 0.2,
+ "L": 1.913239843490321,
+ "kappa_AtA": 162.68829772083865,
+ "x_star": [
+  1.0,
+  0.0
+ ],
+ "F_star": 0.265,
+ "kkt_margin": 0.05500000000000005,
+ "x0": [
+  -1.0,
+  1.5
+ ],
+ "methods": {
+  "ISTA": {
+   "k_dist_1e-6": 78,
+   "k_F_1e-8": 71,
+   "support_first": 64,
+   "support_final": 64,
+   "support_changes_after_first": 0,
+   "n_iter": 101,
+   "n_gev": 101,
+   "converged": true,
+   "restarts": null
+  },
+  "FISTA": {
+   "k_dist_1e-6": 41,
+   "k_F_1e-8": 33,
+   "support_first": 18,
+   "support_final": 18,
+   "support_changes_after_first": 0,
+   "n_iter": 80,
+   "n_gev": 80,
+   "converged": true,
+   "restarts": []
+  },
+  "FISTA-FR": {
+   "k_dist_1e-6": 33,
+   "k_F_1e-8": 27,
+   "support_first": 18,
+   "support_final": 18,
+   "support_changes_after_first": 0,
+   "n_iter": 62,
+   "n_gev": 62,
+   "converged": true,
+   "restarts": [
+    19,
+    24,
+    29,
+    34
+   ]
+  },
+  "FISTA-GR": {
+   "k_dist_1e-6": 31,
+   "k_F_1e-8": 22,
+   "support_first": 18,
+   "support_final": 18,
+   "support_changes_after_first": 0,
+   "n_iter": 51,
+   "n_gev": 51,
+   "converged": true,
+   "restarts": [
+    18,
+    23,
+    28,
+    33,
+    38,
+    43,
+    48
+   ]
+  },
+  "AdProxGD": {
+   "k_dist_1e-6": 29,
+   "k_F_1e-8": 26,
+   "support_first": 22,
+   "support_final": 22,
+   "support_changes_after_first": 0,
+   "n_iter": 43,
+   "n_gev": 43,
+   "converged": true,
+   "restarts": null
+  },
+  "PG (l1 ball)": {
+   "k_dist_1e-6": 30,
+   "support_first": null,
+   "support_final": null,
+   "n_iter": 30,
+   "n_gev": 31,
+   "converged": true,
+   "message": "KKT residual 1.68e-16 \u2264 tol and violation 0 \u2264 tol = 1e-13"
+  },
+  "FW (l1 ball)": {
+   "k_dist_1e-6": 1,
+   "support_first": 1,
+   "support_final": 1,
+   "n_iter": 1,
+   "n_gev": 2,
+   "converged": true,
+   "message": "KKT residual 0 \u2264 tol and violation 0 \u2264 tol = 1e-13"
+  }
+ }
+}

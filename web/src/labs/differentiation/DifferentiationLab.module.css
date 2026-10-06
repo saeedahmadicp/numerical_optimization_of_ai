@@ -1,0 +1,381 @@
+/* Differentiation lab: stage split (stencil above, error V below), canvases, insights. */
+
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+/* Tabular figures on numbers only: in prose and names they widen the hyphen ("Five‑point"). */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.hint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.exact {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-2);
+}
+
+@container stage (max-width: 560px) {
+  .panelNote {
+    display: none;
+  }
+  .strip {
+    height: 34px;
+  }
+  .readoutErr {
+    display: none;
+  }
+}
+
+/* ── Stage layout ─────────────────────────────────────────────────────────── */
+.split {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1.08fr) minmax(0, 1fr);
+}
+.split > .panel + .panel {
+  border-top: 1px solid var(--color-border);
+}
+.single {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.single > .panel {
+  flex: 1;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--chart-surface);
+}
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2px var(--space-3);
+  padding: 8px var(--space-4) 0;
+  min-height: 30px;
+}
+.panelTitle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+.panelMeta {
+  font-weight: var(--weight-regular);
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.collapsed {
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-warn-soft);
+  color: var(--color-text);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+}
+.panelNote {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.panelBody {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.readouts {
+  margin: 0;
+  padding: 4px var(--space-4) 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text);
+}
+.readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.readoutValue,
+.readoutErr {
+  font-variant-numeric: tabular-nums;
+}
+.readoutErr {
+  color: var(--color-text-3);
+}
+.readoutName {
+  display: none;
+  font-family: var(--font-sans);
+  color: var(--color-text-2);
+}
+.insightTitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.canvasBox {
+  position: absolute;
+  inset: 0;
+  touch-action: pan-y;
+}
+.canvasBox canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* The overview strip (a slider over f on its domain). */
+.strip {
+  position: relative;
+  flex: none;
+  height: 44px;
+  margin: 0 var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-sunken);
+  cursor: ew-resize;
+  touch-action: none;
+}
+.strip canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.strip:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Hover tooltip of the error chart. */
+.tip {
+  position: absolute;
+  top: 34px;
+  z-index: var(--z-tooltip);
+  min-width: 190px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-2);
+  font-size: var(--text-xs);
+  pointer-events: none;
+}
+.tipHead {
+  margin-bottom: 4px;
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.tipHead i {
+  font-family: var(--font-math);
+}
+.tipRow {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.6;
+}
+.tipSwatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.tipName {
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+.tipValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+/* ── Insights ─────────────────────────────────────────────────────────────── */
+.chartPad {
+  position: absolute;
+  inset: 0;
+}
+.fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.fill > * {
+  height: 100%;
+}
+/* In normal flow (the panel sizes to its content). */
+.flow {
+  overflow-x: auto;
+}
+.fillCol {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The full method name; a long one wraps to a second line rather than pushing the numbers out. */
+.methodCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 13em;
+  white-space: normal;
+  line-height: var(--leading-snug);
+  font-variant-numeric: normal;
+  color: var(--color-text);
+}
+.methodCell > :first-child {
+  flex: none;
+}
+.ok {
+  color: var(--color-good);
+}
+.bad {
+  color: var(--color-bad);
+}
+.compact th,
+.compact td {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.compact th:first-child,
+.compact td:first-child {
+  padding-left: 14px;
+}
+.warn {
+  color: var(--color-warn);
+}
+.flag {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+}
+.flagBest {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.tableauBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.tableauNote {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.tableau {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.tableau table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.tableau th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 30px;
+  padding: 0 10px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-strong);
+  color: var(--color-text-2);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+.tableau td {
+  position: relative;
+  height: 26px;
+  padding: 0 10px;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--color-text-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+.tableau td:first-child,
+.tableau th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  text-align: right;
+}
+.tableau td[data-diag] {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.tableau tr {
+  cursor: pointer;
+}
+.tableau tr[aria-current='true'] td {
+  color: var(--color-text);
+  box-shadow: inset 0 0 0 999px var(--color-accent-soft);
+}
+.tableau tr[aria-current='true'] td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--color-accent);
+}
+.tableau tr[data-future] td {
+  opacity: 0.35;
+}
+.tableau:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+/* The header chips are hidden on a narrow stage: the readouts carry the method names (this block
+   comes after the base rules so that it wins). */
+@container stage (max-width: 560px) {
+  .readoutName {
+    display: inline;
+  }
+}

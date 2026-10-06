@@ -1,0 +1,108 @@
+{
+ "convex": {
+  "ARC": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "RegN-AdaN": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "RegN-SU": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "RegN-fixed": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "trust_region_exact": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "trust_region_steihaug": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "damped_newton": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "modified_newton": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "pure_newton": {
+   "runs": 256,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  }
+ },
+ "nonconvex": {
+  "ARC": {
+   "runs": 241,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "RegN-AdaN": {
+   "runs": 241,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "RegN-SU": {
+   "runs": 241,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "trust_region_exact": {
+   "runs": 241,
+   "converged_at_saddle": 2,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "trust_region_steihaug": {
+   "runs": 241,
+   "converged_at_saddle": 8,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "damped_newton": {
+   "runs": 241,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "modified_newton": {
+   "runs": 241,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  },
+  "pure_newton": {
+   "runs": 241,
+   "converged_at_saddle": 0,
+   "converged_at_fail": 0,
+   "not_converged_at_min": 0
+  }
+ }
+}

@@ -1,0 +1,231 @@
+/* The differentiation MethodCard: the shared card's order and rhythm (blocks.module.css). */
+.card {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.card > * {
+  flex-shrink: 0;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.headEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.rate {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+.rule {
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  color: var(--color-text);
+  text-align: center;
+}
+.filled {
+  overflow-x: auto;
+  color: var(--color-text);
+  text-align: center;
+  font-size: 0.92em;
+}
+.live {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-border);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.liveCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px 9px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+.liveLabel {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.liveValue {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-3);
+  margin-bottom: 6px;
+}
+.cancel {
+  display: flex;
+  flex-direction: column;
+}
+.digits {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.digitRow {
+  display: grid;
+  grid-template-columns: minmax(84px, auto) 1fr;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.digitRow dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: pre;
+  overflow-x: auto;
+  text-align: right;
+}
+/* The leading digits every value shares (they cancel) recede; the digits that survive lead. */
+.dim {
+  color: var(--color-text-3);
+}
+.kept {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+.cancelNote {
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+/* A short inline formula is one unit: never break it at its relations. */
+.cancelNote :global(.katex),
+.evidence :global(.katex) {
+  white-space: nowrap;
+}
+.statusBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+.statusIcon {
+  flex: none;
+  width: 14px;
+  text-align: center;
+  color: var(--color-text-3);
+}
+.status[data-tone='good'] .statusIcon {
+  color: var(--color-good);
+}
+.status[data-tone='warn'] .statusIcon {
+  color: var(--color-warn);
+}
+.status[data-tone='bad'] {
+  color: var(--color-bad);
+}
+.status[data-tone='bad'] .statusIcon {
+  color: var(--color-bad);
+}
+.evidence {
+  margin: 0;
+  padding-left: 22px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  line-height: var(--leading-snug);
+}
+.intuition {
+  font-size: 14.5px;
+  color: var(--color-text-2);
+  line-height: var(--leading-normal);
+}
+.proscons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.proscons h3 {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-3);
+  margin-bottom: 6px;
+}
+.proscons ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.proscons li {
+  position: relative;
+  padding-left: 14px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  line-height: var(--leading-snug);
+}
+.proscons li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 600;
+}
+.pro li::before {
+  content: '+';
+  color: var(--color-good);
+}
+.con li::before {
+  content: '−';
+  color: var(--color-bad);
+}

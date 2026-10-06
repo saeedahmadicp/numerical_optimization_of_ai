@@ -1,0 +1,459 @@
+/* #/method/<id> — the method's page. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, auto));
+  justify-content: start;
+  gap: var(--space-4) var(--space-10);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--color-border-strong);
+  border-bottom: 1px solid var(--color-border);
+}
+.facts dt {
+  margin-bottom: 4px;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+.facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.idCode {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+.inlineCopy {
+  min-width: 24px;
+  min-height: 24px;
+  opacity: 0.7;
+}
+.inlineCopy:hover,
+.inlineCopy:focus-visible {
+  opacity: 1;
+}
+.rate {
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+  color: var(--color-text);
+  max-width: 34ch;
+}
+/* The rate class, as a link to the Methods filter (shown when the rate does not say it). */
+.rateClass {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  font-size: var(--text-xs);
+  color: var(--color-link);
+}
+.needs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.need {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--radius-xs);
+  background: var(--color-sunken);
+  color: var(--color-text-2);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.parityPill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+.parityPill[data-state='ok'] {
+  background: var(--color-good-soft);
+  color: var(--color-good);
+  box-shadow: none;
+}
+.parityPill[data-state='bad'] {
+  background: var(--color-bad-soft);
+  color: var(--color-bad);
+  box-shadow: none;
+}
+.muted {
+  color: var(--color-text-3);
+}
+.bad {
+  color: var(--color-bad);
+}
+
+.section {
+  margin-top: var(--space-12);
+}
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+.h2 {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  letter-spacing: -0.012em;
+}
+.labLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-ink);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.labLink:hover {
+  text-decoration: none;
+  background: var(--color-ink-hover);
+}
+.caption,
+.prose {
+  max-width: 46em;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-text-2);
+}
+.prose code,
+.caption code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.caption strong {
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+/*
+ * The live-run caption keeps a fixed height from the first paint (two lines; four on phones), so
+ * the figure under it never moves when the parity cases arrive and the sentence fills in.
+ */
+.caption {
+  min-height: calc(2 * 1.6em);
+}
+
+/* Live run: figure (landscape + chart + playback) | MethodCard. */
+.live {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--insight-width, 360px);
+  gap: var(--space-4);
+  align-items: stretch;
+}
+.liveFigure {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+  overflow: hidden;
+}
+.landscape {
+  position: relative;
+  min-height: 380px;
+}
+.landscape > *,
+.chartBig > * {
+  position: absolute;
+  inset: 0;
+}
+.chartSmall {
+  height: 190px;
+  border-top: 1px solid var(--color-border);
+}
+.chartBig {
+  min-height: 420px;
+}
+.chartSmall > * {
+  height: 100%;
+}
+.chartBig {
+  position: relative;
+}
+.liveBar {
+  border-top: 1px solid var(--color-border);
+}
+.liveCard {
+  min-width: 0;
+  max-height: 690px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+  overflow: hidden;
+}
+.liveCard > * {
+  flex: 1;
+  min-height: 0;
+}
+/*
+ * The placeholder is the loaded block's own grid, empty: a figure cell (landscape + chart +
+ * playback bar) and a card cell of the same heights, so nothing below it moves when the run
+ * arrives (1440: 380 + 190 + 52 px; phones: the stacked heights).
+ */
+.livePlaceholderFigure,
+.livePlaceholderCard {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+  color: var(--color-text-3);
+  font-size: var(--text-sm);
+}
+.livePlaceholderFigure {
+  min-height: calc(380px + 190px + 52px);
+}
+.livePlaceholderCard {
+  min-height: 690px;
+}
+
+/* Tables */
+.tableWrap {
+  overflow-x: auto;
+  border-top: 1px solid var(--color-border-strong);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.table th,
+.table td {
+  padding: 10px 16px 10px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+}
+.table thead th {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-3);
+  white-space: nowrap;
+}
+.table tbody th {
+  font-weight: var(--weight-regular);
+  min-width: 150px;
+}
+.pname {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+.ptex {
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--color-text-2);
+}
+.pkind {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+/* Parameter values: typeset numbers (10⁻⁸, 100,000) in Inter with tabular figures. */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+.phelp {
+  min-width: 260px;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+.phelp strong {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+.caseName {
+  display: block;
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+.caseArgs {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+  overflow-wrap: anywhere;
+}
+.ms {
+  color: var(--color-text-3);
+}
+.checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-bad);
+  min-width: 220px;
+}
+.checks li[data-ok] {
+  color: var(--color-good);
+}
+.checks li .muted {
+  margin-left: 2px;
+}
+.note {
+  margin-top: var(--space-3);
+  max-width: 60em;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+
+.codeGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.sourceLine {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+}
+.sourceLine a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.refs {
+  margin: 0;
+  padding: 0 0 0 1.4em;
+  border-top: 1px solid var(--color-border-strong);
+  padding-top: var(--space-3);
+}
+.refs li {
+  padding: 6px 0;
+  font-style: italic;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.refs li::marker {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.refs cite {
+  font-style: inherit;
+  margin-right: 6px;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-16);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-strong);
+}
+.pagerLink {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 48%;
+  color: var(--color-text);
+}
+.pagerLink[data-next] {
+  align-items: flex-end;
+  text-align: right;
+  margin-left: auto;
+}
+.pagerLink:hover {
+  text-decoration: none;
+}
+.pagerLink:hover .pagerName {
+  color: var(--color-link);
+}
+.pagerDir {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.pagerName {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+@media (max-width: 1080px) {
+  .facts {
+    grid-template-columns: repeat(3, minmax(0, auto));
+  }
+  .live {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .liveCard {
+    max-height: none;
+  }
+  .livePlaceholderCard {
+    min-height: 560px;
+  }
+  .codeGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .caption {
+    min-height: calc(4 * 1.6em);
+  }
+  .facts {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-3) var(--space-5);
+  }
+  .landscape {
+    min-height: 320px;
+  }
+  .livePlaceholderFigure {
+    min-height: calc(320px + 190px + 52px);
+  }
+  .chartBig {
+    min-height: 300px;
+  }
+}

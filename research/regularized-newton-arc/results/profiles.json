@@ -1,0 +1,92 @@
+{
+ "Convex set (4 problems \u00d7 64 starts)": {
+  "labels": [
+   "ARC",
+   "RegN-AdaN",
+   "RegN-SU",
+   "RegN-fixed",
+   "trust_region_exact",
+   "trust_region_steihaug",
+   "damped_newton",
+   "modified_newton",
+   "pure_newton"
+  ],
+  "rho_at_1": {
+   "ARC": 0.00390625,
+   "RegN-AdaN": 0.00390625,
+   "RegN-SU": 0.1875,
+   "RegN-fixed": 0.0,
+   "trust_region_exact": 0.359375,
+   "trust_region_steihaug": 0.30078125,
+   "damped_newton": 0.6796875,
+   "modified_newton": 0.6953125,
+   "pure_newton": 0.0703125
+  },
+  "rho_at_2": {
+   "ARC": 0.34765625,
+   "RegN-AdaN": 0.8515625,
+   "RegN-SU": 0.9765625,
+   "RegN-fixed": 0.25,
+   "trust_region_exact": 0.9453125,
+   "trust_region_steihaug": 0.9453125,
+   "damped_newton": 0.98046875,
+   "modified_newton": 0.98828125,
+   "pure_newton": 0.1015625
+  },
+  "solved_fraction": {
+   "ARC": 1.0,
+   "RegN-AdaN": 1.0,
+   "RegN-SU": 1.0,
+   "RegN-fixed": 0.75,
+   "trust_region_exact": 1.0,
+   "trust_region_steihaug": 1.0,
+   "damped_newton": 0.98046875,
+   "modified_newton": 0.98828125,
+   "pure_newton": 0.1015625
+  },
+  "n_instances": 256
+ },
+ "Nonconvex set (3 problems \u00d7 9\u00d79 grid)": {
+  "labels": [
+   "ARC",
+   "RegN-AdaN",
+   "RegN-SU",
+   "trust_region_exact",
+   "trust_region_steihaug",
+   "damped_newton",
+   "modified_newton",
+   "pure_newton"
+  ],
+  "rho_at_1": {
+   "ARC": 0.6431535269709544,
+   "RegN-AdaN": 0.03319502074688797,
+   "RegN-SU": 0.23651452282157676,
+   "trust_region_exact": 0.6929460580912863,
+   "trust_region_steihaug": 0.17012448132780084,
+   "damped_newton": 0.5394190871369294,
+   "modified_newton": 0.6182572614107884,
+   "pure_newton": 0.44398340248962653
+  },
+  "rho_at_2": {
+   "ARC": 1.0,
+   "RegN-AdaN": 0.9294605809128631,
+   "RegN-SU": 0.8796680497925311,
+   "trust_region_exact": 0.991701244813278,
+   "trust_region_steihaug": 0.9626556016597511,
+   "damped_newton": 0.7385892116182573,
+   "modified_newton": 0.9128630705394191,
+   "pure_newton": 0.6514522821576764
+  },
+  "solved_fraction": {
+   "ARC": 1.0,
+   "RegN-AdaN": 0.9377593360995851,
+   "RegN-SU": 0.8796680497925311,
+   "trust_region_exact": 0.991701244813278,
+   "trust_region_steihaug": 0.966804979253112,
+   "damped_newton": 0.7427385892116183,
+   "modified_newton": 0.91701244813278,
+   "pure_newton": 0.6514522821576764
+  },
+  "n_instances": 241
+ }
+}

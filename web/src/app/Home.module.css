@@ -1,0 +1,120 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.container {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--page-gutter));
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+}
+
+/* ── Hero: 12-column grid, text 5 columns, figure 7 ───────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: var(--space-10);
+  align-items: center;
+  padding-top: var(--space-20);
+  padding-bottom: var(--space-24);
+}
+.heroText {
+  grid-column: 1 / span 5;
+  min-width: 0;
+}
+.heroFigure {
+  grid-column: 6 / span 7;
+  min-width: 0;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 1.5rem + 2.4vw, 3.5rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: var(--tracking-serif-display);
+  font-variant-numeric: lining-nums;
+}
+.title span,
+.title em {
+  display: block;
+}
+.title em {
+  font-style: italic;
+  color: var(--color-text-2);
+}
+.lede {
+  margin-top: var(--space-6);
+  max-width: 30em;
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  color: var(--color-text-2);
+}
+.ctas {
+  margin-top: var(--space-8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.facts {
+  margin-top: var(--space-8);
+  max-width: 30em;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ── Labs gallery ────────────────────────────────────────────────────────── */
+.labs {
+  padding-bottom: var(--space-24);
+}
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-6);
+  margin-bottom: var(--space-10);
+}
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: var(--tracking-serif);
+  scroll-margin-top: calc(var(--header-height) + var(--space-8));
+}
+.sectionTitle:focus {
+  outline: none;
+}
+.sectionNote {
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+
+@media (max-width: 1079px) {
+  .heroText,
+  .heroFigure {
+    grid-column: 1 / -1;
+  }
+  .heroText {
+    max-width: 40rem;
+  }
+  .hero {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-16);
+  }
+}
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.4rem;
+  }
+  .ctas > * {
+    flex: 1 1 auto;
+  }
+  .hero {
+    padding-top: var(--space-10);
+  }
+}

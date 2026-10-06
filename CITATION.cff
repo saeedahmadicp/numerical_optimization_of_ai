@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If numopt helps your teaching or research, please cite it as below. When you cite a method, also cite its original source: numopt.get_method(id).references lists them."
+title: "numopt: numerical optimization, iterate by iterate"
+abstract: "A reference implementation of 168 numerical methods in 16 families, from root finding and unconstrained optimization to linear programming, quadrature and regression. Each method is cited to its algorithm and equation, tested against an oracle, and records every iterate in a trace. A TypeScript port of every method, parity-checked against the Python fixtures, drives the interactive web labs."
+type: software
+authors:
+  - family-names: "Ahmad"
+    given-names: "Saeed"
+  - family-names: "Ali"
+    given-names: "Izhar"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/saeedahmadicp/numerical_optimization_of_ai"
+url: "https://saeedahmadicp.github.io/numerical_optimization_of_ai/"
+keywords:
+  - numerical optimization
+  - numerical analysis
+  - optimization algorithms
+  - quasi-Newton methods
+  - benchmarking
+  - education

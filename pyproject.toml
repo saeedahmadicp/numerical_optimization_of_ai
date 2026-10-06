@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "numopt"
+version = "1.0.0"
+description = "Numerical optimization and numerical methods, implemented clearly and checked carefully."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.8"]
+dev = ["pytest>=8", "hypothesis>=6", "scipy>=1.11", "sympy>=1.12", "ruff>=0.6", "pyright>=1.1.380"]
+
+[project.scripts]
+numopt = "numopt.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/numopt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY", "RUF"]
+ignore = ["E501", "E741", "RUF001", "RUF002", "RUF003"]
+
+[tool.pyright]
+include = ["src", "tests"]
+exclude = ["web"]
+venvPath = "."
+venv = ".venv"

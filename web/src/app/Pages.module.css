@@ -1,0 +1,277 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.container {
+  flex: 1;
+  width: 100%;
+  /* Backstop: a page whose data arrives late never shows the footer in the first viewport. */
+  min-height: calc(100dvh - var(--header-height));
+  max-width: calc(var(--content-max) + 2 * var(--page-gutter));
+  margin: 0 auto;
+  padding: 0 var(--page-gutter) var(--space-16);
+}
+.head {
+  padding: var(--space-12) 0 var(--space-8);
+  max-width: 46em;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-2);
+}
+.plannedDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-text-3);
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--text-4xl);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums;
+}
+.titleSmall {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.016em;
+}
+.lede {
+  margin-top: 14px;
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  color: var(--color-text-2);
+  overflow-wrap: break-word;
+}
+/* Inline code in a lede (a study's file paths): the body's code chip, and it may break anywhere
+   so a long path never overflows a phone. */
+.lede code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-sunken);
+  overflow-wrap: anywhere;
+}
+.h2 {
+  margin: var(--space-8) 0 var(--space-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+.h3 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+.note {
+  max-width: 40em;
+  font-size: var(--text-base);
+  color: var(--color-text-2);
+  line-height: 1.6;
+}
+.center {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: var(--space-16) var(--page-gutter);
+}
+.box {
+  max-width: 520px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+.row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.loading {
+  position: relative;
+  flex: 1;
+}
+/* No spinner: a 2-px iris hairline at the top after 400 ms. */
+.progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 40%;
+  background: var(--color-accent);
+  opacity: 0;
+  animation:
+    appear 1ms 400ms forwards,
+    sweep 1.2s 400ms var(--ease-in-out) infinite;
+}
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress {
+    animation: appear 1ms 400ms forwards;
+  }
+}
+
+/* Planned lab */
+.plannedGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-12);
+  align-items: start;
+}
+.plannedMain {
+  min-width: 0;
+}
+.problemBox {
+  padding: var(--space-2) 0 var(--space-5);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 18px;
+  text-align: left;
+}
+.problemBox :global(.katex-display) {
+  text-align: left;
+}
+.methodList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border-strong);
+}
+.method {
+  position: relative;
+  padding: 12px 0 13px;
+  border-bottom: 1px solid var(--color-border);
+}
+.method[data-current] {
+  background: var(--color-accent-soft);
+  padding-left: 12px;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.methodHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.methodName {
+  font-weight: var(--weight-medium);
+}
+.order {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-text-2);
+}
+.summary {
+  margin-top: 3px;
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: var(--leading-snug);
+}
+.cite {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+.plannedSide {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+}
+.thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  background: var(--chart-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+  overflow: hidden;
+}
+.thumb canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.problemList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+.problemList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-2);
+}
+.problemList code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-3);
+}
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+}
+@media (max-width: 900px) {
+  .plannedGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .plannedSide {
+    position: static;
+  }
+  .head {
+    padding-top: var(--space-8);
+  }
+  .title {
+    font-size: 2.25rem;
+  }
+}
+.errorMessage {
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-sunken);
+  color: var(--color-text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+  text-align: left;
+}

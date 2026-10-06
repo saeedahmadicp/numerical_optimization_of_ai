@@ -1,0 +1,14 @@
+/* The rate word: Newsreader italic, at the size of its container. */
+.word {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-variant-numeric: lining-nums;
+}
+/* The qualification: Inter at the secondary UI size, beside inline math. */
+.prose {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
