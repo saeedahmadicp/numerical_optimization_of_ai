@@ -40,6 +40,8 @@ jobs:
           # Absolute og:image / twitter:image URLs for link previews (see web/vite/catalog.ts).
           SITE_URL: https://saeedahmadicp.github.io/numerical_optimization_of_ai/
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist
