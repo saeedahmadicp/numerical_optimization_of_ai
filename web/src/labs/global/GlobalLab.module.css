@@ -1,0 +1,212 @@
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stage: the landscape fills; the key sits under it (never over the plot). */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.keyBar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px var(--space-4);
+  padding: 7px 12px 6px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  color: var(--color-text-2);
+}
+.keyName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+.keySwatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+.keyItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.keyGlyph {
+  flex: none;
+}
+.trackNote {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+/* Insights. */
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 10px 12px 6px 8px;
+}
+.chartEmpty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--space-6);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+/* Chart header: the log-k switch, then the metric. */
+.chartActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+/* Math labels keep their full width and clear the segment edges (f_best − f⋆ is the widest). */
+.metricSeg > button,
+.metricSeg > span > button {
+  flex: none;
+  min-width: max-content;
+  padding-inline: 8px;
+}
+.metricSeg > span {
+  flex: none;
+}
+
+/* Details: the tab's content (the method picker is in the panel header, LabShell `focus`). */
+.details {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.detailsBody {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* One scroll region: the MethodCard (with "This step") at its natural height. */
+.methodTab {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+}
+.methodTab > [role='region'] {
+  height: auto;
+  overflow: visible;
+}
+.popTab {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 4px 8px 8px;
+}
+
+/*
+ * "This step" (inside the shared StepBlock), part by part: the formula and the note each hold the
+ * current version and, hidden in the same cell, the tallest versions of the run, so each keeps
+ * one height and nothing moves while the trace plays. At k = 0 the start note stands in the
+ * formula's cell.
+ */
+.stepStack {
+  display: grid;
+}
+.stepPart {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.stepPart[data-ghost] {
+  visibility: hidden;
+}
+.stepEqTex {
+  color: var(--color-text);
+}
+.stepEqNote {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+
+.live {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-border);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.liveCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 10px 7px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+.liveLabel {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  min-height: 20px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.liveValue {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 899px) {
+  .trackNote {
+    display: none;
+  }
+}
+/* Phones: the key wraps (every entry stays visible; nothing scrolls out of sight). */
+@media (max-width: 599px) {
+  .keyBar {
+    padding: 5px 10px;
+  }
+  .key {
+    gap: 3px 10px;
+  }
+}

@@ -1,0 +1,413 @@
+{
+ "himmelblau": {
+  "n_starts": 81,
+  "saddle_stops": {
+   "damped_newton": 14,
+   "modified_newton": 0,
+   "both": 0
+  },
+  "saddle_both_starts": [],
+  "on_damped_saddle_stops": {
+   "ARC": {
+    "min": 14,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 14,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 14,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 9,
+    "saddle": 5,
+    "fail": 0
+   }
+  },
+  "on_modified_saddle_stops": {
+   "ARC": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   }
+  },
+  "on_both_saddle_stops": {
+   "ARC": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   }
+  },
+  "non_min": {
+   "damped_newton": 18,
+   "modified_newton": 0,
+   "both": 0,
+   "both_near_min_fail": {
+    "damped_newton": 0,
+    "modified_newton": 0
+   }
+  },
+  "on_both_non_min": {
+   "ARC": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   }
+  },
+  "ARC vs trust_region_exact": {
+   "n_both": 81,
+   "a_fewer": 27,
+   "tie": 45,
+   "a_more": 9,
+   "median_a": 7.0,
+   "median_b": 7.0,
+   "median_diff_a_minus_b": 0.0,
+   "sign_test_p": 0.00393317302223295
+  },
+  "ARC vs trust_region_steihaug": {
+   "n_both": 81,
+   "a_fewer": 76,
+   "tie": 5,
+   "a_more": 0,
+   "median_a": 7.0,
+   "median_b": 9.0,
+   "median_diff_a_minus_b": -2.0,
+   "sign_test_p": 2.6469779601696886e-23
+  }
+ },
+ "six_hump_camel": {
+  "n_starts": 80,
+  "saddle_stops": {
+   "damped_newton": 26,
+   "modified_newton": 0,
+   "both": 0
+  },
+  "saddle_both_starts": [],
+  "on_damped_saddle_stops": {
+   "ARC": {
+    "min": 26,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 26,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 26,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 24,
+    "saddle": 2,
+    "fail": 0
+   }
+  },
+  "on_modified_saddle_stops": {
+   "ARC": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   }
+  },
+  "on_both_saddle_stops": {
+   "ARC": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 0,
+    "fail": 0
+   }
+  },
+  "non_min": {
+   "damped_newton": 36,
+   "modified_newton": 12,
+   "both": 12,
+   "both_near_min_fail": {
+    "damped_newton": 8,
+    "modified_newton": 12
+   }
+  },
+  "on_both_non_min": {
+   "ARC": {
+    "min": 12,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 12,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 12,
+    "saddle": 0,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 12,
+    "saddle": 0,
+    "fail": 0
+   }
+  },
+  "ARC vs trust_region_exact": {
+   "n_both": 78,
+   "a_fewer": 10,
+   "tie": 56,
+   "a_more": 12,
+   "median_a": 7.0,
+   "median_b": 7.0,
+   "median_diff_a_minus_b": 0.0,
+   "sign_test_p": 0.8318119049072266
+  },
+  "ARC vs trust_region_steihaug": {
+   "n_both": 80,
+   "a_fewer": 52,
+   "tie": 28,
+   "a_more": 0,
+   "median_a": 7.0,
+   "median_b": 8.0,
+   "median_diff_a_minus_b": -1.0,
+   "sign_test_p": 4.440892098500626e-16
+  }
+ },
+ "quartic_saddle": {
+  "n_starts": 80,
+  "saddle_stops": {
+   "damped_newton": 8,
+   "modified_newton": 8,
+   "both": 8
+  },
+  "saddle_both_starts": [
+   [
+    -3.0,
+    0.0
+   ],
+   [
+    -2.25,
+    0.0
+   ],
+   [
+    -1.5,
+    0.0
+   ],
+   [
+    -0.75,
+    0.0
+   ],
+   [
+    0.75,
+    0.0
+   ],
+   [
+    1.5,
+    0.0
+   ],
+   [
+    2.25,
+    0.0
+   ],
+   [
+    3.0,
+    0.0
+   ]
+  ],
+  "on_damped_saddle_stops": {
+   "ARC": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   }
+  },
+  "on_modified_saddle_stops": {
+   "ARC": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   }
+  },
+  "on_both_saddle_stops": {
+   "ARC": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   }
+  },
+  "non_min": {
+   "damped_newton": 8,
+   "modified_newton": 8,
+   "both": 8,
+   "both_near_min_fail": {
+    "damped_newton": 0,
+    "modified_newton": 0
+   }
+  },
+  "on_both_non_min": {
+   "ARC": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_exact": {
+    "min": 8,
+    "saddle": 0,
+    "fail": 0
+   },
+   "trust_region_steihaug": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   },
+   "RegN-AdaN": {
+    "min": 0,
+    "saddle": 8,
+    "fail": 0
+   }
+  },
+  "ARC vs trust_region_exact": {
+   "n_both": 80,
+   "a_fewer": 6,
+   "tie": 38,
+   "a_more": 36,
+   "median_a": 7.0,
+   "median_b": 7.0,
+   "median_diff_a_minus_b": 0.0,
+   "sign_test_p": 2.8288777684792876e-06
+  },
+  "ARC vs trust_region_steihaug": {
+   "n_both": 72,
+   "a_fewer": 18,
+   "tie": 36,
+   "a_more": 18,
+   "median_a": 7.0,
+   "median_b": 7.0,
+   "median_diff_a_minus_b": 0.0,
+   "sign_test_p": 1.0
+  }
+ }
+}

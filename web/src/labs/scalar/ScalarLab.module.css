@@ -1,0 +1,238 @@
+/* 1-D minimization lab. Tokens only; layout one-offs are commented. */
+
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Rail: the bracket and the start point, each in its own section */
+/* Math in a section heading: the heading's caps and tracking would print [A₀, B₀]. */
+.titleMath {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text-2);
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.hint svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* Stage */
+.stageWrap {
+  position: absolute;
+  inset: 0;
+}
+.stageCanvas {
+  position: absolute;
+  inset: 0;
+  background: var(--chart-surface);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stageCanvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.stageCanvas[data-pick='true'] {
+  cursor: crosshair;
+}
+.stageCanvas[data-handle='true'] {
+  cursor: ew-resize;
+}
+.stageCanvas[data-drag='true'] {
+  cursor: ew-resize;
+  touch-action: none;
+}
+.plotNotes {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: min(420px, calc(100% - 90px));
+  pointer-events: none;
+}
+.floorNote {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 90%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-1);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+  pointer-events: none;
+}
+
+/* Top-left of the stage: the step badge, then (when needed) a warning about the inputs. */
+.overlay {
+  position: absolute;
+  left: 56px; /* clear of the y tick labels */
+  top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: calc(100% - 72px);
+  pointer-events: none;
+}
+.warnNote {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 90%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow:
+    inset 3px 0 0 var(--color-warn, var(--color-accent)),
+    0 0 0 1px var(--color-border);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+
+/* The step badge: which method is drawn, its step and what it does next. */
+.badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  max-width: 100%;
+  padding: 3px 8px 3px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 88%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px var(--color-border);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.badgeName {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+/* The step and status slots stack the current value over an invisible sizer (the run's widest
+   value), so the badge keeps one width during playback. */
+.badgeK,
+.badgeStatus {
+  display: inline-grid;
+  justify-items: start;
+}
+.badgeK > *,
+.badgeStatus > * {
+  grid-area: 1 / 1;
+}
+.badgeK [data-sizer],
+.badgeStatus [data-sizer],
+.badgeRatio[data-hidden] {
+  visibility: hidden;
+}
+.badgeK {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.badgeK :global(.katex) {
+  font-size: 1.05em;
+}
+
+/* Convergence chart */
+.rate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 6px 8px;
+}
+.rateCanvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.rateCanvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.rateEmpty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 24px;
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+/* "This step" (inside the shared StepBlock): the current note over the run's longest notes,
+   which are invisible and only reserve the block's size. */
+.note {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.note > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.note > [data-sizer] {
+  visibility: hidden;
+}
+.note :global(.katex-display) {
+  margin: 4px 0 0;
+}
+
+.short {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .long {
+    display: none;
+  }
+  .short {
+    display: inline;
+  }
+  .badgeName,
+  .badgeRatio {
+    display: none;
+  }
+  .overlay {
+    left: 8px;
+    top: 4px;
+    max-width: calc(100% - 16px);
+  }
+  .plotNotes {
+    left: 8px !important; /* over the inline position: phones give the note the full width */
+    max-width: calc(100% - 16px);
+  }
+}

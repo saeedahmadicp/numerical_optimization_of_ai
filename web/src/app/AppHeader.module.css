@@ -1,0 +1,199 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  height: var(--header-height);
+  background: color-mix(in srgb, var(--color-bg) 84%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+.inner {
+  height: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--page-gutter));
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.header[data-wide] .inner {
+  max-width: none;
+  padding: 0 var(--space-4);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 4px 2px;
+  margin-right: var(--space-4);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+}
+.brand:hover {
+  text-decoration: none;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+.nav a:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+  text-decoration: none;
+}
+.nav a[aria-current='page'] {
+  color: var(--color-text);
+}
+.crumbs {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+.crumbs a {
+  color: var(--color-text-3);
+}
+.crumbs a:hover {
+  color: var(--color-text);
+  text-decoration: none;
+}
+/* Decorative (aria-hidden), but still legible: text-3 passes 4.5:1 on the header. */
+.crumbSep {
+  color: var(--color-text-3);
+  flex: none;
+}
+.crumbCurrent {
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spacer {
+  flex: 1;
+}
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  min-width: 0;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-3);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.search:hover {
+  color: var(--color-text-2);
+  border-color: color-mix(in srgb, var(--color-text) 28%, transparent);
+}
+.searchText {
+  min-width: 13em;
+  text-align: left;
+  white-space: nowrap;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.mobileMenu {
+  position: relative;
+  display: none;
+}
+.menuPanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: var(--z-popover);
+  min-width: 200px;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--color-border-strong),
+    var(--shadow-3);
+}
+.menuPanel nav {
+  display: flex;
+  flex-direction: column;
+}
+.menuPanel a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-base);
+}
+.menuPanel a[aria-current='page'] {
+  background: var(--color-accent-soft);
+}
+.menuPanel a:hover {
+  background: var(--color-hover);
+  text-decoration: none;
+}
+@media (max-width: 1100px) {
+  .searchText {
+    min-width: 0;
+  }
+}
+@media (max-width: 860px) {
+  .nav {
+    display: none;
+  }
+  .mobileMenu {
+    display: block;
+  }
+  .searchText {
+    display: none;
+  }
+  /* Icon only, one constant size: the crumb's ellipsis absorbs the space, never the button. */
+  .search {
+    flex: none;
+    min-width: 34px;
+    justify-content: center;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .search > svg {
+    flex: none;
+  }
+  .search kbd {
+    display: none;
+  }
+}
+/* Touch screens have no "/" key to press. */
+@media (hover: none) {
+  .search kbd {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .hideNarrow {
+    display: none;
+  }
+  .brand {
+    margin-right: 0;
+  }
+}

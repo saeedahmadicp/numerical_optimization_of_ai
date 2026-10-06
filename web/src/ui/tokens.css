@@ -1,0 +1,309 @@
+/*
+ * numopt design tokens.
+ *
+ * Every color, size and timing in the app comes from here. Components reference roles
+ * (`--color-text-2`, `--series-3`), never raw values, so light/dark swap in one place.
+ *
+ * Theme resolution: OS preference by default; `<html data-theme="light|dark">` overrides it
+ * both ways (the `:not([data-theme="light"])` guard lets an explicit light beat OS-dark).
+ */
+
+/*
+ * Metric-matched fallbacks: until the web fonts arrive, text is set in a local face scaled to the
+ * web font's average width (size-adjust) and line box (ascent/descent overrides), so the swap moves
+ * nothing. Values measured in Chromium (capsize-style weighted lowercase width; Arial 0.4414 em,
+ * Georgia 0.4458 em): Inter 0.4729 em, ascent 0.97, descent 0.24; Newsreader 0.4446 em, ascent
+ * 0.74, descent 0.27. Liberation Sans / Arimo and Gelasio are metric clones of Arial and Georgia.
+ */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 107.12%;
+  ascent-override: 90.55%;
+  descent-override: 22.4%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Newsreader Fallback';
+  src: local('Georgia'), local('Gelasio');
+  size-adjust: 99.73%;
+  ascent-override: 74.2%;
+  descent-override: 27.07%;
+  line-gap-override: 0%;
+}
+
+:root {
+  /* ── Type ─────────────────────────────────────────────────────────────── */
+  --font-sans:
+    'Inter Variable', 'Inter Fallback', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Display only (titles, hero, section heads, rate annotations); never body text. */
+  --font-serif:
+    'Newsreader Variable', 'Newsreader Fallback', 'Newsreader', Georgia, 'Times New Roman', serif;
+  /* Variables drawn on canvases (axis names), so they match the KaTeX math beside them. */
+  --font-math: 'KaTeX_Math', 'Latin Modern Math', 'Cambria Math', 'Times New Roman', serif;
+
+  --text-2xs: 0.6875rem; /* 11 */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.8125rem; /* 13 */
+  --text-md: 0.875rem; /* 14 — UI base */
+  --text-base: 0.9375rem; /* 15 — prose */
+  --text-lg: 1.0625rem; /* 17 */
+  --text-xl: 1.25rem; /* 20 */
+  --text-2xl: 1.625rem; /* 26 */
+  --text-3xl: 2.125rem; /* 34 — lab title (Newsreader 500) */
+  --text-4xl: 2.75rem; /* 44 — page title (Newsreader 400) */
+  --text-display: clamp(2.5rem, 1.6rem + 3.2vw, 4rem); /* home hero (Newsreader 400) */
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+
+  --weight-regular: 420;
+  --weight-medium: 520;
+  --weight-semibold: 600;
+  --weight-bold: 680;
+
+  --tracking-tight: -0.018em;
+  --tracking-display: -0.032em;
+  --tracking-caps: 0.06em;
+  --tracking-serif: -0.016em;
+  --tracking-serif-display: -0.024em;
+
+  /* ── Space (4-px base) ───────────────────────────────────────────────── */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  --gutter: var(--space-4); /* phone side gutter */
+  --content-max: 1240px;
+  /* Research figures are matplotlib output on white: they sit on a white plate in both themes. */
+  --figure-plate: #ffffff;
+  --figure-plate-text: #5f5d56;
+  --page-gutter: var(--space-4); /* 16 px phones, 24 px ≥ 640, 40 px ≥ 1024 (global.css) */
+  --rail-width: 304px;
+  --insight-width: 380px;
+  --header-height: 52px;
+
+  /* ── Radii ───────────────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+
+  /* ── Control sizes ───────────────────────────────────────────────────── */
+  --control-sm: 26px;
+  --control-md: 32px;
+  --control-lg: 38px;
+
+  /* ── Motion ──────────────────────────────────────────────────────────── */
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 360ms;
+  --duration-slower: 560ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  /* ── Z-layers ────────────────────────────────────────────────────────── */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-header: 200;
+  --z-overlay: 300;
+  --z-sheet: 400;
+  --z-popover: 500;
+  --z-tooltip: 600;
+  --z-toast: 700;
+
+  /* ── Color: light (default) ──────────────────────────────────────────── */
+  color-scheme: light;
+  --color-bg: #f5f5f2; /* page plane */
+  --color-surface: #fcfcfb; /* cards, rail, chart surface */
+  --color-surface-raised: #ffffff; /* popovers, inputs */
+  --color-sunken: #eeeeea; /* wells, tracks, segmented bg */
+  --color-hover: rgba(20, 20, 19, 0.045);
+  --color-active: rgba(20, 20, 19, 0.08);
+  --color-border: rgba(20, 20, 19, 0.085);
+  --color-border-strong: rgba(20, 20, 19, 0.16);
+  --color-text: #141413;
+  --color-text-2: #52514e;
+  --color-text-3: #6b6963; /* ≥ 4.5:1 on bg, surface and sunken */
+  --color-text-inverse: #fcfcfb;
+  --color-ink: #1b1b1a; /* primary button */
+  --color-ink-hover: #2e2e2c;
+  /* Iris: focus, selection, links, the path in the mark — never a data color. Gated against every
+     series color (normal ΔE ≥ 15, protan/deutan ≥ 8; brand.md §4). */
+  --color-accent: #4b2ace;
+  --color-accent-soft: rgba(75, 42, 206, 0.1);
+  --color-focus: #4b2ace; /* opaque: ≥ 3:1 against every surface */
+  --color-link: #4b2ace;
+
+  --color-good: #0f7034; /* ≥ 4.5:1 on its soft tint */
+  --color-good-soft: rgba(18, 130, 59, 0.1);
+  --color-warn: #8f5500; /* ≥ 4.5:1 on its soft tint */
+  --color-warn-soft: rgba(214, 140, 0, 0.13);
+  --color-bad: #c23434;
+  --color-bad-soft: rgba(194, 52, 52, 0.09);
+
+  /* chart chrome */
+  --chart-surface: #fcfcfb;
+  --chart-grid: rgba(20, 20, 19, 0.065);
+  --chart-axis: rgba(20, 20, 19, 0.22);
+  --chart-tick: #6b6963; /* drawn with a --chart-halo stroke over fills */
+  --chart-iso: rgba(30, 40, 60, 0.16);
+  --chart-iso-strong: rgba(30, 40, 60, 0.3);
+  --chart-halo: rgba(252, 252, 251, 0.92); /* ring around marks over fills */
+  --chart-crosshair: rgba(20, 20, 19, 0.35);
+  --chart-playhead: rgba(20, 20, 19, 0.5);
+  --chart-region: rgba(20, 20, 19, 0.5); /* hatch/tint of infeasible or shaded regions */
+  /* Level-set tints of the large mark (docs/brand/logo/mark-color-*.svg). */
+  --mark-tint-1: #e6e8f8;
+  --mark-tint-2: #d7daf8;
+  --mark-tint-3: #c7cbf8;
+  --mark-tint-4: #b8bdf7;
+
+  /*
+   * Method palette: 4 slots, assigned in fixed order, validated all-pairs (paths can cross)
+   * with the dataviz validator: CVD ΔE ≥ 9.2, normal-vision ΔE ≥ 18.8 (light), ≥ 9.4 / 20.9 (dark).
+   * Slot 3 (aqua) is < 3:1 on the light surface → every series also carries a direct label
+   * (MethodChip, table) so identity is never color alone.
+   */
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #882892; /* plum */
+
+  /* elevation */
+  --shadow-1: 0 1px 0 rgba(20, 20, 19, 0.03), 0 1px 2px rgba(20, 20, 19, 0.05);
+  --shadow-2: 0 1px 2px rgba(20, 20, 19, 0.05), 0 4px 12px -2px rgba(20, 20, 19, 0.08);
+  --shadow-3: 0 2px 6px rgba(20, 20, 19, 0.06), 0 16px 40px -8px rgba(20, 20, 19, 0.18);
+  --ring-inset: inset 0 0 0 1px var(--color-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-bg: #0d0d0c;
+    --color-surface: #141413;
+    --color-surface-raised: #1c1c1b;
+    --color-sunken: #0f0f0e;
+    --color-hover: rgba(255, 255, 250, 0.05);
+    --color-active: rgba(255, 255, 250, 0.09);
+    --color-border: rgba(255, 255, 250, 0.08);
+    --color-border-strong: rgba(255, 255, 250, 0.15);
+    --color-text: #f1f0eb;
+    --color-text-2: #bab9b0;
+    --color-text-3: #8a8982;
+    --color-text-inverse: #141413;
+    --color-ink: #f1f0eb;
+    --color-ink-hover: #ffffff;
+    --color-accent: #b0a8fc;
+    --color-accent-soft: rgba(176, 168, 252, 0.14);
+    --color-focus: #b0a8fc;
+    --color-link: #b0a8fc;
+    --color-good: #3fbf6a;
+    --color-good-soft: rgba(63, 191, 106, 0.12);
+    --color-warn: #e3a336;
+    --color-warn-soft: rgba(227, 163, 54, 0.13);
+    --color-bad: #ef6b6b;
+    --color-bad-soft: rgba(239, 107, 107, 0.12);
+    --chart-surface: #141413;
+    --chart-grid: rgba(255, 255, 250, 0.06);
+    --chart-axis: rgba(255, 255, 250, 0.2);
+    --chart-tick: #8a8982;
+    --chart-iso: rgba(220, 230, 255, 0.11);
+    --chart-iso-strong: rgba(220, 230, 255, 0.22);
+    --chart-halo: rgba(20, 20, 19, 0.9);
+    --chart-crosshair: rgba(255, 255, 250, 0.38);
+    --chart-playhead: rgba(255, 255, 250, 0.55);
+    --chart-region: rgba(255, 255, 250, 0.5);
+    --mark-tint-1: #1d1e2c;
+    --mark-tint-2: #272843;
+    --mark-tint-3: #32335a;
+    --mark-tint-4: #3d3e73;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #a13bab;
+    --shadow-1: 0 1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.5);
+    --shadow-3: 0 2px 8px rgba(0, 0, 0, 0.45), 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0d0d0c;
+  --color-surface: #141413;
+  --color-surface-raised: #1c1c1b;
+  --color-sunken: #0f0f0e;
+  --color-hover: rgba(255, 255, 250, 0.05);
+  --color-active: rgba(255, 255, 250, 0.09);
+  --color-border: rgba(255, 255, 250, 0.08);
+  --color-border-strong: rgba(255, 255, 250, 0.15);
+  --color-text: #f1f0eb;
+  --color-text-2: #bab9b0;
+  --color-text-3: #8a8982;
+  --color-text-inverse: #141413;
+  --color-ink: #f1f0eb;
+  --color-ink-hover: #ffffff;
+  --color-accent: #b0a8fc;
+  --color-accent-soft: rgba(176, 168, 252, 0.14);
+  --color-focus: #b0a8fc;
+  --color-link: #b0a8fc;
+  --color-good: #3fbf6a;
+  --color-good-soft: rgba(63, 191, 106, 0.12);
+  --color-warn: #e3a336;
+  --color-warn-soft: rgba(227, 163, 54, 0.13);
+  --color-bad: #ef6b6b;
+  --color-bad-soft: rgba(239, 107, 107, 0.12);
+  --chart-surface: #141413;
+  --chart-grid: rgba(255, 255, 250, 0.06);
+  --chart-axis: rgba(255, 255, 250, 0.2);
+  --chart-tick: #8a8982;
+  --chart-iso: rgba(220, 230, 255, 0.11);
+  --chart-iso-strong: rgba(220, 230, 255, 0.22);
+  --chart-halo: rgba(20, 20, 19, 0.9);
+  --chart-crosshair: rgba(255, 255, 250, 0.38);
+  --chart-playhead: rgba(255, 255, 250, 0.55);
+  --chart-region: rgba(255, 255, 250, 0.5);
+  --mark-tint-1: #1d1e2c;
+  --mark-tint-2: #272843;
+  --mark-tint-3: #32335a;
+  --mark-tint-4: #3d3e73;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #a13bab;
+  --shadow-1: 0 1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 2px 8px rgba(0, 0, 0, 0.45), 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+  }
+}

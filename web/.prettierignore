@@ -1,0 +1,7 @@
+dist
+node_modules
+src/generated/*.json
+src/generated/fixtures
+tests/fixtures
+playwright-report
+test-results

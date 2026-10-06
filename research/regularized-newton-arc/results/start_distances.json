@@ -1,0 +1,44 @@
+{
+ "lse": {
+  "x_star": [
+   -0.3799955665849969,
+   0.11692519589708213
+  ],
+  "min_distance": 1.779692626442439,
+  "nearest_start": [
+   -1.5,
+   1.5
+  ],
+  "n_within_3": 4,
+  "median_distance": 9.673501663983135
+ },
+ "sqrt1p": {
+  "x_star": [
+   0.0,
+   0.0
+  ],
+  "min_distance": 2.1213203435596424,
+  "nearest_start": [
+   -1.5,
+   -1.5
+  ],
+  "n_within_3": 4,
+  "median_distance": 9.67651478003308
+ },
+ "logistic_ridge": {
+  "x_star": [
+   4.536651020055183,
+   7.632010421270584
+  ],
+  "min_distance": 0.1370038269360476,
+  "nearest_start": [
+   4.5,
+   7.5
+  ],
+  "n_within_3": 3,
+  "median_distance": 12.405538094104378
+ },
+ "logistic_sep": {
+  "x_star": null
+ }
+}

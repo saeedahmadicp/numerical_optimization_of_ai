@@ -1,0 +1,456 @@
+/* Quadrature lab — local styles (tokens only). */
+
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ── Rail ─────────────────────────────────────────────────────────────── */
+/* Math inside a caps section heading: variables keep their case and spacing. */
+.titleMath {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text-2);
+}
+.abFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.exact {
+  margin: var(--space-3) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.exact .mono {
+  font-size: 12px;
+  color: var(--color-text-2);
+}
+.hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+/* A switch in the stage toolbar or a panel header: the shared Toggle with its visible label. */
+.toolbarToggle {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* ── Stage: small multiples ───────────────────────────────────────────── */
+.panels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 0;
+}
+.panel {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.panel + .panel {
+  border-top: 1px solid var(--color-border);
+}
+.panelHead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  min-height: 30px;
+  padding: 4px 14px 0 12px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.panelName {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium, 500);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.panelName:hover {
+  background: var(--color-accent-soft);
+}
+.nameFull,
+.nameShort {
+  white-space: nowrap;
+}
+/* The short rule name appears only on a narrow stage (below). */
+.nameShort {
+  display: none;
+}
+.panelName[aria-pressed='true'] {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.panelMeta {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nestedMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+/* The legend of the nested-rule nodes: a filled dot (reused value) and a ring (new value). */
+.metaDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: var(--_c);
+}
+.metaRing {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--_c);
+}
+.panelEst {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.panelSym {
+  color: var(--color-text);
+}
+.good {
+  color: var(--color-text);
+}
+.rest {
+  color: var(--color-text-3);
+}
+.panelErr {
+  margin-left: 8px;
+  color: var(--color-text-3);
+}
+.panelErr .mono {
+  color: var(--color-text-2);
+}
+.panelCanvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  touch-action: pan-y;
+}
+.panelCanvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.panelCanvas[data-drag] {
+  cursor: ew-resize;
+}
+.panelError {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-bad);
+}
+
+/* Four panels on a short stage: keep one header line. */
+.panels[data-count='3'] .panelHead,
+.panels[data-count='4'] .panelHead {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+@container stage (max-width: 620px) {
+  .panelHead {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: 8px;
+    padding-left: 8px;
+  }
+  .panelMeta,
+  .panelErr {
+    display: none;
+  }
+  /* A phone shows the rule's own name ("Trapezoidal"): the full name would truncate. */
+  .nameFull {
+    display: none;
+  }
+  .nameShort {
+    display: inline;
+  }
+}
+
+/* ── Error chart ──────────────────────────────────────────────────────── */
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 8px 12px 6px 8px;
+}
+.errorChart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+}
+.legend {
+  padding-left: 6px;
+}
+.legendExtra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.legendGuide {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-text-2);
+}
+.guideKey {
+  flex: none;
+}
+.legendNum {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-3);
+}
+.errorCanvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.errorCanvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.chartTip {
+  position: absolute;
+  top: 6px;
+  left: 56px;
+  right: 10px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+}
+.estToggle {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* ── Details ──────────────────────────────────────────────────────────── */
+.methodTab {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.methodTab > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+.readout {
+  flex: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 1px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-border);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.readoutCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 9px 7px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+.readoutCell dt {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.readoutCell dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Steps table: narrower cell padding than the shared default, so every column fits. */
+.steps {
+  display: contents;
+}
+.steps :global(th),
+.steps :global(td) {
+  /* First and last cells keep a little more room from the panel edge. */
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.steps :global(th:first-child),
+.steps :global(td:first-child) {
+  padding-left: 10px;
+}
+
+/* Romberg table: k and the estimate R(k, k) pinned, the triangle scrolls under them. */
+.rombergWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.romberg {
+  --pin-k: 40px;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  /* One column of room at the end: the current row's last columns can start at the pinned edge. */
+  padding: 0 96px var(--space-4) 0;
+}
+.romberg[data-more-right] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+.romberg:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+.rombergCaption {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.rombergTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11px;
+}
+.rombergTable th,
+.rombergTable td {
+  padding: 4px 7px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+.rombergTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  font-weight: 400;
+  color: var(--color-text-2);
+  vertical-align: bottom;
+}
+.rombergTable thead th > * {
+  display: block;
+}
+.rombergTable [data-pin] {
+  position: sticky;
+  z-index: 1;
+  background: var(--color-surface);
+}
+.rombergTable thead [data-pin] {
+  z-index: 2;
+}
+.rombergTable [data-pin='k'] {
+  left: 0;
+  box-sizing: border-box;
+  width: var(--pin-k);
+  min-width: var(--pin-k);
+  max-width: var(--pin-k);
+  padding-left: var(--space-4);
+}
+.rombergTable [data-pin='diag'] {
+  left: var(--pin-k);
+  font-weight: 600;
+  border-right: 1px solid var(--color-border-strong, var(--color-border));
+}
+.romberg[data-more-left] .rombergTable [data-pin='diag'] {
+  box-shadow: 6px 0 8px -6px color-mix(in srgb, var(--color-text) 22%, transparent);
+}
+.colName {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+}
+.rombergCorner {
+  text-align: left;
+}
+.rombergTable tbody th {
+  color: var(--color-text-3);
+  font-weight: 400;
+}
+.rombergTable tbody tr {
+  cursor: pointer;
+}
+.rombergTable tbody tr[aria-current='true'] {
+  background: var(--color-accent-soft);
+}
+.rombergTable tbody tr[aria-current='true'] > [data-pin] {
+  background:
+    linear-gradient(var(--color-accent-soft), var(--color-accent-soft)), var(--color-surface);
+}
+.rombergTable tbody tr[aria-current='true'] > [data-pin='k'] {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.rombergTable tbody tr[data-future] {
+  opacity: 0.35;
+}
+.rombergTable td[data-diag] {
+  font-weight: 600;
+}

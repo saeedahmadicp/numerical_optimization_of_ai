@@ -1,0 +1,394 @@
+/* ── Stage ─────────────────────────────────────────────────────────────── */
+.stageGrid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.figure {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 220px;
+}
+.stripWrap {
+  flex: 0 1 auto;
+  max-height: 46%;
+  min-height: 0;
+  display: flex;
+  border-top: 1px solid var(--color-border);
+}
+/* No picture (n ≥ 4): the tableau is the main view, the bars sit above it. */
+.stageGrid[data-bars] .figure {
+  min-height: 0;
+  overflow: auto;
+}
+.stageGrid[data-bars='tableau'] .figure {
+  flex: 0 1 auto;
+  max-height: 44%;
+}
+.stageGrid[data-bars='tableau'] .stripWrap {
+  flex: 1 1 auto;
+  max-height: none;
+}
+/* A short strip (search tree measures, central-path measures): the bars take the rest. */
+.stageGrid[data-bars='measures'] .figure {
+  flex: 1 1 auto;
+}
+.stageGrid[data-bars='measures'] .stripWrap {
+  flex: 0 0 auto;
+}
+
+.planeWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+.planeWrap:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+  border-radius: var(--radius-md);
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cHandle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.cHandle:hover {
+  background: var(--color-accent-soft);
+}
+.cHandle:active {
+  cursor: grabbing;
+}
+.cHandle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.solidCaption {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  max-width: calc(100% - 20px);
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 86%, transparent);
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  pointer-events: none;
+}
+
+/* ── Working strip ─────────────────────────────────────────────────────── */
+.strip {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+.stripHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 8px 10px 0 var(--space-4);
+}
+.stripTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.stripStep {
+  font-weight: var(--weight-regular);
+  color: var(--color-text-3);
+}
+/* The step number in a box as wide as the run's widest number (set inline, in ch). */
+.stripK {
+  display: inline-block;
+}
+.stripStep [data-off] {
+  visibility: hidden;
+}
+/* Traces longer than the sentence stack: reserve two lines. */
+.noteFallback {
+  display: block;
+  min-height: calc(2 * 1lh);
+}
+.stripNote {
+  margin: 4px 0 0;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+  max-width: 78ch;
+}
+.phase {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+.muted {
+  color: var(--color-text-3);
+}
+.stripBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  margin-top: 4px;
+}
+.tableauScroll {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 0 var(--space-2) var(--space-2);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+.tableauScroll:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+/* Scroll cue: the right edge fades out while columns remain off screen (set from the scroll
+   position, so the last column is fully visible at the end). */
+.tableauScroll[data-more] {
+  mask-image: linear-gradient(to left, transparent, #000 32px);
+}
+.treeScroll {
+  flex: 1;
+  min-height: 140px;
+}
+/* Fixed-width columns: the cells keep their places (and the rows their count) while the numbers
+   change length during playback. */
+.stats {
+  flex: 1;
+  align-self: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5em, 1fr));
+  gap: 4px 18px;
+  margin: 0;
+  padding: 6px var(--space-4) 12px;
+}
+.stats > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.stats dt {
+  color: var(--color-text-3);
+}
+.stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.mobileStrip {
+  display: flex;
+  max-height: 520px;
+  min-height: 220px;
+  overflow: auto;
+}
+.mobileStrip .treeScroll {
+  min-height: 260px;
+}
+
+/* ── Bars (n ≥ 4) ──────────────────────────────────────────────────────── */
+.bars {
+  display: grid;
+  gap: 2px;
+  padding: 10px var(--space-4) 12px;
+}
+.barsHead {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  padding-bottom: 4px;
+}
+.barRow {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 3px 0;
+  border-top: 1px solid var(--color-border);
+}
+.barLabel {
+  font-size: var(--text-sm);
+}
+.barTrack {
+  display: grid;
+  gap: 3px;
+}
+.barLine {
+  display: grid;
+  grid-template-columns: 10px 1fr 64px;
+  gap: 8px;
+  align-items: center;
+}
+.barArea {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-sunken);
+}
+.bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+.star {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--color-text);
+}
+.barValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-align: right;
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Rail and headers ──────────────────────────────────────────────────── */
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.zstar {
+  flex: none;
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 10px 12px 6px 8px;
+}
+.cFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+
+@media (max-width: 899px) {
+  .figure {
+    min-height: 0;
+  }
+}
+
+.note {
+  flex: none;
+  margin: 0;
+  padding: 5px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.noteDash {
+  color: var(--color-text-3);
+}
+.canvasBox {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* ── Restarted PDHG ────────────────────────────────────────────────────── */
+/* Fixed columns: the cells keep their place while the numbers change during playback. */
+.pdhgStats {
+  display: grid;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  align-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 4px 18px;
+  margin: 0;
+  padding: 6px var(--space-4) 12px;
+}
+.pdhgStats > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.pdhgStats dt {
+  color: var(--color-text-3);
+}
+.pdhgStats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+/* Every sentence of the strip in one grid cell; only the current one is visible, so the
+   strip's height is that of the longest sentence and does not change during playback. */
+.noteStack {
+  display: grid;
+}
+.noteStack > * {
+  grid-area: 1 / 1;
+}
+.noteStack > [aria-hidden='true'] {
+  visibility: hidden;
+}
+.residualChart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+.residualLegend {
+  min-height: 20px;
+}
+.dashSample {
+  flex: none;
+  display: block;
+}
+.restartSwatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--_c);
+  box-shadow: 0 0 0 1.5px var(--color-surface);
+}

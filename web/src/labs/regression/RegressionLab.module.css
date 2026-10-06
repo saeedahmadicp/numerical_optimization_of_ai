@@ -1,0 +1,353 @@
+/* Regression lab: data plane, rail controls, insights (fit table, analysis, step rule). */
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.hint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+
+/* ── Stage ────────────────────────────────────────────────────────────── */
+.stageRoot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stageMain {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The key under the plot (StageKey.tsx): a fixed height for each stage width, so a new focus,
+   a toggle or a new dataset never resizes the plot. Every method's key fits one row from 1040 px
+   (the widest, ridge with its readout, squares and the noise-free f, is about 930 px), two rows
+   from 600 px, three below (without the readout). */
+.keyBar {
+  flex: none;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  overflow: hidden;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.keyName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+.keySwatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+.keyItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.keyGlyph {
+  flex: none;
+}
+/* The live value: the color of the names, so it reads as a number, not as a key entry. */
+.keyReadout {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+@container stage (max-width: 1040px) {
+  .keyBar {
+    height: 52px;
+  }
+  .key {
+    gap: 2px 14px;
+  }
+}
+@container stage (max-width: 600px) {
+  .keyBar {
+    height: 70px;
+    padding: 0 var(--space-3);
+  }
+  .key {
+    gap: 2px 12px;
+  }
+  /* A phone keeps the key's entries; the live value is in the method card's step. */
+  .keyReadout {
+    display: none;
+  }
+}
+.stagePlot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: var(--chart-surface);
+  touch-action: pan-y;
+  user-select: none;
+}
+.stagePlot[data-editable] {
+  cursor: copy;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* A 24 × 24 hit target centered on each point (the dot itself is drawn on the canvas). */
+.handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.handle:hover {
+  box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
+}
+.handle:active {
+  cursor: grabbing;
+}
+.handle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 0;
+}
+
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+/* ── Rail ─────────────────────────────────────────────────────────────── */
+.dataRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+.dataCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+.degree {
+  display: grid;
+  gap: 6px;
+}
+.degreeLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+/* ── Insights ─────────────────────────────────────────────────────────── */
+.insightTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.fitTable {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+/* Five columns in a 380 px card: tighter gutters between cells, the outer 12 px kept. */
+.fitTable :global(th),
+.fitTable :global(td) {
+  padding-inline: 7px;
+}
+.fitTable :global(th):first-child,
+.fitTable :global(td):first-child {
+  padding-left: 12px;
+}
+.fitTable :global(th):last-child,
+.fitTable :global(td):last-child {
+  padding-right: 12px;
+}
+/* The name wraps to a second line rather than being cut ("Theil–Sen estimator"). */
+.fitName {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+}
+.fitName > :first-child {
+  flex: none;
+}
+.fitLabel {
+  min-width: 0;
+  max-width: 9em;
+  white-space: normal;
+  line-height: var(--leading-snug);
+  font-variant-numeric: normal;
+}
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 8px 10px 4px 6px;
+}
+.chartBox {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.sweep {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.sweep:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.analysisBody {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px 8px 6px;
+  gap: 4px;
+}
+.analysisBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-left: 6px;
+}
+.readout {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+.caption {
+  flex: none;
+  padding-left: 6px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-3);
+}
+.methodTab {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+.methodTab > :last-child {
+  flex: 1 0 auto;
+}
+/* KaTeX's hidden MathML (absolutely positioned) keeps the one-line width: clip it in a
+   positioned box, or a phone page scrolls sideways. */
+.stepRuleBody {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+.live {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-border);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.liveCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 10px 8px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+.liveCell[data-wide] {
+  grid-column: span 2;
+}
+.liveCell dt {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+.liveCell dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stepNote {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.pyRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.toolbarToggles {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: var(--space-2);
+}
+.toolbarToggle {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* A narrow stage keeps the two labeled switches; the band readout is in the step block below. */
+@container stage (max-width: 560px) {
+  .toolbarToggles {
+    margin-right: 0;
+  }
+}

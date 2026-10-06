@@ -1,0 +1,225 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--color-bg);
+  /* Keyboard focus and in-page links never land under the sticky header (WCAG 2.4.11). */
+  scroll-padding-top: calc(var(--header-height) + var(--space-4));
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  font-feature-settings: 'cv11', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* Links inside running text are underlined (color alone is 1.04:1 against the text). Styled
+   links (a class: cards, buttons, pills) and links in a <nav> stay undecorated. */
+:where(p, li, dd, .md-inline) > a:where(:not([class]), .ext):not(nav a) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+:where(p, li, dd, .md-inline) > a:where(:not([class]), .ext):not(nav a):hover {
+  text-decoration-color: currentColor;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+/* Skip link: hidden until it receives keyboard focus. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: var(--z-toast);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-ink);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transform: translateY(-160%);
+}
+.skip-link:focus-visible {
+  transform: none;
+  text-decoration: none;
+}
+
+/* Programmatic focus targets (page headings after navigation) show no ring. */
+[tabindex='-1']:focus:not(:focus-visible),
+h1[tabindex='-1']:focus {
+  outline: none;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * Inline math beside Inter: KaTeX Main's x-height (0.431 em) is ~21 % below Inter's (0.546 em), so
+ * inline math is set at 1.2em to match lowercase heights (brand.md §3). Display math is 1.2em too.
+ */
+.katex {
+  font-size: 1.2em;
+}
+.katex-display {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* 2 px each side: sub-pixel glyph overhang no longer makes a needless scroller. */
+  padding: 2px 2px;
+}
+
+/*
+ * A formula that really scrolls sideways (FormulaScroll; research .math-display / .math-wide):
+ * reachable by keyboard (tabindex 0, role region) and faded at its right edge while more is hidden.
+ */
+.formula-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+.formula-scroll[data-more] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.formula-scroll:focus-visible {
+  outline-offset: 0;
+}
+.katex-display > .katex {
+  font-size: 1.2em;
+}
+
+/* Display face: titles, hero, section heads. Lining figures, optical sizing on. */
+.serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-variant-numeric: lining-nums;
+  font-optical-sizing: auto;
+  letter-spacing: var(--tracking-serif);
+}
+
+/* Numbers in prose and stats: tabular lining figures. */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Page side gutter: 16 px on phones, 24 px ≥ 640 px, 40 px ≥ 1024 px (brand.md §8). */
+:root {
+  --page-gutter: var(--space-4);
+}
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: var(--space-6);
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --page-gutter: var(--space-10);
+  }
+}
+
+/* The theme toggle cross-fades surfaces (220 ms); canvases redraw once. */
+html[data-theme-fading] *,
+html[data-theme-fading] *::before,
+html[data-theme-fading] *::after {
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out) !important;
+}
+
+/* Thin, quiet scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}

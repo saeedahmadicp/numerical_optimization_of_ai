@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="32" height="32" role="img" aria-label="numopt">
+<title>numopt</title>
+<rect width="16" height="16" rx="3.5" fill="#141413"/>
+<polyline points="3,4 7,4 7,7" fill="none" stroke="#b0a8fc" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+<rect x="10" y="8" width="4" height="4" rx="1.2" fill="#fcfcfb"/>
+</svg>

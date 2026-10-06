@@ -1,0 +1,53 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+}
+.tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: var(--z-tooltip);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-ink);
+  color: var(--color-text-inverse);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-2);
+  transform: translateX(-50%);
+  animation: tip-in var(--duration-fast) var(--ease-out) 380ms both;
+}
+/* Help text (toggletips): wraps at a readable measure, never wider than the viewport. */
+.long {
+  display: block;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  white-space: normal;
+  line-height: 1.4;
+  font-weight: var(--weight-regular);
+}
+.bottom .tip {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+.kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  opacity: 0.7;
+}

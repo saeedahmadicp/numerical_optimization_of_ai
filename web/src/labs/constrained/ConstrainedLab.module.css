@@ -1,0 +1,181 @@
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.kktToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+.stageFill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* The key: a caption strip under the plot (never over the domain). */
+.legend {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 18px;
+  padding: 6px 12px 7px;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.legend > span {
+  display: block;
+  min-width: 0;
+}
+/* A fragment kept at its widest value over the run (Fixed): content and ghost in one cell. */
+.fixed {
+  display: inline-grid;
+  vertical-align: baseline;
+}
+.fixed > * {
+  grid-area: 1 / 1;
+}
+.ghost {
+  visibility: hidden;
+}
+/* A fragment that does not apply at this step keeps its place, unseen. */
+.hideable[data-off] {
+  visibility: hidden;
+}
+/* The arrows' drawing scale: tabular figures in a box of ≥ 7ch, so the text after it never moves. */
+.scale {
+  display: inline-block;
+  margin-left: 0.15em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Key marks: the dotted ink of the linearized constraints, the dash of an overlapped path. */
+.dots,
+.dash {
+  display: inline-block;
+  vertical-align: 0.3em;
+  margin-right: 0.3em;
+  width: 22px;
+  height: 0;
+  border-top: 2px dotted var(--color-text);
+  opacity: 0.75;
+}
+.dash {
+  border-top: 2px dashed var(--color-text-2);
+  opacity: 1;
+}
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 10px 12px 6px 8px;
+}
+.startStatus {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-warn);
+}
+.startStatus[data-ok] {
+  color: var(--color-text-3);
+}
+.kktPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-3) var(--space-4);
+}
+.kktLead,
+.kktNote {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.kktNote {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.92em;
+}
+.constraintCell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.86em;
+}
+/* Iterations: 5 px between columns (default 10); the table's min-width counts 10, so the 25 px
+   left over widen the columns (the x column most) and six compact columns fit ≈ 378 px. */
+.iterTable :global([role='row']) {
+  column-gap: 5px;
+}
+.ref {
+  color: var(--color-text-3);
+}
+.inlineSwatch {
+  display: inline-flex;
+  vertical-align: -0.05em;
+  margin-right: 0.45em;
+}
+.inlineSwatch > * {
+  display: inline-block;
+}
+/* The KKT table fits the panel (≈ 340 px): tighter cell padding than the default 12 px. */
+.kktPanel table th,
+.kktPanel table td {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.status {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  letter-spacing: 0.02em;
+}
+.status[data-status='active'] {
+  color: var(--color-text-2);
+  font-weight: var(--weight-semibold);
+}
+.status[data-status='violated'] {
+  color: var(--color-warn);
+}
+@media (max-width: 560px) {
+  .wideOnly {
+    display: none !important;
+  }
+  .legend {
+    padding: 4px 10px 5px;
+    gap: 1px 12px;
+    font-size: var(--text-2xs);
+  }
+  .kktToggle {
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+  }
+}

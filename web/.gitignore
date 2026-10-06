@@ -1,0 +1,14 @@
+node_modules
+dist
+playwright-report
+test-results
+*.tsbuildinfo
+
+# Python reference dumps for the vitest suites (~14 MB). They are deterministic output of the
+# numopt package, so git does not store them: `npm test` regenerates absent ones (pretest),
+# and `npm run gen:test-fixtures` regenerates all of them (tests/fixtures/gen_test_fixtures.py).
+# The parity fixtures in src/generated/ are a different thing and stay committed.
+tests/**/fixtures/*.json
+tests/**/fixtures/*.json.gz
+tests/combinatorial/extra_python.json
+src/methods/constrained/__fixtures__/*.json

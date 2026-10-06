@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="numopt">
+<title>numopt</title>
+<rect width="512" height="512" rx="119.81" fill="#141413"/>
+<ellipse cx="256.000" cy="256.000" rx="225.201" ry="91.938" transform="rotate(45.00 256.000 256.000)" fill="#212232"/>
+<ellipse cx="256.000" cy="256.000" rx="160.858" ry="65.670" transform="rotate(45.00 256.000 256.000)" fill="#2c2d49"/>
+<ellipse cx="256.000" cy="256.000" rx="114.898" ry="46.907" transform="rotate(45.00 256.000 256.000)" fill="#373861"/>
+<ellipse cx="256.000" cy="256.000" rx="82.070" ry="33.505" transform="rotate(45.00 256.000 256.000)" fill="#42437a"/>
+<polyline points="116.400,133.143 168.245,133.143 168.245,193.318 211.227,193.318 211.227,224.019 233.157,224.019 233.157,239.683 244.345,239.683" fill="none" stroke="#b0a8fc" stroke-width="20.800" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"/>
+<circle cx="84.000" cy="133.143" r="26.400" fill="none" stroke="#b0a8fc" stroke-width="15.200"/>
+<circle cx="256.000" cy="256.000" r="33.600" fill="#fcfcfb"/>
+</svg>

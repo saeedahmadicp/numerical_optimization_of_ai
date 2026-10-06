@@ -1,0 +1,16 @@
+/*
+ * Scientific notation as typeset text: mantissa, ×10 and a raised exponent in Inter with tabular
+ * figures. Unicode superscripts in a monospaced face take a full advance each, so the exponent
+ * digits of "6.17×10⁻¹⁰" split apart at about 6 px; a real <sup> keeps them together and legible.
+ */
+.sci {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'cv11', 'ss03', 'tnum';
+  white-space: nowrap;
+}
+.sci sup {
+  font-size: 0.78em;
+  vertical-align: 0.45em;
+  line-height: 0;
+}

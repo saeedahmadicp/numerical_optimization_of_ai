@@ -1,0 +1,262 @@
+/* ── Stage: the plane and the φ panel ─────────────────────────────────── */
+.stageGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 0;
+}
+.stageGrid[data-layout='rows'] {
+  grid-template-rows: minmax(0, 36fr) minmax(0, 64fr);
+}
+.stageGrid[data-layout='columns'] {
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+}
+.stageGrid[data-layout='single'] {
+  grid-template-rows: minmax(0, 1fr);
+}
+.planeBox {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+.stageGrid[data-layout='rows'] .planeBox {
+  border-bottom: 1px solid var(--color-border);
+}
+.stageGrid[data-layout='columns'] .planeBox {
+  border-right: 1px solid var(--color-border);
+}
+.phiCell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--chart-surface);
+}
+.phiBox {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+}
+.phiBox:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.phiEmpty {
+  position: absolute;
+  inset: 0;
+}
+.phiTools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px 2px 12px;
+  min-height: 40px;
+}
+.phiTitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.toolsEnd {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.phiBody {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.problemName {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+}
+.readout {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-raised) 92%, transparent);
+  box-shadow: 0 0 0 1px var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.failure {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 32px));
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface-raised) 94%, transparent);
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-1);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+
+/* ── Rail ─────────────────────────────────────────────────────────────── */
+.count {
+  font-size: var(--text-2xs);
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.pBox {
+  margin-top: var(--space-2);
+  display: grid;
+  gap: var(--space-1-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+.pVals {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-3);
+  margin: 0;
+  align-items: baseline;
+}
+.pVals dt {
+  color: var(--color-text-3);
+}
+.pVals dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+/* ── Insights ─────────────────────────────────────────────────────────── */
+.chartPad {
+  position: absolute;
+  inset: 0;
+  padding: 10px 12px 6px 8px;
+}
+.checkPad {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: var(--space-1) var(--space-4) var(--space-3);
+}
+.check {
+  display: grid;
+  gap: var(--space-2);
+}
+.checkHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.checkName {
+  font-weight: var(--weight-semibold);
+}
+.checkK {
+  margin-left: auto;
+  color: var(--color-text-3);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+.checkRow {
+  display: grid;
+  gap: 2px;
+  padding-left: var(--space-2-5, 10px);
+  border-left: 2px solid var(--color-border);
+  min-width: 0;
+}
+.checkRow[data-verdict='pass'] {
+  border-left-color: var(--color-good);
+}
+.checkRow[data-verdict='fail'] {
+  border-left-color: var(--color-bad);
+}
+.checkLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.checkMark {
+  color: var(--color-text-2);
+  font-weight: var(--weight-medium);
+}
+.checkRow[data-verdict='pass'] .checkMark {
+  color: var(--color-good);
+}
+.checkRow[data-verdict='fail'] .checkMark {
+  color: var(--color-bad);
+}
+.checkNote {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-2);
+}
+.phiBody > .planeBox {
+  position: absolute;
+  inset: 0;
+}
+.checkSkip {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.checkRow :global(.katex-display) {
+  margin: 2px 0 0;
+  text-align: left;
+}
+.checkRow :global(.katex-display) > :global(.katex) {
+  text-align: left;
+}
+
+/* ── Trials table: phase and interval in one cell ─────────────────────── */
+.phaseCell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.phaseWord {
+  color: var(--color-text-3);
+  font-size: var(--text-xs);
+}
+.phaseIv {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+}
+
+/* ── Plane: the switch between the search frame and the whole domain ──── */
+.frameBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+}
+/* Seven columns in the insight column: tighter cell padding than the shared table. */
+.trialsTable {
+  height: 100%;
+}
+.trialsTable :is(th, td) {
+  padding-left: 5px;
+  padding-right: 5px;
+}

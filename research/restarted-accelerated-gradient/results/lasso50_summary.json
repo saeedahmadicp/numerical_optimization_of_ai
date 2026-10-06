@@ -1,0 +1,243 @@
+{
+ "ISTA": {
+  "identified": 15,
+  "median_support_final": 91.0,
+  "median_support_first": 91.0,
+  "median_k_F_1e-8": 220.0,
+  "median_changes_after_first": 0.0,
+  "max_final_gap": 8.881784197001252e-16,
+  "by_ratio_median_support_final": {
+   "0.3": 20.0,
+   "0.1": 91.0,
+   "0.03": 310.0
+  },
+  "n_instances_lag_positive": 0,
+  "max_lag_final_minus_first": 0,
+  "max_changes_after_first": 0,
+  "median_restarts": 0.0,
+  "n_converged": 15,
+  "max_final_dist": 1.6981775206248337e-10
+ },
+ "FISTA": {
+  "identified": 15,
+  "median_support_final": 38.0,
+  "median_support_first": 24.0,
+  "median_k_F_1e-8": 106.0,
+  "median_changes_after_first": 2.0,
+  "max_final_gap": 8.881784197001252e-16,
+  "by_ratio_median_support_final": {
+   "0.3": 10.0,
+   "0.1": 38.0,
+   "0.03": 70.0
+  },
+  "n_instances_lag_positive": 8,
+  "max_lag_final_minus_first": 39,
+  "max_changes_after_first": 9,
+  "median_restarts": 0.0,
+  "n_converged": 15,
+  "max_final_dist": 1.4129462858753211e-10
+ },
+ "FISTA-FR": {
+  "identified": 15,
+  "median_support_final": 28.0,
+  "median_support_first": 24.0,
+  "median_k_F_1e-8": 55.0,
+  "median_changes_after_first": 0.0,
+  "max_final_gap": 1.1102230246251565e-16,
+  "by_ratio_median_support_final": {
+   "0.3": 10.0,
+   "0.1": 28.0,
+   "0.03": 44.0
+  },
+  "n_instances_lag_positive": 1,
+  "max_lag_final_minus_first": 8,
+  "max_changes_after_first": 2,
+  "median_restarts": 21.0,
+  "n_converged": 15,
+  "max_final_dist": 1.6962843007860635e-10
+ },
+ "FISTA-GR": {
+  "identified": 15,
+  "median_support_final": 28.0,
+  "median_support_first": 24.0,
+  "median_k_F_1e-8": 52.0,
+  "median_changes_after_first": 0.0,
+  "max_final_gap": 8.881784197001252e-16,
+  "by_ratio_median_support_final": {
+   "0.3": 10.0,
+   "0.1": 28.0,
+   "0.03": 44.0
+  },
+  "n_instances_lag_positive": 1,
+  "max_lag_final_minus_first": 8,
+  "max_changes_after_first": 2,
+  "median_restarts": 7.0,
+  "n_converged": 15,
+  "max_final_dist": 8.995433771757228e-11
+ },
+ "AdProxGD": {
+  "identified": 15,
+  "median_support_final": 21.0,
+  "median_support_first": 21.0,
+  "median_k_F_1e-8": 40.0,
+  "median_changes_after_first": 0.0,
+  "max_final_gap": 8.881784197001252e-16,
+  "by_ratio_median_support_final": {
+   "0.3": 8.0,
+   "0.1": 21.0,
+   "0.03": 63.0
+  },
+  "n_instances_lag_positive": 1,
+  "max_lag_final_minus_first": 3,
+  "max_changes_after_first": 2,
+  "median_restarts": 0.0,
+  "n_converged": 15,
+  "max_final_dist": 1.5715100145425492e-10
+ },
+ "comparisons": {
+  "FISTA/ISTA": {
+   "median_ratio_support_final": 0.30158730158730157,
+   "n_later": 0,
+   "n_instances": 15
+  },
+  "FISTA-GR/ISTA": {
+   "median_ratio_support_final": 0.27692307692307694,
+   "n_later": 0,
+   "n_instances": 15
+  },
+  "FISTA-FR/ISTA": {
+   "median_ratio_support_final": 0.27692307692307694,
+   "n_later": 0,
+   "n_instances": 15
+  },
+  "FISTA-GR/FISTA": {
+   "median_ratio_support_final": 0.8421052631578947,
+   "n_later": 0,
+   "n_instances": 15
+  },
+  "FISTA-FR/FISTA": {
+   "median_ratio_support_final": 0.8421052631578947,
+   "n_later": 0,
+   "n_instances": 15
+  },
+  "AdProxGD/ISTA": {
+   "median_ratio_support_final": 0.23333333333333334,
+   "n_later": 0,
+   "n_instances": 15
+  }
+ },
+ "restart_effect_on_lag": {
+  "fista_lag_instances": [
+   [
+    0,
+    0.03
+   ],
+   [
+    0,
+    0.1
+   ],
+   [
+    1,
+    0.03
+   ],
+   [
+    1,
+    0.1
+   ],
+   [
+    2,
+    0.03
+   ],
+   [
+    3,
+    0.03
+   ],
+   [
+    4,
+    0.03
+   ],
+   [
+    4,
+    0.1
+   ]
+  ],
+  "FISTA-FR": {
+   "n_lag_removed": 7,
+   "n_affected": 8,
+   "n_lag_free": 14,
+   "remaining": [
+    {
+     "seed": 1,
+     "ratio": 0.1,
+     "lag_fista": 14,
+     "lag_restart": 8,
+     "first_fista": 24,
+     "final_fista": 38,
+     "first_restart": 24,
+     "final_restart": 32
+    }
+   ],
+   "new_lag": [],
+   "first_later_than_fista": []
+  },
+  "FISTA-GR": {
+   "n_lag_removed": 7,
+   "n_affected": 8,
+   "n_lag_free": 14,
+   "remaining": [
+    {
+     "seed": 1,
+     "ratio": 0.1,
+     "lag_fista": 14,
+     "lag_restart": 8,
+     "first_fista": 24,
+     "final_fista": 38,
+     "first_restart": 24,
+     "final_restart": 32
+    }
+   ],
+   "new_lag": [],
+   "first_later_than_fista": [
+    {
+     "seed": 1,
+     "ratio": 0.03,
+     "first_fista": 44,
+     "first_restart": 51,
+     "final_fista": 83,
+     "final_restart": 51
+    },
+    {
+     "seed": 3,
+     "ratio": 0.03,
+     "first_fista": 35,
+     "first_restart": 40,
+     "final_fista": 52,
+     "final_restart": 40
+    }
+   ]
+  }
+ },
+ "lag_final_minus_first": {
+  "ISTA": 0.0,
+  "FISTA": 10.0,
+  "FISTA-FR": 0.0,
+  "FISTA-GR": 0.0,
+  "AdProxGD": 0.0
+ },
+ "FW (l1 ball)": {
+  "identified": 4,
+  "median_final_dist": 0.004685044198253827,
+  "median_final_nnz": 11.0,
+  "min_final_dist": 0.0006368228078496717,
+  "max_final_dist": 0.017246391285240966,
+  "n_iter": 3000
+ },
+ "PG (l1 ball)": {
+  "final_dist": 1.5517286007202994e-07,
+  "final_nnz": 50,
+  "n_iter": 148,
+  "support_final": null,
+  "message": "stalled at the rounding level: after 61 trials (step down to 8.67e-19) the predicted decrease of f is below its resolution and the gradient form of the Armijo test fails (KKT residual 1.17e-08 > tol = 1e-13)",
+  "seconds": 19.608353229996283
+ }
+}
