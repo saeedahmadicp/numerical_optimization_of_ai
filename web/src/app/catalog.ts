@@ -23,4 +23,4 @@ export function loadCatalogIndex(): Promise<CatalogIndex> {
 }
 
 /** The repository (links to the Python package, docs, research notes). */
-export const REPO = 'https://github.com/saeedahmadicp/numerical_optimization_of_ai';
+export const REPO = 'https://github.com/saeedahmadicp/numopt';

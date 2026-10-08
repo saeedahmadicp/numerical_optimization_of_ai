@@ -10,8 +10,8 @@ authors:
     given-names: "Izhar"
 version: 1.0.0
 license: MIT
-repository-code: "https://github.com/saeedahmadicp/numerical_optimization_of_ai"
-url: "https://saeedahmadicp.github.io/numerical_optimization_of_ai/"
+repository-code: "https://github.com/saeedahmadicp/numopt"
+url: "https://saeedahmadicp.github.io/numopt/"
 keywords:
   - numerical optimization
   - numerical analysis

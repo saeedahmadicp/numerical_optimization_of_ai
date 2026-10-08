@@ -42,7 +42,7 @@ wrong package. Checked on 2026-10-05 through `https://pypi.org/pypi/<name>/json`
   only clash is a user who installs *both* on a case-insensitive file system (macOS, Windows), where
   the two directories merge. That risk is small; note it in the package's FAQ.
 * **Until the name is reserved,** every install line (README, portal concept) is the name-free
-  `pip install git+https://github.com/saeedahmadicp/numerical_optimization_of_ai`. A
+  `pip install git+https://github.com/saeedahmadicp/numopt`. A
   `numopt-lab @ git+https://...` line would fail while `pyproject.toml` still says `name = "numopt"`.
 * The rename itself is a one-line change to `[project] name` in `pyproject.toml`, owned by the
   package team.

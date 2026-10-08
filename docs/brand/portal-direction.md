@@ -37,7 +37,7 @@ proves the claim, one sentence that states it, then an index.
   README figure exactly. The caption states the test. Plays once, holds the last frame, shows a
   replay control and "Open in the lab →" (deep link with the same `?p=&m=` state).
 * **A code card under the CTAs** (JetBrains Mono, surface card): a snippet that runs as shown —
-  `pip install git+https://github.com/saeedahmadicp/numerical_optimization_of_ai` (until the PyPI
+  `pip install git+https://github.com/saeedahmadicp/numopt` (until the PyPI
   name `numopt-lab` is reserved; `numopt` on PyPI is another project), `import numopt`,
   `from numopt import problems`, `numopt.run(...)`, and its real output `(True, 38)`. Researchers
   trust a page that shows the call.

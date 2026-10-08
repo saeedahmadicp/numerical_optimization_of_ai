@@ -142,7 +142,7 @@ export default function PythonPage() {
               lines={[
                 { prompt: '$', code: `pip install git+${REPO}` },
                 { prompt: '', code: '# or, to run the tests and the research studies:' },
-                { prompt: '$', code: `git clone ${REPO}.git && cd numerical_optimization_of_ai` },
+                { prompt: '$', code: `git clone ${REPO}.git && cd numopt` },
                 { prompt: '$', code: 'pip install -e ".[dev]"' },
               ]}
             />

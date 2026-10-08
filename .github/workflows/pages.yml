@@ -38,7 +38,7 @@ jobs:
       - run: npm run build
         env:
           # Absolute og:image / twitter:image URLs for link previews (see web/vite/catalog.ts).
-          SITE_URL: https://saeedahmadicp.github.io/numerical_optimization_of_ai/
+          SITE_URL: https://saeedahmadicp.github.io/numopt/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

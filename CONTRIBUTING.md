@@ -11,8 +11,8 @@ kind of change.
 Python 3.11 or later and, for the portal, Node 24.
 
 ```bash
-git clone https://github.com/saeedahmadicp/numerical_optimization_of_ai
-cd numerical_optimization_of_ai
+git clone https://github.com/saeedahmadicp/numopt
+cd numopt
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 # with uv instead: uv venv && uv pip install -e ".[dev]"
 cd web && npm install

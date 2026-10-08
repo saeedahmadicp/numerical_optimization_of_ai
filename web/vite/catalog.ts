@@ -24,7 +24,7 @@ const FACTS = join(REPO, 'docs/brand/portal/facts.js');
 const RESEARCH = join(REPO, 'research');
 
 const FIXTURES = join(WEB, 'src/generated/fixtures');
-const REPO_URL = 'https://github.com/saeedahmadicp/numerical_optimization_of_ai';
+const REPO_URL = 'https://github.com/saeedahmadicp/numopt';
 
 const CATALOG_ID = 'virtual:numopt/catalog';
 const INDEX_ID = 'virtual:numopt/index';

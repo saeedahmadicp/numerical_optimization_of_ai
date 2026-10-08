@@ -1,3 +1,15 @@
+> [!IMPORTANT]
+> **This repository has moved to [ML-Dev-Hub/numopt](https://github.com/ML-Dev-Hub/numopt).**
+>
+> This copy is archived and read-only. It is kept for reference and existing citations, and receives
+> no further updates. Please open issues, pull requests and discussions in the new repository, and
+> install from there:
+>
+> ```bash
+> pip install git+https://github.com/ML-Dev-Hub/numopt
+> git remote set-url origin https://github.com/ML-Dev-Hub/numopt.git   # update an existing clone
+> ```
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo/wordmark-dark.svg">
@@ -8,7 +20,7 @@
 <p align="center"><em>Numerical optimization, iterate by iterate.</em></p>
 
 <p align="center">
-  <a href="https://github.com/saeedahmadicp/numerical_optimization_of_ai/actions/workflows/ci.yml"><img alt="CI status" src="https://img.shields.io/github/actions/workflow/status/saeedahmadicp/numerical_optimization_of_ai/ci.yml?branch=main&style=flat-square&labelColor=52514e&label=CI"></a>
+  <a href="https://github.com/saeedahmadicp/numopt/actions/workflows/ci.yml"><img alt="CI status" src="https://img.shields.io/github/actions/workflow/status/saeedahmadicp/numopt/ci.yml?branch=main&style=flat-square&labelColor=52514e&label=CI"></a>
   <img alt="Python 3.11 or later" src="https://img.shields.io/badge/python-%E2%89%A5%203.11-6b6963?style=flat-square&labelColor=52514e">
   <img alt="Runtime dependency: NumPy only" src="https://img.shields.io/badge/runtime%20deps-numpy-6b6963?style=flat-square&labelColor=52514e">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-6b6963?style=flat-square&labelColor=52514e">
@@ -16,7 +28,7 @@
 </p>
 
 <p align="center">
-  <a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/">Interactive labs</a> ·
+  <a href="https://saeedahmadicp.github.io/numopt/">Interactive labs</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#whats-inside">Methods</a> ·
   <a href="#gallery">Gallery</a> ·
@@ -39,7 +51,7 @@ the first iterate with ‖∇<i>f</i>(<b>x</b><sub>k</sub>)‖₂ ≤ 10⁻⁸, 
 every other parameter is the registered default. ◆ marks <b>x</b><sub>k</sub> at <i>k</i> = 10, 10², 10³, 10⁴ ·
 <a href="docs/brand/scripts/make_hero.py">reproduce this figure</a></sub></p>
 
-<p align="center"><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/">Open the interactive labs →</a></b></p>
+<p align="center"><b><a href="https://saeedahmadicp.github.io/numopt/">Open the interactive labs →</a></b></p>
 
 **numopt** — 168 numerical methods, each cited to its algorithm and equation, tested against an
 oracle, and replayable iterate by iterate in the browser.
@@ -54,7 +66,7 @@ same problems and budgets.
 ## Quick start
 
 ```bash
-pip install git+https://github.com/saeedahmadicp/numerical_optimization_of_ai
+pip install git+https://github.com/saeedahmadicp/numopt
 ```
 
 > [!NOTE]
@@ -129,22 +141,22 @@ convergence order; `numopt problems` lists the 103 test problems. Each family ha
 
 | Family | Methods | Examples | Lab |
 |:--|--:|:--|:--|
-| Root finding | 16 | Bisection, Newton–Raphson, Secant, Brent (zeroin), ITP, Halley, +10 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/roots) |
-| Nonlinear systems | 2 | Newton's method for systems, Broyden's method (good Broyden) | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/systems) |
-| Linear systems | 14 | Gaussian elimination, LU, Cholesky, QR (Householder), Jacobi, SOR, conjugate gradient, GMRES, +6 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/linalg) |
-| 1-D minimization | 8 | Golden-section search, Fibonacci search, Brent's method (minimization), +5 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/scalar) |
-| Line search | 5 | Backtracking (Armijo), Strong Wolfe (bracket + zoom), Goldstein (bisection), +2 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/line-search) |
-| Unconstrained | 42 | Gradient descent, Nesterov accelerated gradient, Adam, BFGS, L-BFGS, trust region (Steihaug–Toint CG), ARC, OGM, +34 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/unconstrained) |
-| Nonlinear least squares | 2 | Gauss–Newton, Levenberg–Marquardt | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/least-squares) |
-| Global | 5 | CMA-ES, Differential evolution, Basin hopping, Particle swarm, Simulated annealing | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/global) |
-| Stochastic gradients | 9 | SGD, SVRG, SAGA, SAG, Adam, +4 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/stochastic) |
-| Constrained | 6 | SQP (line search, BFGS), Augmented Lagrangian, Log-barrier interior point, Frank–Wolfe, +2 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/constrained) |
-| Linear & integer programming | 10 | Primal simplex, Revised simplex (LU), Primal–dual interior point (Mehrotra), Restarted PDHG, Branch and bound, +5 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/lp) |
-| Combinatorial | 10 | Knapsack dynamic programming, Held–Karp, 2-opt, Ant System, +6 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/combinatorial) |
-| Quadrature | 13 | Composite Simpson, Romberg, Gauss–Legendre, Clenshaw–Curtis, Adaptive Simpson, +8 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/integration) |
-| Differentiation | 7 | Central difference, Five-point stencil, Richardson extrapolation, Complex-step derivative, +3 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/differentiation) |
-| Interpolation | 12 | Lagrange, Newton divided differences, Chebyshev, cubic splines (natural, clamped, not-a-knot), PCHIP, AAA, Floater–Hormann, +3 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/interpolation) |
-| Regression | 7 | Linear regression (OLS), Ridge, Huber (IRLS), Least absolute deviations (IRLS), Theil–Sen, +2 more | [open](https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/regression) |
+| Root finding | 16 | Bisection, Newton–Raphson, Secant, Brent (zeroin), ITP, Halley, +10 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/roots) |
+| Nonlinear systems | 2 | Newton's method for systems, Broyden's method (good Broyden) | [open](https://saeedahmadicp.github.io/numopt/#/lab/systems) |
+| Linear systems | 14 | Gaussian elimination, LU, Cholesky, QR (Householder), Jacobi, SOR, conjugate gradient, GMRES, +6 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/linalg) |
+| 1-D minimization | 8 | Golden-section search, Fibonacci search, Brent's method (minimization), +5 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/scalar) |
+| Line search | 5 | Backtracking (Armijo), Strong Wolfe (bracket + zoom), Goldstein (bisection), +2 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/line-search) |
+| Unconstrained | 42 | Gradient descent, Nesterov accelerated gradient, Adam, BFGS, L-BFGS, trust region (Steihaug–Toint CG), ARC, OGM, +34 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/unconstrained) |
+| Nonlinear least squares | 2 | Gauss–Newton, Levenberg–Marquardt | [open](https://saeedahmadicp.github.io/numopt/#/lab/least-squares) |
+| Global | 5 | CMA-ES, Differential evolution, Basin hopping, Particle swarm, Simulated annealing | [open](https://saeedahmadicp.github.io/numopt/#/lab/global) |
+| Stochastic gradients | 9 | SGD, SVRG, SAGA, SAG, Adam, +4 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/stochastic) |
+| Constrained | 6 | SQP (line search, BFGS), Augmented Lagrangian, Log-barrier interior point, Frank–Wolfe, +2 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/constrained) |
+| Linear & integer programming | 10 | Primal simplex, Revised simplex (LU), Primal–dual interior point (Mehrotra), Restarted PDHG, Branch and bound, +5 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/lp) |
+| Combinatorial | 10 | Knapsack dynamic programming, Held–Karp, 2-opt, Ant System, +6 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/combinatorial) |
+| Quadrature | 13 | Composite Simpson, Romberg, Gauss–Legendre, Clenshaw–Curtis, Adaptive Simpson, +8 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/integration) |
+| Differentiation | 7 | Central difference, Five-point stencil, Richardson extrapolation, Complex-step derivative, +3 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/differentiation) |
+| Interpolation | 12 | Lagrange, Newton divided differences, Chebyshev, cubic splines (natural, clamped, not-a-knot), PCHIP, AAA, Floater–Hormann, +3 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/interpolation) |
+| Regression | 7 | Linear regression (OLS), Ridge, Huber (IRLS), Least absolute deviations (IRLS), Theil–Sen, +2 more | [open](https://saeedahmadicp.github.io/numopt/#/lab/regression) |
 | **Total** | **168** | across 16 families | |
 
 Each method is one function, `fn(problem, *, x0=None, **params) -> Result`, registered with its
@@ -174,31 +186,31 @@ browser; nothing in these pictures is pre-rendered.
   <tr>
     <td width="50%" valign="top">
       <img src="docs/assets/screens/lab-unconstrained.webp" alt="The Unconstrained lab: BFGS, the dogleg trust region and Nelder–Mead on the Rosenbrock function, with a convergence chart and the BFGS update evaluated at step 37 to 38.">
-      <br><sub><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/unconstrained">Unconstrained</a>.</b> BFGS, dogleg trust region and Nelder–Mead on Rosenbrock (38, 24 and 110 iterations), with the BFGS update written out at the last step.</sub>
+      <br><sub><b><a href="https://saeedahmadicp.github.io/numopt/#/lab/unconstrained">Unconstrained</a>.</b> BFGS, dogleg trust region and Nelder–Mead on Rosenbrock (38, 24 and 110 iterations), with the BFGS update written out at the last step.</sub>
     </td>
     <td width="50%" valign="top">
       <img src="docs/assets/screens/lab-roots.webp" alt="The Root finding lab at k = 2: bisection, Newton–Raphson and Brent on Wallis' cubic x³ − 2x − 5; the discarded half of the bisection bracket is hatched.">
-      <br><sub><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/roots">Root finding</a>.</b> Bisection, Newton–Raphson and Brent on Wallis' cubic at <i>k</i> = 2; the hatched half of the bracket is discarded.</sub>
+      <br><sub><b><a href="https://saeedahmadicp.github.io/numopt/#/lab/roots">Root finding</a>.</b> Bisection, Newton–Raphson and Brent on Wallis' cubic at <i>k</i> = 2; the hatched half of the bracket is discarded.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
       <img src="docs/assets/screens/lab-lp.webp" alt="The Linear and integer programming lab: the primal simplex walks the vertices of the Wyndor Glass polygon to x⋆ = (2, 6), the primal–dual interior point follows the central path, and the final tableau is shown below.">
-      <br><sub><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/lp">Linear &amp; integer programming</a>.</b> The simplex walks vertices to <b>x</b><sup>⋆</sup> = (2, 6); the interior-point method follows the central path; the tableau pivots in sync.</sub>
+      <br><sub><b><a href="https://saeedahmadicp.github.io/numopt/#/lab/lp">Linear &amp; integer programming</a>.</b> The simplex walks vertices to <b>x</b><sup>⋆</sup> = (2, 6); the interior-point method follows the central path; the tableau pivots in sync.</sub>
     </td>
     <td width="50%" valign="top">
       <img src="docs/assets/screens/lab-quadrature.webp" alt="The Quadrature lab: composite trapezoid, composite Simpson and Gauss–Legendre rules on the Gaussian over [−2, 2], with the error against n on log axes.">
-      <br><sub><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/integration">Quadrature</a>.</b> Trapezoid, Simpson and Gauss–Legendre on e<sup>−x²</sup> over [−2, 2]: error against <i>n</i>, with fitted orders 2.01 and 4.05.</sub>
+      <br><sub><b><a href="https://saeedahmadicp.github.io/numopt/#/lab/integration">Quadrature</a>.</b> Trapezoid, Simpson and Gauss–Legendre on e<sup>−x²</sup> over [−2, 2]: error against <i>n</i>, with fitted orders 2.01 and 4.05.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
       <img src="docs/assets/screens/lab-interpolation.webp" alt="The Interpolation lab: the degree-10 Newton interpolant of Runge's function on 11 equispaced nodes oscillates near ±1, while the not-a-knot cubic spline follows the function.">
-      <br><sub><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/interpolation">Interpolation</a>.</b> Runge's phenomenon: the degree-10 interpolant on 11 equispaced nodes against the not-a-knot cubic spline.</sub>
+      <br><sub><b><a href="https://saeedahmadicp.github.io/numopt/#/lab/interpolation">Interpolation</a>.</b> Runge's phenomenon: the degree-10 interpolant on 11 equispaced nodes against the not-a-knot cubic spline.</sub>
     </td>
     <td width="50%" valign="top">
       <img src="docs/assets/screens/lab-stochastic.webp" alt="The Stochastic gradients lab: SGD, SVRG and SAGA fit a line to 200 noisy points; the contour plot shows their paths and an inset shows the covariance ellipse of the mini-batch step.">
-      <br><sub><b><a href="https://saeedahmadicp.github.io/numerical_optimization_of_ai/#/lab/stochastic">Stochastic gradients</a>.</b> SGD, SVRG and SAGA fit a line to 200 noisy points; the inset draws the 2σ ellipse of the mini-batch step.</sub>
+      <br><sub><b><a href="https://saeedahmadicp.github.io/numopt/#/lab/stochastic">Stochastic gradients</a>.</b> SGD, SVRG and SAGA fit a line to 200 noisy points; the inset draws the 2σ ellipse of the mini-batch step.</sub>
     </td>
   </tr>
 </table>
@@ -274,7 +286,7 @@ tau = 1e-07     solved    best   (fractions of instances)
 
 The ranking of BFGS and Nelder–Mead flips between the two tolerances, which is why a single τ is
 never enough. `--json PATH` saves every run and `--plot PREFIX` draws both profiles (matplotlib:
-install with the `plot` extra, `pip install "numopt[plot] @ git+https://github.com/saeedahmadicp/numerical_optimization_of_ai"`).
+install with the `plot` extra, `pip install "numopt[plot] @ git+https://github.com/saeedahmadicp/numopt"`).
 The Python API is `bench.run_benchmark`, `bench.performance_profile` and `bench.data_profile`; see
 [How benchmarking works](research/README.md#how-benchmarking-works).
 
@@ -302,7 +314,7 @@ button reads [`CITATION.cff`](CITATION.cff):
   author  = {Ahmad, Saeed and Ali, Izhar},
   year    = {2026},
   version = {1.0.0},
-  url     = {https://github.com/saeedahmadicp/numerical_optimization_of_ai}
+  url     = {https://github.com/saeedahmadicp/numopt}
 }
 ```
 
