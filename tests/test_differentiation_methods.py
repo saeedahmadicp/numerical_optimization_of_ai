@@ -171,13 +171,18 @@ def test_richardson_equals_polynomial_extrapolation_in_h_squared(pid, k):
 @pytest.mark.parametrize("method", [*FD, "richardson_extrapolation", "complex_step"])
 def test_best_estimate_agrees_with_scipy_differentiate(pid, method):
     p = problems.get(pid)
+    exact = float(p.grad(p.x0))
     ref = differentiate.derivative(
         p.f, p.x0, initial_step=0.01, tolerances={"rtol": 1e-13, "atol": 1e-13}
     )
     res = numopt.run(method, p)
     assert res.converged, res.message
     # the method's own bound (times a safety factor) covers the true error
-    assert abs(res.x - ref.df) <= 10 * res.extra["bound_best"] + 10 * ref.error + 1e-15
+    assert abs(res.x - exact) <= 10 * res.extra["bound_best"] + 2 * EPS * abs(exact)
+    # SciPy agrees to its true error, which its own estimate ref.error can understate: the
+    # estimate is the change between two of its iterations, 0 on some CPUs while the error is
+    # 1e-11 (sin_0_pi on x86-64). Its true error is at most 2.2e-11 on these problems.
+    assert abs(res.x - ref.df) <= 10 * res.extra["bound_best"] + 1e-10 * max(1.0, abs(exact))
 
 
 @pytest.mark.parametrize("pid", CALCULUS)

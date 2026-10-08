@@ -51,7 +51,8 @@ describe('filled-in MethodCard rules', () => {
         } catch {
           continue;
         }
-        const piecewise = methodKind(m.spec.id) === 'piecewise' || methodKind(m.spec.id) === 'blend';
+        const piecewise =
+          methodKind(m.spec.id) === 'piecewise' || methodKind(m.spec.id) === 'blend';
         const nodes = piecewise && nums(r.extra.nodes).length ? nums(r.extra.nodes) : data.x;
         const values = piecewise && nums(r.extra.values).length ? nums(r.extra.values) : data.y;
         for (let k = 0; k < r.trace.length; k++) {
@@ -60,7 +61,10 @@ describe('filled-in MethodCard rules', () => {
           expect(tex, `${data.id} ${m.spec.id} k=${k}`).not.toMatch(/\+ -|- -/);
           if (!seen.has(tex)) {
             seen.add(tex);
-            expect(() => katex.renderToString(tex, { throwOnError: true, displayMode: true }), `${data.id} ${m.spec.id} k=${k}`).not.toThrow();
+            expect(
+              () => katex.renderToString(tex, { throwOnError: true, displayMode: true }),
+              `${data.id} ${m.spec.id} k=${k}`,
+            ).not.toThrow();
           }
           checked++;
         }
@@ -90,7 +94,8 @@ describe('Lagrange partial sums in O(n)', () => {
   it('equals Σ_{j≤k} y_j ℓ_j on a grid and at the nodes', () => {
     for (let k = 0; k < nodes.length; k++) {
       const g = lagrangePartial(nodes, ys.slice(0, k + 1));
-      const direct = (t: number) => ys.slice(0, k + 1).reduce((s, y, j) => s + y * basisFn(nodes, j)(t), 0);
+      const direct = (t: number) =>
+        ys.slice(0, k + 1).reduce((s, y, j) => s + y * basisFn(nodes, j)(t), 0);
       for (let i = 0; i <= 50; i++) {
         const t = -1.1 + (2.2 * i) / 50;
         expect(g(t)).toBeCloseTo(direct(t), 12);

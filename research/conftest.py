@@ -13,10 +13,18 @@ files do not collide either.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 import pytest
+from hypothesis import settings
+
+# CI (GitHub Actions sets CI=true) runs a fixed, reproducible set of examples: derandomized, no
+# example database, no deadline (the shared runners' timing varies).
+settings.register_profile("ci", derandomize=True, database=None, deadline=None)
+if os.environ.get("CI", "").lower() == "true":
+    settings.load_profile("ci")
 
 RESEARCH = Path(__file__).resolve().parent
 STUDIES = frozenset(p for p in RESEARCH.iterdir() if p.is_dir() and (p / "README.md").is_file())

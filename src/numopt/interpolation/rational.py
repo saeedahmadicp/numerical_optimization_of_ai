@@ -55,7 +55,8 @@ Info keys:
     node: [x, y]           that sample / node
     support: [m]           AAA: the support points z_1..z_m after this step
     support_values: [m]    AAA: f_1..f_m
-    weights: [m]           AAA: w after this step (‖w‖₂ = 1, largest |w_j| positive)
+    weights: [m]           AAA: w after this step (‖w‖₂ = 1; the first entry, in support
+                           order, with |w_j| ≥ (1 - TIE_RTOL)·max|w| is positive)
     degree: int            AAA: m - 1, the type (m-1, m-1) of r after this step
     sample_error: float    AAA: max_{z ∈ Z} |f(z) - r(z)| after this step
     sigma_min: float       AAA (k ≥ 1): smallest singular value of the Loewner matrix A^(m)
@@ -114,6 +115,46 @@ _HINT_RTOL = 1e-4
 _HINT_ATOL = 1e3 * _EPS
 #: Bisection steps per bracket in real_denominator_roots (2⁻²⁰⁰⁰ < any float spacing).
 _BISECT_MAX = 2000
+#: AAA ranks two values (sample errors, |w_j|) as tied when they differ by less than
+#: TIE_RTOL relative; a tie goes to the first index (see aaa). Symmetric data ties in exact
+#: arithmetic, and the computed values then differ only by rounding (≈ 1e-16 relative),
+#: which changes with the CPU and BLAS. 1e-8 is far above that noise and far below any
+#: difference that matters for the fit.
+TIE_RTOL = 1e-8
+
+
+def _first_near_max(v: np.ndarray) -> int:
+    """The first index i with v_i ≥ (1 - TIE_RTOL)·max(v), v ≥ 0 (the first NaN wins)."""
+    i = int(np.argmax(v))
+    big = float(v[i])
+    if math.isnan(big):
+        return i
+    return int(np.flatnonzero(v >= (1.0 - TIE_RTOL) * big)[0])
+
+
+def _minimal_vector(vh: np.ndarray, n_rows: int) -> np.ndarray:
+    """A unit minimizer of ‖Av‖ for an n_rows×m matrix A with right singular vectors ``vh``.
+
+    With n_rows ≥ m - 1 this is the last row of vh (the minimal right singular vector; unique up
+    to sign when n_rows = m - 1 and A has full row rank). A wider A has the null space N spanned
+    by vh[n_rows:], of dimension d = m - n_rows ≥ 2, and an SVD returns an arbitrary basis of it.
+    A convention picks one vector that does not depend on that basis: P·1/‖P·1‖ (P the
+    orthogonal projector onto N), the minimum-norm v ∈ N with Σ v_j = 1 — the interpolant whose
+    denominator keeps its full degree with the largest leading coefficient, and whose weights
+    are generically all nonzero. If N is (nearly) orthogonal to 1 (‖P·1‖ ≤ 1e-8·√m), the unit
+    vector of N with the largest single entry, P e_j/‖P e_j‖ (j the first index with P_jj within
+    TIE_RTOL of the largest). Every v ∈ N interpolates all samples exactly.
+    """
+    m = vh.shape[0]
+    d = m - n_rows
+    if d <= 1:
+        return vh[-1]
+    basis = vh[n_rows:]  # (d, m): rows span N
+    v = basis.T @ np.sum(basis, axis=1)  # P·1
+    if not np.linalg.norm(v) > 1e-8 * math.sqrt(m):
+        j = _first_near_max(np.sum(basis * basis, axis=0))  # P_jj = ‖column j of basis‖²
+        v = basis.T @ basis[:, j]  # P e_j
+    return v / np.linalg.norm(v)
 
 
 # --------------------------------------------------------------------------------------
@@ -491,8 +532,13 @@ def aaa(
 
     # NOTE: the argmax runs over the non-support samples J (as SciPy does); Fig. 4.1 takes
     # it over all of Z, which is the same whenever some error is nonzero.
-    # NOTE: w is normalized so that its largest-|w_j| entry is positive. The SVD sign is
-    # arbitrary and cancels in r; the fixed sign makes the trace reproducible.
+    # NOTE: errors within TIE_RTOL (relative) of the largest one count as tied, and the tie
+    # goes to the first sample index. On symmetric data (sin on [0, 2π], Runge's function)
+    # two errors are equal in exact arithmetic, and the last bit of mean(F) would otherwise
+    # choose the support point, so another CPU would build r from another node order.
+    # NOTE: w is normalized so that its largest-|w_j| entry is positive, ties (TIE_RTOL)
+    # going to the first support point. The SVD sign is arbitrary and cancels in r; the
+    # fixed sign makes the trace reproducible on every platform.
     # NOTE: scaling="columns" (default) is not in Fig. 4.1. It takes w = Dv/‖Dv‖ with
     # D = diag(1/‖a_j‖) (a_j the columns of A^(m)) and v the minimal right singular vector
     # of A^(m)D, i.e. it solves (3.5) with the constraint ‖D⁻¹w‖ = 1 instead of ‖w‖ = 1.
@@ -505,9 +551,11 @@ def aaa(
     # Column equilibration is within a factor √m of the best diagonal scaling for κ₂
     # (van der Sluis 1969). SciPy's AAA switches to the same scaling once
     # κ(A^(m)) > 1/(3 eps); "none" reproduces Fig. 4.1 (and SciPy before the switch).
-    # NOTE: when A^(m) has fewer rows than columns (M - m < m), the last row of the full
-    # V* is a null vector of A^(m) (σ_min reported as 0), as with Fig. 4.1's svd(A, 0). The
-    # null space then has dimension ≥ 2m - M, so w is not unique once 2m - M ≥ 2.
+    # NOTE: when A^(m) has fewer rows than columns (M - m < m), w is a null vector of A^(m)
+    # (σ_min reported as 0), as with Fig. 4.1's svd(A, 0). The null space then has dimension
+    # 2m - M, so w is not unique once 2m - M ≥ 2. Fig. 4.1 takes the last column of V, which
+    # depends on the SVD routine; here the minimum-norm null vector with Σ w_j = 1 is taken
+    # (see _minimal_vector), which every platform and the TypeScript port compute alike.
     # NOTE: the poles in ``Step.info`` are computed every step (Fig. 4.1 computes them once,
     # at the end) so the visualizer can show Froissart doublets and real poles as they
     # appear.
@@ -564,7 +612,7 @@ def aaa(
     converged = False
     for m in range(1, int(max_terms) + 1):
         cand = np.flatnonzero(free)
-        j = int(cand[np.argmax(np.abs(f_all[cand] - r_samples[cand]))])
+        j = int(cand[_first_near_max(np.abs(f_all[cand] - r_samples[cand]))])
         support_idx.append(j)
         free[j] = False
         cauchy_cols.append(1.0 / (z_all - z_all[j]))  # inf at row j only; row j leaves J
@@ -587,9 +635,9 @@ def aaa(
                 sigma_min = 0.0
         except np.linalg.LinAlgError:
             return _broken("aaa", trace, f"SVD of the Loewner matrix failed at step {m}")
-        w = vh[-1] / col_norm  # (m,) real data → real w
+        w = _minimal_vector(vh, rows.size) / col_norm  # (m,) real data → real w
         w = w / np.linalg.norm(w)
-        w = w * (1.0 if w[int(np.argmax(np.abs(w)))] >= 0.0 else -1.0)
+        w = w * (1.0 if w[_first_near_max(np.abs(w))] >= 0.0 else -1.0)
         numer = cmat @ (w * fs)  # N on J
         denom = cmat @ w  # D on J
         r_samples = f_all.copy()

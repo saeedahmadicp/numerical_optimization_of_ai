@@ -1636,6 +1636,20 @@ export function augmentedLagrangian(problem: unknown, o: Opts): Result {
 // ---------------------------------------------------------------------------------------
 
 /** H + τI with the smallest τ of the sequence of N&W Alg. 3.3 that admits Cholesky. */
+/**
+ * Solve Hm·x = b for an Hm that passed makePd's Cholesky test (Python `_solve_pd`): LU first;
+ * when LU meets an exactly zero pivot (Hm positive definite only at the rounding level, near the
+ * boundary), with the Cholesky factor Hm = LLᵀ.
+ */
+function solvePd(Hm: Matrix, b: Vector): Vector | null {
+  const x = luSolve(Hm, b);
+  if (x !== null) return x;
+  const L = cholesky(Hm);
+  if (!L) return null;
+  const y = luSolve(L, b);
+  return y === null ? null : luSolve(transpose(L), y);
+}
+
 function makePd(H: Matrix): [Matrix, number] | null {
   const n = H.length;
   const dmin = Math.min(...H.map((r, i) => r[i]));
@@ -1786,9 +1800,14 @@ export function logBarrier(problem: unknown, o: Opts): Result {
       ];
       const sol = luSolve(K, [...negV(dF), ...negV(pick(c, E))]);
       dx = sol ? sol.slice(0, n) : null;
-    } else dx = luSolve(Hm, negV(dF));
+    } else dx = solvePd(Hm, negV(dF));
     if (dx === null)
-      return done(false, 'singular Newton (KKT) system: the equality constraints are dependent');
+      return done(
+        false,
+        eqIdx.length
+          ? 'singular Newton (KKT) system: the equality constraints are dependent'
+          : 'singular Newton system: the barrier Hessian is singular in float64',
+      );
     const decrement = 0.5 * dot(matTvec(Hm, dx, n), dx);
     const finalStage = mIn === 0 || 1.0 / t < tol;
     if ((decrement <= newtonTol || atFloor) && !finalStage) {

@@ -35,8 +35,7 @@ const TINY = 2.2250738585072014e-308;
 
 type F = (x: number) => number;
 /** A Dataset, or a bare `[x, y]` pair (Python accepts an `(x, y)` tuple). */
-export type InterpProblem = Pick<Dataset, 'x' | 'y'> &
-  Partial<Pick<Dataset, 'fTrue' | 'domain'>>;
+export type InterpProblem = Pick<Dataset, 'x' | 'y'> & Partial<Pick<Dataset, 'fTrue' | 'domain'>>;
 type ProblemArg = InterpProblem | readonly [readonly number[], readonly number[]];
 
 // ---------------------------------------------------------------------------------------
@@ -125,8 +124,7 @@ function requireDistinct(x: readonly number[]): void {
 
 /** Data sorted by x (stable), with distinct nodes and at least `minPoints` points. */
 function sortedData(data: Data, minPoints: number): [number[], number[]] {
-  if (data.n < minPoints)
-    throw new Error(`need at least ${minPoints} data points, got ${data.n}`);
+  if (data.n < minPoints) throw new Error(`need at least ${minPoints} data points, got ${data.n}`);
   const order = data.x.map((_, i) => i).sort((i, j) => data.x[i] - data.x[j] || i - j);
   const x = order.map((i) => data.x[i]);
   const y = order.map((i) => data.y[i]);
@@ -353,9 +351,7 @@ const barycentric: MethodFn<ProblemArg> = (problem) => {
     }
     w.push(wk);
     const curve = barycentricEval(x.slice(0, k + 1), w, y.slice(0, k + 1), grid.t);
-    trace.push(
-      step(k, w.slice(), grid.error(curve), { node_index: k, node: [x[k], y[k]], curve }),
-    );
+    trace.push(step(k, w.slice(), grid.error(curve), { node_index: k, node: [x[k], y[k]], curve }));
     if (!allFinite(w) || w.some((v) => v === 0.0))
       return broken(
         'barycentric',
@@ -855,7 +851,12 @@ const chebyshevInterpolation: MethodFn<ProblemArg> = (problem, { n_nodes = 0 }) 
     const fNodes = sample(f, nodesDesc);
     if (!allFinite(fNodes)) {
       const s0 = step(0, [0.0], null, { term_index: 0, curve: new Array(N_GRID).fill(0) });
-      return broken('chebyshev_interpolation', [s0], 'f_true is not finite at a Chebyshev node', nFev);
+      return broken(
+        'chebyshev_interpolation',
+        [s0],
+        'f_true is not finite at a Chebyshev node',
+        nFev,
+      );
     }
     coef = new Array<number>(n);
     for (let k = 0; k < n; k++) {
@@ -976,7 +977,7 @@ export const DOCS: Record<string, MethodDoc> = {
   },
   cubic_spline_natural: {
     order: 'O(h⁴) interior',
-    rule: 'h_i s_{i-1} + 2(h_{i-1}+h_i)\\,s_i + h_{i-1} s_{i+1} = 3(h_i m_{i-1} + h_{i-1} m_i),\\quad S\'\'(x_0) = S\'\'(x_{n-1}) = 0',
+    rule: "h_i s_{i-1} + 2(h_{i-1}+h_i)\\,s_i + h_{i-1} s_{i+1} = 3(h_i m_{i-1} + h_{i-1} m_i),\\quad S''(x_0) = S''(x_{n-1}) = 0",
     intuition:
       'Choose the slopes sᵢ = S′(xᵢ) so that the second derivative is continuous at every interior node; the natural end conditions set the curvature to zero at both ends. One tridiagonal solve gives every slope.',
     pros: SPLINE_PROS,
@@ -984,7 +985,7 @@ export const DOCS: Record<string, MethodDoc> = {
   },
   cubic_spline_clamped: {
     order: 'O(h⁴)',
-    rule: 'h_i s_{i-1} + 2(h_{i-1}+h_i)\\,s_i + h_{i-1} s_{i+1} = 3(h_i m_{i-1} + h_{i-1} m_i),\\quad s_0 = f\'_a,\\; s_{n-1} = f\'_b',
+    rule: "h_i s_{i-1} + 2(h_{i-1}+h_i)\\,s_i + h_{i-1} s_{i+1} = 3(h_i m_{i-1} + h_{i-1} m_i),\\quad s_0 = f'_a,\\; s_{n-1} = f'_b",
     intuition:
       'The C² cubic spline with the end slopes prescribed. With the true derivatives at the ends it is O(h⁴) everywhere; with wrong ones the error stays near the ends.',
     pros: ['O(h⁴) with exact end slopes'],
@@ -992,7 +993,7 @@ export const DOCS: Record<string, MethodDoc> = {
   },
   cubic_spline_not_a_knot: {
     order: 'O(h⁴)',
-    rule: 'h_i s_{i-1} + 2(h_{i-1}+h_i)\\,s_i + h_{i-1} s_{i+1} = 3(h_i m_{i-1} + h_{i-1} m_i),\\quad S\'\'\' \\text{ continuous at } x_1, x_{n-2}',
+    rule: "h_i s_{i-1} + 2(h_{i-1}+h_i)\\,s_i + h_{i-1} s_{i+1} = 3(h_i m_{i-1} + h_{i-1} m_i),\\quad S''' \\text{ continuous at } x_1, x_{n-2}",
     intuition:
       'The default spline of MATLAB and SciPy: the first two and the last two pieces are one cubic each, so no end derivative is assumed. It is O(h⁴) up to the ends.',
     pros: ['O(h⁴) without end data'],
@@ -1042,7 +1043,8 @@ registerMethod(
     params: NO_PARAMS,
     needs: ['data'],
     order: ERR_ORDER,
-    summary: 'Precompute one weight per node in O(n²); then evaluate p with a stable O(n) weighted average.',
+    summary:
+      'Precompute one weight per node in O(n²); then evaluate p with a stable O(n) weighted average.',
     references: [
       'Berrut & Trefethen (2004), Barycentric Lagrange Interpolation, SIAM Review 46(3), ' +
         'eq. (3.2) weights, eq. (4.2) second form',
@@ -1086,7 +1088,8 @@ registerMethod(
     ],
     needs: ['data'],
     order: ERR_ORDER,
-    summary: 'Evaluate p(x*) directly by combining interpolants on ever larger sets of nodes (O(n²) per point).',
+    summary:
+      'Evaluate p(x*) directly by combining interpolants on ever larger sets of nodes (O(n²) per point).',
     references: [`${REF_BF}, §3.2, Alg. 3.1 (Theorem 3.5)`],
   },
   neville,
@@ -1152,8 +1155,7 @@ registerMethod(
   (problem: ProblemArg, { fprime_a = 0.0, fprime_b = 0.0 }) => {
     const fa = Number(fprime_a),
       fb = Number(fprime_b);
-    if (!(Number.isFinite(fa) && Number.isFinite(fb)))
-      throw new Error('end slopes must be finite');
+    if (!(Number.isFinite(fa) && Number.isFinite(fb))) throw new Error('end slopes must be finite');
     return cubicSpline('cubic_spline_clamped', problem, 'clamped', fa, fb);
   },
   DOCS.cubic_spline_clamped,
@@ -1214,8 +1216,7 @@ registerMethod(
     ],
     needs: ['data'],
     order: 'geometric for analytic f',
-    summary:
-      'Sample f at the Chebyshev nodes and expand the interpolant in Chebyshev polynomials.',
+    summary: 'Sample f at the Chebyshev nodes and expand the interpolant in Chebyshev polynomials.',
     references: [
       `${REF_BF}, §8.3 (Chebyshev nodes)`,
       'Press et al., Numerical Recipes (3rd ed.), §5.8 (coefficients by discrete ' +

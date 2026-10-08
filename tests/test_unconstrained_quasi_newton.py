@@ -53,6 +53,20 @@ def _direct_broyden(B: np.ndarray, s: np.ndarray, y: np.ndarray, phi: float) -> 
     return B - np.outer(Bs, Bs) / sBs + np.outer(y, y) / ys + phi * sBs * np.outer(v, v)
 
 
+def _term_size(B: np.ndarray, s: np.ndarray, y: np.ndarray, phi: float) -> np.ndarray:
+    """Entrywise size of the terms of eq. 6.32 (B form; the H form with s ↔ y and φ ↦ Φ):
+    |B| + |Bs||Bs|ᵀ/sᵀBs + |y||y|ᵀ/|yᵀs| + φ·sᵀBs·aaᵀ with a = |y|/|yᵀs| + |Bs|/sᵀBs (the
+    size of v = y/yᵀs − Bs/sᵀBs before it cancels). A sum's rounding error is ε times this."""
+    Bs = np.abs(B @ s)
+    sBs = float(s @ (B @ s))
+    ys = abs(float(y @ s))
+    a = np.abs(y) / ys + Bs / sBs
+    return (
+        np.abs(B) + np.outer(Bs, Bs) / sBs + np.outer(np.abs(y), np.abs(y)) / ys
+        + phi * sBs * np.outer(a, a)
+    )  # fmt: skip
+
+
 def _bfgs_product(H: np.ndarray, s: np.ndarray, y: np.ndarray) -> np.ndarray:
     """N&W eq. 6.17 in its product form (the implementation uses the expanded form)."""
     rho = 1.0 / float(y @ s)
@@ -165,11 +179,20 @@ def _check_against_direct_update(res: Any, phi: float) -> None:
             H_old = cur.info["gamma"] * np.eye(2)
         s, y = np.asarray(cur.info["s"]), np.asarray(cur.info["y"])
         B_old = scipy.linalg.solve(H_old, np.eye(2), assume_a="pos")
-        H_ref = scipy.linalg.solve(_direct_broyden(B_old, s, y, phi), np.eye(2), assume_a="pos")
+        B_new = _direct_broyden(B_old, s, y, phi)
+        H_ref = scipy.linalg.solve(B_new, np.eye(2), assume_a="pos")
         H_new = np.asarray(cur.info["H"])
         kappa = np.linalg.cond(H_ref) * np.linalg.cond(H_old)
-        # Two solves and the rank-two update: forward error ≲ κ(H_old)κ(H_new)·ε.
-        assert_allclose(H_new, H_ref, rtol=0, atol=100 * kappa * EPS * np.abs(H_ref).max())
+        # The reference: two solves (κ(H_old)κ(H_new)·ε) around the B-form update, whose terms
+        # cancel: its rounding error is ε times the size of the terms, not of B_new. The
+        # implementation's inverse form (dual parameter Φ) has error ε times the size of its
+        # own terms. The tolerance is the sum of the two, with a factor 100.
+        phi_inv = cur.info.get("phi_inverse")
+        phi_inv = 1.0 - phi if phi_inv is None else phi_inv  # bfgs: Φ = 1, dfp: Φ = 0
+        cancel_b = _term_size(B_old, s, y, phi).max() / np.abs(B_new).max()
+        ref_err = kappa * cancel_b * np.abs(H_ref).max()
+        impl_err = _term_size(H_old, y, s, phi_inv).max()  # dual: s and y swap roles
+        assert_allclose(H_new, H_ref, rtol=0, atol=100 * EPS * (ref_err + impl_err))
         n_checked += 1
     assert n_checked >= 3
 
@@ -395,12 +418,17 @@ def test_sr1_skips_a_zero_gradient_change() -> None:
 def test_sr1_with_backtracking_does_not_raise_on_a_zero_pair(pid: str, x0: Any) -> None:
     # Audit regression: these runs reach a pair with y = 0 (s ≈ 1e-18 at the precision floor
     # of f) and used to raise ZeroDivisionError in the SR1 update. From this Beale start SR1
-    # follows Beale's flat valley y → 1, x → −∞ and stops there with a failed line search.
+    # follows Beale's flat valley y → 1, x → −∞ and stops there with a failed line search, or
+    # (on CPUs that round the last bits of f differently) is still walking down the valley at
+    # max_iter. The update rule itself is tested from given values in
+    # test_sr1_skips_a_zero_gradient_change.
     prob = problems.get(pid)
     res = numopt.run("sr1", prob, x0=x0, line_search="backtracking")
     assert_valid_result(res, max_iter=500)
     if not res.converged:
-        assert "line search failed" in res.message and "rounding level" in res.message
+        assert (
+            "line search failed" in res.message and "rounding level" in res.message
+        ) or res.message.startswith("reached max_iter=500"), res.message
     if pid == "goldstein_price":
         assert_allclose(res.x, _nearest_min(prob, res.x), rtol=0, atol=1e-5)
     pairs = [s for s in res.trace[1:] if not np.any(s.info["y"])]

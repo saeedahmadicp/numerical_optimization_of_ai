@@ -43,7 +43,8 @@ describe('step evaluators of the rational methods', () => {
         const g = stepFunction('aaa', r, k, data)!;
         const curve = nums(s.info.curve);
         grid.forEach((t, i) => {
-          if (Number.isFinite(curve[i]) && Math.abs(curve[i]) < 1e6) expect(g(t)).toBeCloseTo(curve[i], 9);
+          if (Number.isFinite(curve[i]) && Math.abs(curve[i]) < 1e6)
+            expect(g(t)).toBeCloseTo(curve[i], 9);
         });
         expect(aaaSupport(r, k)).toHaveLength(k);
       });
@@ -107,7 +108,10 @@ describe('MethodCard rules and presets', () => {
         for (let k = 0; k < r.trace.length; k++) {
           const tex = filledRule(m, r, k, nodes, values);
           expect(tex).toContain('aligned');
-          expect(() => katex.renderToString(tex, { throwOnError: true, displayMode: true }), `${id} ${m} k=${k}`).not.toThrow();
+          expect(
+            () => katex.renderToString(tex, { throwOnError: true, displayMode: true }),
+            `${id} ${m} k=${k}`,
+          ).not.toThrow();
         }
       }
     }

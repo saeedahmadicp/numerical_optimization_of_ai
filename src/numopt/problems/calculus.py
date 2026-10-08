@@ -37,6 +37,33 @@ def _where_real_nonneg(d: Any) -> Any:
     return np.where(np.real(d) >= 0, d, -d)[()]
 
 
+def _libm(scalar: Any, ufunc: Any) -> Any:
+    """f(x) with ``scalar`` (C libm, via ``math``) for a real float x, else with the ufunc.
+
+    # NOTE: the differentiation methods sweep h down to the rounding regime, where D(h) is
+    # decided by the last bit of f. For one float NumPy's ufuncs take the CPU's SIMD loop: on
+    # x86-64 with AVX-512 its exp differs from libm's in the last bit for some x, so the
+    # V-curve (and which level ends the truncation run) depended on the CPU. libm's exp, sin
+    # and cos (glibc) round the same on x86-64 and aarch64; complex (complex step) and array
+    # (quadrature nodes) arguments keep the ufunc.
+    """
+
+    def f(x: Any) -> Any:
+        if isinstance(x, float):  # Python float or np.float64
+            try:
+                return scalar(x)
+            except OverflowError:  # NumPy returns inf (and warns)
+                return math.inf
+        return ufunc(x)
+
+    return f
+
+
+_exp = _libm(math.exp, np.exp)
+_sin = _libm(math.sin, np.sin)
+_cos = _libm(math.cos, np.cos)
+
+
 @factory("calculus")
 def poly3() -> Problem:
     """f(x) = x³ − 2x + 1 on [0, 2]; ∫ = [x⁴/4 − x² + x]₀² = 4 − 4 + 2 = 2.
@@ -67,9 +94,9 @@ def exp_0_1() -> Problem:
         id="exp_0_1",
         name="Exponential",
         latex=r"f(x) = e^{x}",
-        f=lambda x: np.exp(x),
-        grad=lambda x: np.exp(x),
-        hess=lambda x: np.exp(x),
+        f=lambda x: _exp(x),
+        grad=lambda x: _exp(x),
+        hess=lambda x: _exp(x),
         dim=1,
         domain=(0.0, 1.0),
         x0=1.0,
@@ -86,9 +113,9 @@ def sin_0_pi() -> Problem:
         id="sin_0_pi",
         name="Sine on [0, π]",
         latex=r"f(x) = \sin x",
-        f=lambda x: np.sin(x),
-        grad=lambda x: np.cos(x),
-        hess=lambda x: -np.sin(x),
+        f=lambda x: _sin(x),
+        grad=lambda x: _cos(x),
+        hess=lambda x: -_sin(x),
         dim=1,
         domain=(0.0, math.pi),
         x0=math.pi / 3.0,
@@ -172,9 +199,9 @@ def gaussian() -> Problem:
         id="gaussian",
         name="Gaussian",
         latex=r"f(x) = e^{-x^2}",
-        f=lambda x: np.exp(-(x**2)),
-        grad=lambda x: -2.0 * x * np.exp(-(x**2)),
-        hess=lambda x: (4.0 * x**2 - 2.0) * np.exp(-(x**2)),
+        f=lambda x: _exp(-(x**2)),
+        grad=lambda x: -2.0 * x * _exp(-(x**2)),
+        hess=lambda x: (4.0 * x**2 - 2.0) * _exp(-(x**2)),
         dim=1,
         domain=(-2.0, 2.0),
         x0=0.5,
@@ -198,9 +225,9 @@ def oscillatory() -> Problem:
         id="oscillatory",
         name="Oscillatory sine",
         latex=r"f(x) = \sin(10x)",
-        f=lambda x: np.sin(10.0 * x),
-        grad=lambda x: 10.0 * np.cos(10.0 * x),
-        hess=lambda x: -100.0 * np.sin(10.0 * x),
+        f=lambda x: _sin(10.0 * x),
+        grad=lambda x: 10.0 * _cos(10.0 * x),
+        hess=lambda x: -100.0 * _sin(10.0 * x),
         dim=1,
         domain=(0.0, math.pi),
         x0=0.5,

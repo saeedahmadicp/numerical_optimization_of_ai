@@ -895,17 +895,16 @@ def test_solvers_at_extreme_scales(
 
 
 def test_dogleg_falls_back_when_curvature_rounds_to_nonpositive() -> None:
-    """B = vvᵀ + 1e-16·I passes Cholesky, but with g ⊥ v (to rounding) the computed gᵀBg ≤ 0, so
-    p^U = −(gᵀg/gᵀBg)g is undefined; the dogleg takes the Cauchy point and says why."""
-    v = np.array([0.7604508913778566, -0.480369070543063])
-    B = np.array(
-        [[0.5782855581973767, -0.36529708788482473], [-0.36529708788482473, 0.23075444393440622]]
-    )
-    g = np.array([0.48036907141779395, 0.760450891761848])
+    """B = [[7, 7], [7, 7]] is singular (B·(1, −1) = 0), but Cholesky succeeds in floating point:
+    l₁₁ = fl(√7), l₂₁ = 7/l₁₁ (or 7·(1/l₁₁)), and 7 − l₂₁² is positive, ≥ 2.4e-16·7, however
+    l₂₁² is rounded (with or without FMA). With g = (1, −1) every product in Bg and gᵀBg is
+    exact, so gᵀBg = 0 on every IEEE platform: p^U = −(gᵀg/gᵀBg)g is undefined, and the dogleg
+    takes the Cauchy point and says why."""
+    B = np.array([[7.0, 7.0], [7.0, 7.0]])
+    g = np.array([1.0, -1.0])
     assert tr._newton_step(g, B) is not None  # Cholesky succeeds
     gh, _ = tr._pow2_scaled(g)
-    assert float(gh @ (B @ gh)) <= 0.0
-    assert abs(float(g @ v)) < 1e-8
+    assert np.array_equal(B @ gh, [0.0, 0.0]) and float(gh @ (B @ gh)) == 0.0
     sub = tr._dogleg(g, B, 1.0)
     assert sub.note is not None and "floating point" in sub.note
     assert sub.info == {"dogleg_path": None, "tau": None}

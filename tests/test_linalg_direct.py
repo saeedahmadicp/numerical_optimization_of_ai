@@ -123,8 +123,12 @@ def test_lu_factors_match_scipy(p):
     Ps, Ls, Us = sl.lu(p.A)  # pyright: ignore[reportAssignmentType]  (A = Ps L U, Ps = Pᵀ)
     assert np.array_equal(P, Ps.T)
     scale = np.max(np.abs(p.A))
-    assert_allclose(L, Ls, rtol=0, atol=10 * EPS)
-    assert_allclose(U, Us, rtol=0, atol=10 * p.b.size * EPS * scale)
+    # Both factorizations have backward error O(nε)·|A| (checked below), but the factors
+    # themselves move by up to κ(A) times that (the forward error; LAPACK's blocked, FMA
+    # kernels and numopt's loops round differently: 7e-15 in L of hilbert_5 on x86-64).
+    fwd = 10 * p.b.size * EPS * max(1.0, float(np.linalg.cond(p.A, 1)))
+    assert_allclose(L, Ls, rtol=0, atol=fwd)
+    assert_allclose(U, Us, rtol=0, atol=fwd * scale)
     assert_allclose(P @ p.A, L @ U, rtol=0, atol=10 * p.b.size * EPS * scale)
     assert np.all(np.abs(L) <= 1.0)  # partial pivoting
 

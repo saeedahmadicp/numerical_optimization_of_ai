@@ -9,6 +9,7 @@
  * the QP solutions, and f, ∇f, ∇²f, c, ∇c, ∇²c and the metadata of every problem.
  */
 import { describe, expect, it } from 'vitest';
+import { CANONICAL } from '../../../tests/fixtures/platform';
 import { reviveNumbers, stepFromJson } from '../../core/json';
 import { getMethod } from '../../core/registry';
 import { getProblem } from '../../problems/registry';
@@ -190,7 +191,11 @@ describe('constrained methods vs the Python reference', () => {
         expect(Object.keys(gi).sort()).toEqual(Object.keys(wi).sort());
         for (const key of Object.keys(wi)) {
           // Quotients of rounding noise near feasibility / stationarity (see the file header).
-          const tol = NOISY[c.method]?.includes(key) ? NOISY_TOL : INFO_TOL;
+          // Off the canonical platform (tests/fixtures/platform.ts) every info value is held to
+          // NOISY_TOL: the dump's own rounding moves e.g. SQP's θ by 6e-5 relative (sqp on
+          // circle_eq from [0.05, 0.05], measured with two OpenBLAS kernels); x and f stay at
+          // STEP_TOL.
+          const tol = !CANONICAL || NOISY[c.method]?.includes(key) ? NOISY_TOL : INFO_TOL;
           expect(mismatch(gi[key], wi[key], tol, `trace[${k}].info.${key}`)).toBeNull();
         }
       });

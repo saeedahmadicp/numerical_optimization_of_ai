@@ -8,6 +8,7 @@
  *   - helpers: cond₂ equals np.linalg.cond, Python's `:.3g`, input errors.
  */
 import { describe, expect, it } from 'vitest';
+import { CANONICAL, sameTemplate } from '../fixtures/platform';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getMethod, runMethod } from '../../src/core/registry';
@@ -51,6 +52,18 @@ const META = read<Record<string, unknown>[]>('../../src/generated/problems.json'
 );
 
 const rel = (a: number, b: number) => Math.abs(a - b) / Math.max(1, Math.abs(b));
+
+/**
+ * Off the canonical platform (tests/fixtures/platform.ts) the Python dump rounds differently, and
+ * runs that wander do not keep Python's path: Broyden on rosenbrock_system and freudenstein_roth
+ * (no convergence in 100 steps) part after their first 10 iterates (2.5 and 70 apart at the
+ * end), Newton on freudenstein_roth after them (0.06), and Broyden from [2, 1.386] at once (4.8
+ * within 10 steps). There the comparison is the parity rule: the counts and the flag, the first
+ * 10 iterates within 1e-8 (except the runs in PLATFORM_CHAOTIC), the final x within 1e-6 when the
+ * run converged.
+ */
+const PLATFORM_CHAOTIC = new Set(['broyden on freudenstein_roth {"x0":[2,1.386]}']);
+const PARITY_STEPS = 10;
 
 describe('systems problems', () => {
   it('match problems.json (ids, order, metadata)', () => {
@@ -128,14 +141,19 @@ describe('systems methods (every iterate of the long preset runs)', () => {
       expect(r.nIter).toBe(c.n_iter);
       expect(r.trace.length).toBe(c.xs.length);
       let worst = 0;
-      c.xs.forEach((x, k) =>
+      const xs = CANONICAL ? c.xs : c.xs.slice(0, PARITY_STEPS);
+      xs.forEach((x, k) =>
         x.forEach((v, i) => {
           const d = Math.abs((r.trace[k].x as Vector)[i] - v) / (1 + Math.abs(v));
           worst = Math.max(worst, d);
         }),
       );
       // 9 of the 10 runs are bit-identical; trig_system differs in the last bit of sin/cos.
-      expect(worst).toBeLessThanOrEqual(1e-12);
+      expect(worst).toBeLessThanOrEqual(CANONICAL ? 1e-12 : 1e-8);
+      if (!CANONICAL && c.converged) {
+        const end = c.xs[c.xs.length - 1];
+        (r.x as Vector).forEach((v, i) => expect(rel(v, end[i])).toBeLessThanOrEqual(1e-6));
+      }
     });
   }
 });
@@ -150,7 +168,23 @@ describe('systems methods (extra Python runs)', () => {
       expect(r.nGev).toBe(c.n_gev);
       expect(r.extra).toEqual(c.extra);
       const mask = (m: string) => m.replace(/[-+]?\d+(\.\d+)?(e[-+]\d+)?/g, '#');
-      expect(mask(r.message)).toBe(mask(c.message));
+      // Another platform may round a singular J to cond₂ = inf instead of 4.8e16.
+      if (CANONICAL) expect(mask(r.message)).toBe(mask(c.message));
+      else expect(sameTemplate(r.message, c.message), `${r.message} vs ${c.message}`).toBe(true);
+      const name = `${c.method} on ${c.problem} ${JSON.stringify(c.params)}`;
+      if (!CANONICAL && (PLATFORM_CHAOTIC.has(name) || !c.converged)) {
+        if (!PLATFORM_CHAOTIC.has(name))
+          c.xs
+            .slice(0, PARITY_STEPS)
+            .forEach((x, k) =>
+              x.forEach((v, i) =>
+                expect(Math.abs((r.trace[k].x as Vector)[i] - v)).toBeLessThanOrEqual(
+                  1e-8 * (1 + Math.abs(v)),
+                ),
+              ),
+            );
+        return;
+      }
       // Every run, including those that wander for the whole budget (Broyden on Rosenbrock /
       // Freudenstein–Roth): the port replays NumPy's rounding, so their paths agree too.
       c.xs.forEach((x, k) =>
@@ -234,7 +268,11 @@ describe('systems methods (extra Python runs)', () => {
 
 describe('numerical helpers', () => {
   it('cond₂ equals np.linalg.cond (2×2 via the LAPACK path, n×n via Jacobi)', () => {
-    for (const c of EXTRA.cond) expect(rel(cond2(c.A), c.cond)).toBeLessThan(1e-12);
+    // Off the canonical platform, κ₂ ≥ 1e14 of a numerically singular matrix is σ_max over a
+    // rounding-level σ_min (4.8e16 on aarch64, 2.5e16 on x86-64): only "huge" is shared.
+    for (const c of EXTRA.cond)
+      if (!CANONICAL && c.cond >= 1e14) expect(cond2(c.A)).toBeGreaterThanOrEqual(1e14);
+      else expect(rel(cond2(c.A), c.cond)).toBeLessThan(1e-12);
   });
   it('fma rounds once', () => {
     expect(fma(0.1, 10, -1)).toBe(5.551115123125783e-17);

@@ -508,7 +508,7 @@ def _cholesky_shift(A: Array, beta: float) -> tuple[Array | None, float, int]:
     while True:
         attempts += 1
         try:
-            L = np.linalg.cholesky(A + tau * eye)
+            L = np.asarray(np.linalg.cholesky(A + tau * eye), dtype=np.float64)
         except np.linalg.LinAlgError:
             L = None
         if L is not None and finite(L):
@@ -733,5 +733,6 @@ FIXTURE_CASES: list[tuple[str, str, dict[str, Any]]] = [
     ("damped_newton", "six_hump_camel", {}),
     ("modified_newton", "rosenbrock", {}),
     ("modified_newton", "himmelblau", {}),
-    ("modified_newton", "beale", {"line_search": "strong_wolfe"}),
+    # Not beale: there the count of Cholesky attempts at x0 (15 or 16) flips with one ulp of x0.
+    ("modified_newton", "goldstein_price", {"line_search": "strong_wolfe"}),
 ]

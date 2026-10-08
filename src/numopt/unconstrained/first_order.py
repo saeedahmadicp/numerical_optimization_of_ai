@@ -1621,7 +1621,9 @@ FIXTURE_CASES: list[tuple[str, str, dict[str, Any]]] = [
     ("gradient_descent", "quadratic_ill", {"step_rule": "exact_quadratic"}),
     ("gradient_descent", "booth", {"step_rule": "strong_wolfe"}),
     ("gradient_descent", "quadratic_bowl", {"step_rule": "fixed", "lr": 0.2}),
-    ("barzilai_borwein", "rosenbrock", {}),
+    # Not rosenbrock: there a one-ulp change of x0 moves the nonmonotone BB iterates by 5e-9,
+    # so the trace would differ between CPUs (web/tests/fixtures/check_generated.py).
+    ("barzilai_borwein", "beale", {}),
     ("barzilai_borwein", "quadratic_ill", {"variant": "bb2", "nonmonotone": False}),
     ("momentum", "quadratic_ill", {"lr": 0.02, "beta": 0.7, "max_iter": 250}),
     ("nesterov", "quadratic_ill", {"lr": 0.02, "beta": 0.7, "max_iter": 250}),

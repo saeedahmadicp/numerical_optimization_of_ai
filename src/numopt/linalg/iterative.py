@@ -1157,6 +1157,8 @@ FIXTURE_CASES: list[tuple[str, str, dict[str, Any]]] = [
     ("sor", "poisson_1d_10", {"omega": 1.56}),
     ("steepest_descent_linear", "spd_2x2", {}),
     ("conjugate_gradient_linear", "poisson_1d_10", {}),
-    ("preconditioned_cg", "hilbert_5", {}),
+    # Not hilbert_5: with κ = 4.8e5 the CG iterates lose orthogonality, and rounding moves
+    # iterate 5 by 7e-5 between BLAS kernels. spd_2x2 has an unequal diagonal for Jacobi.
+    ("preconditioned_cg", "spd_2x2", {}),
     ("gmres", "nonsymmetric_4", {"restart": 2}),
 ]

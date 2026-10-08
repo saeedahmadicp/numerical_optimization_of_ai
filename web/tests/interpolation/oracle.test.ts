@@ -59,14 +59,17 @@ function same(got: unknown, want: unknown, path: string, rtol = RTOL): void {
     return;
   }
   if (typeof want === 'number') {
-    if (typeof got !== 'number') expect.fail(`${path}: expected ${want}, got ${JSON.stringify(got)}`);
+    if (typeof got !== 'number')
+      expect.fail(`${path}: expected ${want}, got ${JSON.stringify(got)}`);
     if (!Number.isFinite(want)) {
       if (got !== want) expect.fail(`${path}: expected ${want}, got ${got}`);
       return;
     }
     const tol = ATOL + rtol * Math.abs(want);
     if (!(Math.abs((got as number) - want) <= tol))
-      expect.fail(`${path}: expected ${want}, got ${got} (|Δ| = ${Math.abs((got as number) - want)})`);
+      expect.fail(
+        `${path}: expected ${want}, got ${got} (|Δ| = ${Math.abs((got as number) - want)})`,
+      );
     return;
   }
   if (Array.isArray(want)) {
@@ -80,10 +83,12 @@ function same(got: unknown, want: unknown, path: string, rtol = RTOL): void {
     if (typeof got !== 'object' || got === null) expect.fail(`${path}: expected an object`);
     const g = got as Record<string, unknown>;
     expect(Object.keys(g).sort(), `${path} keys`).toEqual(Object.keys(want).sort());
-    for (const [k, w] of Object.entries(want as Record<string, unknown>)) same(g[k], w, `${path}.${k}`, rtol);
+    for (const [k, w] of Object.entries(want as Record<string, unknown>))
+      same(g[k], w, `${path}.${k}`, rtol);
     return;
   }
-  if (got !== want) expect.fail(`${path}: expected ${JSON.stringify(want)}, got ${JSON.stringify(got)}`);
+  if (got !== want)
+    expect.fail(`${path}: expected ${JSON.stringify(want)}, got ${JSON.stringify(got)}`);
 }
 
 function problemOf(c: OracleCase): unknown {
@@ -110,7 +115,9 @@ function sameMessage(got: string, want: string) {
     const a = Number(t),
       b = Number(w[i]);
     if (a === b || (Math.abs(a) < 1e-10 && Math.abs(b) < 1e-10)) return;
-    expect(Math.abs(a - b), `message number ${t} vs ${w[i]}`).toBeLessThanOrEqual(5e-3 * Math.abs(b));
+    expect(Math.abs(a - b), `message number ${t} vs ${w[i]}`).toBeLessThanOrEqual(
+      5e-3 * Math.abs(b),
+    );
   });
 }
 
@@ -153,7 +160,10 @@ describe('interpolation port vs the Python oracle', () => {
         same(gs.x, ws.x, `trace[${i}].x`, rtol);
         same(gs.fun, ws.fun, `trace[${i}].fun`, cheb ? 1e-6 : 1e-8);
         const info = Object.fromEntries(
-          Object.entries(gs.info).map(([k, v]) => [k, k === 'curve' || k === 'basis' ? thin(v) : v]),
+          Object.entries(gs.info).map(([k, v]) => [
+            k,
+            k === 'curve' || k === 'basis' ? thin(v) : v,
+          ]),
         );
         if (ill) {
           // The values are cancellation noise beyond ~3 digits (and overflow where they end).
@@ -166,12 +176,18 @@ describe('interpolation port vs the Python oracle', () => {
       const extra = { ...got.extra };
       if (extra.eval) {
         const ev = extra.eval as Record<string, unknown>;
-        extra.eval = { x: thin(ev.x), y: thin(ev.y), f_true: ev.f_true === null ? null : thin(ev.f_true) };
+        extra.eval = {
+          x: thin(ev.x),
+          y: thin(ev.y),
+          f_true: ev.f_true === null ? null : thin(ev.f_true),
+        };
       }
       const wantExtra = { ...want.extra };
       if (cheb) {
         // node_residual is a round-off quantity (≈1e-15) — compare its size, not its digits.
-        expect(Math.abs((extra.node_residual as number) - (num(wantExtra.node_residual) as number))).toBeLessThan(1e-12);
+        expect(
+          Math.abs((extra.node_residual as number) - (num(wantExtra.node_residual) as number)),
+        ).toBeLessThan(1e-12);
         delete extra.node_residual;
         delete wantExtra.node_residual;
       }

@@ -29,10 +29,12 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       # pyproject.toml points pyright at .venv, and web/package.json calls ../.venv/bin/*.
+      # The `plot` extra (matplotlib) lets pyright check bench.py's plotting code against the real
+      # matplotlib types, and runs the plot tests that skip without it.
       - name: Install numopt into .venv
         run: |
           python -m venv .venv
-          .venv/bin/pip install -e ".[dev]"
+          .venv/bin/pip install -e ".[dev,plot]"
       - name: ruff check
         run: .venv/bin/ruff check src tests
       - name: ruff format --check
@@ -78,9 +80,10 @@ jobs:
           python -m venv .venv
           .venv/bin/pip install -e .
       # Exports into a temporary folder and compares it with the committed web/src/generated/
-      # under the parity tolerances (not byte identity: NumPy may round the last bit
-      # differently on another CPU). It fails when someone changed Python and did not run
-      # `npm run gen`.
+      # (written on aarch64): text, counts, flags and structure exactly; x, f and ‖∇f‖ along the
+      # whole trace within 1e-9 of their size in the run (+1e-12), since NumPy rounds the last
+      # bits differently on another CPU. It fails when someone changed Python and did not run
+      # `npm run gen` (the policy is in check_generated.py).
       - name: Compare a fresh export with web/src/generated
         run: .venv/bin/python web/tests/fixtures/check_generated.py
 
@@ -110,7 +113,9 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
-      # git does not store the per-lab Python dumps under web/tests/**/fixtures (~14 MB).
+      # git does not store the per-lab Python dumps under web/tests/**/fixtures (~14 MB). On this
+      # runner they are not canonical (tests/fixtures/platform.ts): the tests compare them with
+      # their stated tolerances instead of bit for bit.
       - name: Generate the Python reference dumps
         run: npm run gen:test-fixtures
       # Replays the committed parity fixtures and the dumps with the TypeScript ports.

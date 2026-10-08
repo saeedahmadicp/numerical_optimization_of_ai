@@ -30,7 +30,8 @@
  * eigenvalues from a Householder–Hessenberg reduction and the shifted QR iteration (Golub & Van
  * Loan 2013, Alg. 7.4.2 and §7.5). The singular vector is unique up to sign whenever the
  * Loewner matrix has at least m − 1 rows (every parity fixture), so w agrees with NumPy to
- * rounding; the products `C @ v` replay OpenBLAS's dgemv kernel (`gemv`).
+ * rounding; where it is not unique, both take the same basis-free vector (`minimalVector`). The
+ * products `C @ v` replay OpenBLAS's dgemv kernel (`gemv`).
  */
 import { param, registerMethod, type MethodDoc } from '../../core/registry';
 import type { MethodFn, Result, Step } from '../../core/types';
@@ -119,8 +120,7 @@ function requireDistinct(x: readonly number[]): void {
 }
 
 function sortedData(data: Data, minPoints: number): [number[], number[]] {
-  if (data.n < minPoints)
-    throw new Error(`need at least ${minPoints} data points, got ${data.n}`);
+  if (data.n < minPoints) throw new Error(`need at least ${minPoints} data points, got ${data.n}`);
   const order = data.x.map((_, i) => i).sort((i, j) => data.x[i] - data.x[j] || i - j);
   const x = order.map((i) => data.x[i]);
   const y = order.map((i) => data.y[i]);
@@ -158,7 +158,10 @@ export type Complex = [number, number];
 
 const cadd = (a: Complex, b: Complex): Complex => [a[0] + b[0], a[1] + b[1]];
 const csub = (a: Complex, b: Complex): Complex => [a[0] - b[0], a[1] - b[1]];
-const cmul = (a: Complex, b: Complex): Complex => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+const cmul = (a: Complex, b: Complex): Complex => [
+  a[0] * b[0] - a[1] * b[1],
+  a[0] * b[1] + a[1] * b[0],
+];
 const cabs = (a: Complex) => Math.hypot(a[0], a[1]);
 const cfinite = (a: Complex) => Number.isFinite(a[0]) && Number.isFinite(a[1]);
 
@@ -192,7 +195,10 @@ function csqrt([re, im]: Complex): Complex {
  * deflation at |h_{k,k−1}| ≤ ε(|h_{k−1,k−1}| + |h_{kk}|) (Golub & Van Loan 2013, Alg. 7.4.2,
  * §7.5). Returns null if an eigenvalue needs more than 30 iterations (NumPy: LinAlgError).
  */
-export function complexEigvals(Are: readonly (readonly number[])[], Aim: readonly (readonly number[])[]): Complex[] | null {
+export function complexEigvals(
+  Are: readonly (readonly number[])[],
+  Aim: readonly (readonly number[])[],
+): Complex[] | null {
   const n = Are.length;
   const hr = Are.map((r) => Float64Array.from(r));
   const hi = Aim.map((r) => Float64Array.from(r));
@@ -291,7 +297,7 @@ export function complexEigvals(Are: readonly (readonly number[])[], Aim: readonl
     let mu: Complex;
     if (its % 11 === 10) {
       // Exceptional shift (breaks cycles; LAPACK zlahqr uses the same idea).
-      mu = [d[0] + 0.75 * Math.abs(c[0]) , d[1] + 0.75 * Math.abs(c[1])];
+      mu = [d[0] + 0.75 * Math.abs(c[0]), d[1] + 0.75 * Math.abs(c[1])];
     } else {
       const half: Complex = [(a[0] - d[0]) / 2, (a[1] - d[1]) / 2];
       const disc = csqrt(cadd(cmul(half, half), cmul(b, c)));
@@ -444,7 +450,13 @@ export function barycentricPoles(
   const center = 0.5 * (Math.min(...z) + Math.max(...z));
   let radius = maxAbs(z.map((zj) => zj - center));
   if (radius === 0.0) radius = 1.0;
-  const nFinite = m - 1 - vanishingMoments(z.map((zj) => (zj - center) / radius), w);
+  const nFinite =
+    m -
+    1 -
+    vanishingMoments(
+      z.map((zj) => (zj - center) / radius),
+      w,
+    );
   if (nFinite === 0) return { poles: [], residues: [] };
   const nan = (): { poles: Complex[]; residues: Complex[] } => ({
     poles: Array.from({ length: nFinite }, () => [NaN, NaN] as Complex),
@@ -479,7 +491,8 @@ export function barycentricPoles(
         im.push(ri);
       }
       const norm = Math.sqrt(norm2);
-      if (Number.isFinite(norm) && (best === null || norm < best.norm)) best = { norm, sigma, re, im };
+      if (Number.isFinite(norm) && (best === null || norm < best.norm))
+        best = { norm, sigma, re, im };
     }
   }
   if (best === null) return nan();
@@ -487,7 +500,10 @@ export function barycentricPoles(
   if (mu === null || !mu.every(cfinite)) return nan();
   // Drop the m − nFinite eigenvalues of smallest |μ| (one Jordan block at 0), then exact zeros.
   const order = mu.map((_, i) => i).sort((i, j) => cabs(mu[i]) - cabs(mu[j]));
-  const kept = order.slice(m - nFinite).map((i) => mu[i]).filter((q) => !(q[0] === 0 && q[1] === 0));
+  const kept = order
+    .slice(m - nFinite)
+    .map((i) => mu[i])
+    .filter((q) => !(q[0] === 0 && q[1] === 0));
   const sigma = best.sigma;
   const poles = polishPoles(
     kept.map((q) => cadd(sigma, cdiv([1, 0], q))),
@@ -598,7 +614,11 @@ export function realDenominatorRoots(
       hi = ends[s + 1];
     if (!(hi > lo)) continue;
     const hs = hints.filter((h) => h > lo && h < hi).sort((p, q) => p - q);
-    let t = [...GAP_FRACTIONS.map((g) => lo + g * (hi - lo)), ...GAP_FRACTIONS.map((g) => hi - g * (hi - lo)), ...hs];
+    let t = [
+      ...GAP_FRACTIONS.map((g) => lo + g * (hi - lo)),
+      ...GAP_FRACTIONS.map((g) => hi - g * (hi - lo)),
+      ...hs,
+    ];
     for (let i = 0; i + 1 < hs.length; i++) t.push(0.5 * (hs[i + 1] + hs[i]));
     t = [...new Set(t)].sort((p, q) => p - q).filter((v) => v > lo && v < hi);
     const xs = [lo],
@@ -620,7 +640,8 @@ export function realDenominatorRoots(
         ks.push(v);
       }
     });
-    for (let i = 0; i + 1 < ks.length; i++) if (ks[i + 1] !== ks[i]) brackets.push([kx[i], kx[i + 1], ks[i]]);
+    for (let i = 0; i + 1 < ks.length; i++)
+      if (ks[i + 1] !== ks[i]) brackets.push([kx[i], kx[i + 1], ks[i]]);
   }
   return brackets.map(([lo, hi, sLo]) => bisectCertified(lo, hi, sLo, z, w));
 }
@@ -636,7 +657,9 @@ function poleSummary(
 ): Record<string, unknown> {
   const { poles, residues } = barycentricPoles(z, w, f);
   const scale = z.length ? maxAbs(z) : 1.0;
-  const hints = poles.filter((p) => Math.abs(p[1]) <= HINT_RTOL * cabs(p) + HINT_ATOL * scale).map((p) => p[0]);
+  const hints = poles
+    .filter((p) => Math.abs(p[1]) <= HINT_RTOL * cabs(p) + HINT_ATOL * scale)
+    .map((p) => p[0]);
   const brackets = realDenominatorRoots(z, w, a, b, hints);
   const limit = DOUBLET_RTOL * Math.max(fScale, TINY);
   return {
@@ -653,14 +676,26 @@ function poleSummary(
 // ---------------------------------------------------------------------------------------
 
 /**
- * One-sided Jacobi on the columns of the r×p matrix `a` (no transposition, so a wide matrix
- * keeps its null vectors): returns the right singular vector of the smallest column norm after
- * convergence, and that norm. With r < p the smallest norm is 0 up to rounding: its vector is a
- * null vector of `a` (NumPy's last row of the full Vᴴ). Null when a sweep limit is reached.
+ * One-sided Jacobi on the columns of the r×p matrix `a` (no transposition, so a wide matrix keeps
+ * its null vectors): after convergence the columns are A·v_j for the orthonormal right singular
+ * vectors v_j, so their norms are the singular values. With r < p, p − r of the norms are 0 up to
+ * rounding: their vectors span the null space of `a`. Two columns that are both negligible
+ * (norm ≤ ‖a‖_F·max(r, p)·ε) are not rotated: their angle is rounding noise and would never meet
+ * the stopping test, and any orthonormal basis of their span is as good (`minimalVector` uses
+ * the null space of a wide `a` as a span only; a tall `a` has at most one such column unless
+ * its minimal singular vector is not unique anyway). Null when a sweep limit is reached.
  */
-export function minRightSingular(a: readonly (readonly number[])[], p: number): { sigma: number; v: number[] } | null {
+function jacobiRight(
+  a: readonly (readonly number[])[],
+  p: number,
+): { norms: number[]; v: Float64Array[] } | null {
   const r = a.length;
-  const cols: Float64Array[] = Array.from({ length: p }, (_, j) => Float64Array.from(a, (row) => row[j]));
+  let fro = 0;
+  for (const row of a) for (const t of row) fro += t * t;
+  const negligible = fro * (Math.max(r, p) * EPS) ** 2;
+  const cols: Float64Array[] = Array.from({ length: p }, (_, j) =>
+    Float64Array.from(a, (row) => row[j]),
+  );
   const v: Float64Array[] = Array.from({ length: p }, (_, j) => {
     const e = new Float64Array(p);
     e[j] = 1;
@@ -682,6 +717,7 @@ export function minRightSingular(a: readonly (readonly number[])[], p: number): 
           gamma += wi[q] * wj[q];
         }
         if (gamma === 0 || Math.abs(gamma) <= EPS * Math.sqrt(alpha * beta)) continue;
+        if (alpha <= negligible && beta <= negligible) continue;
         const zeta = (beta - alpha) / (2 * gamma);
         const t = (zeta >= 0 ? 1 : -1) / (Math.abs(zeta) + Math.sqrt(1 + zeta * zeta));
         if (t === 0 || !Number.isFinite(t)) continue;
@@ -713,113 +749,61 @@ export function minRightSingular(a: readonly (readonly number[])[], p: number): 
     for (const c of col) ss += (c / big) * (c / big);
     return big * Math.sqrt(ss);
   });
-  // The last column in descending order of norm (ties: the later column, as V's last row).
+  return { norms, v };
+}
+
+/**
+ * The right singular vector of the smallest singular value of the r×p matrix `a` and that value
+ * (one-sided Jacobi, Hestenes 1958; Demmel & Veselić 1992). With r < p the smallest value is 0 up
+ * to rounding and its vector is a null vector of `a`. Null when a sweep limit is reached.
+ */
+export function minRightSingular(
+  a: readonly (readonly number[])[],
+  p: number,
+): { sigma: number; v: number[] } | null {
+  const svd = jacobiRight(a, p);
+  return svd === null ? null : smallest(svd);
+}
+
+/** The last column in descending order of norm (ties: the later column, as V's last row). */
+function smallest({ norms, v }: { norms: number[]; v: Float64Array[] }): {
+  sigma: number;
+  v: number[];
+} {
   let best = 0;
-  for (let j = 1; j < p; j++) if (norms[j] <= norms[best]) best = j;
+  for (let j = 1; j < norms.length; j++) if (norms[j] <= norms[best]) best = j;
   return { sigma: norms[best], v: Array.from(v[best]) };
 }
 
 /**
- * LAPACK `dlarfg` on (alpha, x): returns [beta, tau, v] with H = I − τ[1; v][1; v]ᵀ and
- * H[alpha; x] = [beta; 0] (τ = 0 when x = 0). The safe-minimum rescaling loop is kept.
+ * A unit minimizer of ‖Av‖ for the r×p matrix `a` (Python `_minimal_vector`) and the smallest
+ * singular value. With r ≥ p − 1 this is `minRightSingular`. A wider `a` has a null space N of
+ * dimension d = p − r ≥ 2 (the vectors of the d smallest column norms), and the choice is
+ * P·1/‖P·1‖ (P the projector onto N): the minimum-norm v ∈ N with Σ v_j = 1. If
+ * ‖P·1‖ ≤ 1e-8·√p (N nearly orthogonal to 1) it is the unit vector of N with the largest single
+ * entry, P e_j/‖P e_j‖ (j the first index with P_jj within TIE_RTOL of the largest). Neither
+ * depends on the basis of N that an SVD returns, so Jacobi and LAPACK give the same w.
  */
-function dlarfg(alphaIn: number, xIn: readonly number[]): [number, number, number[]] {
-  let alpha = alphaIn;
-  let x = xIn.slice();
-  const nrm = (v: readonly number[]) => {
-    let scale = 0,
-      ssq = 1;
-    for (const t of v) {
-      if (t === 0) continue;
-      const a = Math.abs(t);
-      if (scale < a) {
-        ssq = 1 + ssq * (scale / a) ** 2;
-        scale = a;
-      } else ssq += (a / scale) ** 2;
-    }
-    return scale * Math.sqrt(ssq);
-  };
-  let xnorm = nrm(x);
-  if (xnorm === 0) return [alpha, 0, x];
-  let beta = -Math.sign(alpha || 1) * Math.hypot(alpha, xnorm);
-  const safmin = TINY / EPS;
-  let knt = 0;
-  if (Math.abs(beta) < safmin) {
-    const rsafmn = 1 / safmin;
-    do {
-      knt++;
-      x = x.map((t) => t * rsafmn);
-      beta *= rsafmn;
-      alpha *= rsafmn;
-    } while (Math.abs(beta) < safmin && knt < 20);
-    xnorm = nrm(x);
-    beta = -Math.sign(alpha || 1) * Math.hypot(alpha, xnorm);
+export function minimalVector(
+  a: readonly (readonly number[])[],
+  p: number,
+): { sigma: number; v: number[] } | null {
+  const svd = jacobiRight(a, p);
+  if (svd === null) return null;
+  const d = p - a.length;
+  if (d <= 1) return smallest(svd);
+  const order = svd.norms.map((_, j) => j).sort((i, j) => svd.norms[j] - svd.norms[i] || i - j);
+  const basis = order.slice(p - d).map((j) => svd.v[j]);
+  const norm = (u: number[]) => Math.sqrt(u.reduce((t, x) => t + x * x, 0));
+  const sums = basis.map((b) => b.reduce((t, x) => t + x, 0)); // Bᵀ1
+  let v = Array.from({ length: p }, (_, i) => basis.reduce((t, b, k) => t + b[i] * sums[k], 0)); // P·1
+  if (!(norm(v) > 1e-8 * Math.sqrt(p))) {
+    const diag = Array.from({ length: p }, (_, j) => basis.reduce((t, b) => t + b[j] * b[j], 0));
+    const j = firstNearMaxAbs(diag);
+    v = Array.from({ length: p }, (_, i) => basis.reduce((t, b) => t + b[i] * b[j], 0)); // P e_j
   }
-  const tau = (beta - alpha) / beta;
-  const s = 1 / (alpha - beta);
-  x = x.map((t) => t * s);
-  for (let j = 0; j < knt; j++) beta *= safmin;
-  return [beta, tau, x];
-}
-
-/**
- * The last row of the full Vᴴ that LAPACK `dgesdd` (NumPy's `svd(full_matrices=True)`) returns
- * for an r×p matrix with r < p: a unit null vector of A. Rows r+1…p of Vᴴ come from the
- * Householder reflectors only, so they are reproducible: with p ≥ ⌊11r/6⌋ dgesdd first factors
- * A = LQ (`dgelq2`) and the row is e_pᵀQ; otherwise it reduces A to lower bidiagonal form
- * (`dgebd2`) and the row is (G₁⋯G_r e_p)ᵀ. When the null space has dimension ≥ 2 (2m − M ≥ 2 in
- * AAA) the minimal singular vector is not unique, and this is the one Python uses.
- */
-export function lapackNullVector(aIn: readonly (readonly number[])[], p: number): number[] {
-  const r = aIn.length;
-  const a = aIn.map((row) => row.slice());
-  const taus: number[] = [];
-  const vs: number[][] = []; // reflector i acts on entries i..p−1: v = [1, …]
-  const lq = p >= Math.floor((r * 11) / 6);
-  for (let i = 0; i < r; i++) {
-    // Right reflector: annihilate a[i][i+1:p].
-    const [beta, tau, tail] = dlarfg(a[i][i], a[i].slice(i + 1));
-    const v = [1, ...tail];
-    taus.push(tau);
-    vs.push(v);
-    a[i][i] = beta;
-    for (let j = i + 1; j < p; j++) a[i][j] = tail[j - i - 1];
-    // Apply from the right to rows i+1..r−1: A ← A(I − τvvᵀ).
-    if (tau !== 0)
-      for (let q = i + 1; q < r; q++) {
-        let s = 0;
-        for (let j = 0; j < v.length; j++) s += a[q][i + j] * v[j];
-        s *= tau;
-        for (let j = 0; j < v.length; j++) a[q][i + j] -= s * v[j];
-      }
-    if (lq || i >= r - 1) continue;
-    // dgebd2: left reflector on column i, rows i+1..r−1, applied to columns i+1..p−1.
-    const col = [];
-    for (let q = i + 2; q < r; q++) col.push(a[q][i]);
-    const [bq, tq, tailq] = dlarfg(a[i + 1][i], col);
-    a[i + 1][i] = bq;
-    const u = [1, ...tailq];
-    if (tq !== 0)
-      for (let j = i + 1; j < p; j++) {
-        let s = 0;
-        for (let q = 0; q < u.length; q++) s += u[q] * a[i + 1 + q][j];
-        s *= tq;
-        for (let q = 0; q < u.length; q++) a[i + 1 + q][j] -= s * u[q];
-      }
-  }
-  // x = H₁H₂⋯H_r e_p (each Hᵢ symmetric).
-  const x = new Array<number>(p).fill(0);
-  x[p - 1] = 1;
-  for (let i = r - 1; i >= 0; i--) {
-    const v = vs[i],
-      tau = taus[i];
-    if (tau === 0) continue;
-    let s = 0;
-    for (let j = 0; j < v.length; j++) s += v[j] * x[i + j];
-    s *= tau;
-    for (let j = 0; j < v.length; j++) x[i + j] -= s * v[j];
-  }
-  return x;
+  const nrm = norm(v);
+  return { sigma: svd.norms[order[p - 1]], v: v.map((x) => x / nrm) };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -841,34 +825,39 @@ function argmaxAbs(v: readonly number[]): number {
   return best;
 }
 
-/** Entries with |w_j| ≥ (1 − SIGN_TIE_RTOL)·max|w| count as tied for the sign rule. */
-const SIGN_TIE_RTOL = 1e-8;
+/**
+ * AAA ranks two values (sample errors, |w_j|) as tied when they differ by less than TIE_RTOL
+ * relative (Python `TIE_RTOL`). Symmetric data ties in exact arithmetic, and the computed values
+ * then differ only by rounding, which changes with the CPU and BLAS; 1e-8 is far above that noise.
+ */
+const TIE_RTOL = 1e-8;
 
 /**
- * The entry of w that is made positive: the last of the entries tied (to SIGN_TIE_RTOL) for the
- * largest |w_j|.
- *
- * NOTE: Python makes `argmax |w_j|` positive. On symmetric data two entries of w are equal in
- * exact arithmetic (sine_samples, steps 2 and 4: w = ±0.5587…), so NumPy's choice depends on
- * the last bit of its SVD, which no port can reproduce. The tie rule is deterministic, and it
- * gives the same sign as NumPy on every step of every parity fixture (checked against the
- * Python traces); without a tie it is Python's rule.
+ * The first index i with |v_i| ≥ (1 − TIE_RTOL)·max|v| (Python `_first_near_max`; the first NaN
+ * wins). AAA uses it to pick the next support point and the entry of w that is made positive,
+ * so neither choice depends on the last bit of a tie (sine_samples: |F − mean F| at π/2 and
+ * 3π/2; w = ±0.5587… at step 4).
  */
-function signIndex(w: readonly number[]): number {
-  const big = maxAbs(w);
-  let idx = argmaxAbs(w);
-  for (let j = 0; j < w.length; j++) if (Math.abs(w[j]) >= (1 - SIGN_TIE_RTOL) * big) idx = j;
-  return idx;
+function firstNearMaxAbs(v: readonly number[]): number {
+  const i = argmaxAbs(v);
+  const big = Math.abs(v[i]);
+  if (Number.isNaN(big)) return i;
+  for (let j = 0; j < v.length; j++) if (Math.abs(v[j]) >= (1 - TIE_RTOL) * big) return j;
+  return i;
 }
 
-const aaa: MethodFn<ProblemArg> = (problem, { tol = 1e-13, max_terms = 100, scaling = 'columns' }) => {
+const aaa: MethodFn<ProblemArg> = (
+  problem,
+  { tol = 1e-13, max_terms = 100, scaling = 'columns' },
+) => {
   const tolN = Number(tol);
   if (!(tolN >= 0.0)) throw new Error('tol must be ≥ 0');
   if (typeof max_terms === 'boolean' || !Number.isInteger(Number(max_terms)))
     throw new Error('max_terms must be an integer');
   const maxTerms = Number(max_terms);
   if (maxTerms < 1) throw new Error('max_terms must be ≥ 1');
-  if (scaling !== 'none' && scaling !== 'columns') throw new Error("scaling must be 'none' or 'columns'");
+  if (scaling !== 'none' && scaling !== 'columns')
+    throw new Error("scaling must be 'none' or 'columns'");
   const data = resolve(problem);
   requireDistinct(data.x);
   const grid = new Grid(data);
@@ -914,7 +903,7 @@ const aaa: MethodFn<ProblemArg> = (problem, { tol = 1e-13, max_terms = 100, scal
   let converged = false;
   for (let m = 1; m <= maxTerms; m++) {
     const cand = free.flatMap((f, i) => (f ? [i] : []));
-    const j = cand[argmaxAbs(cand.map((i) => fAll[i] - rSamples[i]))];
+    const j = cand[firstNearMaxAbs(cand.map((i) => fAll[i] - rSamples[i]))];
     supportIdx.push(j);
     free[j] = false;
     const zj = zAll[j];
@@ -934,23 +923,31 @@ const aaa: MethodFn<ProblemArg> = (problem, { tol = 1e-13, max_terms = 100, scal
       }
     }
     const scaled = loewner.map((row) => row.map((v, jj) => v / colNorm[jj]));
-    // NOTE: with fewer rows than columns NumPy's w is the last row of the full Vᴴ (σ_min
-    // reported as 0); `lapackNullVector` rebuilds that row, so a non-unique w matches too.
+    // NOTE: with fewer rows than columns w is a null vector (σ_min reported as 0); when the
+    // minimizers of ‖Aw‖ form a subspace of dimension ≥ 2, `minimalVector` takes the same
+    // basis-free choice as Python (`_minimal_vector`).
     const finite = scaled.every((row) => row.every(Number.isFinite));
-    const svd = !finite ? null : rows.length >= m ? minRightSingular(scaled, m) : { sigma: 0.0, v: lapackNullVector(scaled, m) };
+    const svd = !finite ? null : minimalVector(scaled, m);
     if (svd === null) return broken('aaa', trace, `SVD of the Loewner matrix failed at step ${m}`);
-    const sigmaMin = svd.sigma;
+    const sigmaMin = rows.length >= m ? svd.sigma : 0.0;
     w = svd.v.map((v, jj) => v / colNorm[jj]);
     const wn = Math.sqrt(blasDot(w, w));
     w = w.map((v) => v / wn);
-    const sgn = w[signIndex(w)] >= 0.0 ? 1.0 : -1.0;
+    const sgn = w[firstNearMaxAbs(w)] >= 0.0 ? 1.0 : -1.0;
     w = w.map((v) => v * sgn);
-    const numer = gemv(cmat, w.map((v, jj) => v * fs[jj]));
+    const numer = gemv(
+      cmat,
+      w.map((v, jj) => v * fs[jj]),
+    );
     const denom = gemv(cmat, w);
     rSamples = fAll.slice();
     rows.forEach((i, q) => (rSamples[i] = numer[q] / denom[q]));
     if (!(allFinite(w) && allFinite(rSamples)))
-      return broken('aaa', trace, `non-finite weights or values at step ${m} (d(z) = 0 at a sample point)`);
+      return broken(
+        'aaa',
+        trace,
+        `non-finite weights or values at step ${m} (d(z) = 0 at a sample point)`,
+      );
     sigmas.push(sigmaMin);
     err = maxDev(rSamples);
     errors.push(err);
@@ -982,7 +979,8 @@ const aaa: MethodFn<ProblemArg> = (problem, { tol = 1e-13, max_terms = 100, scal
       `(type (${m - 1}, ${m - 1}))`
     : `max_terms = ${maxTerms} reached: max sample error ${pyG(err, 3)} > tol·max|f| = ${pyG(atol, 3)}`;
   const nReal = Number(final.n_interval_poles);
-  if (nReal) message += `; warning: ${nReal} certified real pole(s) of r in [${pyG(data.a, 6)}, ${pyG(data.b, 6)}]`;
+  if (nReal)
+    message += `; warning: ${nReal} certified real pole(s) of r in [${pyG(data.a, 6)}, ${pyG(data.b, 6)}]`;
 
   const zs = supportIdx.map((i) => zAll[i]);
   const fs = supportIdx.map((i) => fAll[i]);
@@ -1036,9 +1034,13 @@ const aaa: MethodFn<ProblemArg> = (problem, { tol = 1e-13, max_terms = 100, scal
  * each factor scaled by h = (x_n − x_0)/n (a common factor h^d that cancels in r). Returns the
  * weights and the windows [min J_k, max J_k]; throws unless 0 ≤ d ≤ n.
  */
-export function floaterHormannWeights(x: readonly number[], d: number): { w: number[]; windows: [number, number][] } {
+export function floaterHormannWeights(
+  x: readonly number[],
+  d: number,
+): { w: number[]; windows: [number, number][] } {
   const n = x.length - 1;
-  if (!(d >= 0 && d <= n)) throw new Error(`need 0 ≤ d ≤ n = ${n} (number of nodes - 1); got d = ${d}`);
+  if (!(d >= 0 && d <= n))
+    throw new Error(`need 0 ≤ d ≤ n = ${n} (number of nodes - 1); got d = ${d}`);
   const h = n > 0 ? (x[n] - x[0]) / n : 1.0;
   const w = new Array<number>(n + 1).fill(0);
   const windows: [number, number][] = [];
@@ -1060,7 +1062,8 @@ export function floaterHormannWeights(x: readonly number[], d: number): { w: num
 const floaterHormann: MethodFn<ProblemArg> = (problem, { d = 3 }) => {
   const data = resolve(problem);
   const [xs, ys] = sortedData(data, 1);
-  if (typeof d === 'boolean' || !Number.isInteger(Number(d))) throw new Error('d must be an integer');
+  if (typeof d === 'boolean' || !Number.isInteger(Number(d)))
+    throw new Error('d must be an integer');
   const dd = Number(d);
   const { w, windows } = floaterHormannWeights(xs, dd);
   const grid = new Grid(data);
@@ -1131,7 +1134,11 @@ export const RATIONAL_DOCS: Record<'aaa' | 'floater_hormann', MethodDoc> = {
     rule: 'r(x) = \\frac{\\sum_j \\frac{w_j f_j}{x - z_j}}{\\sum_j \\frac{w_j}{x - z_j}},\\qquad z_m = \\arg\\max_{Z}|f - r_{m-1}|,\\quad \\mathbf{w} = \\arg\\min_{\\|\\mathbf{w}\\|=1}\\|A^{(m)}\\mathbf{w}\\|',
     intuition:
       'Each step adds the sample where the current rational function fits worst as a new support point zₘ; r interpolates every support point. The weights w then fit all other samples in the least-squares sense: w is the smallest singular vector of the Loewner matrix with entries (Fᵢ − fⱼ)/(Zᵢ − zⱼ). On smooth data the poles of r lie off the interval, near the singularities of f; on noisy data AAA can put real poles between the samples, and a pole with a tiny residue pairs with a nearby zero (a Froissart doublet).',
-    pros: ['near-best rational approximation', 'handles poles and |x|-type singularities', 'no parameters to tune'],
+    pros: [
+      'near-best rational approximation',
+      'handles poles and |x|-type singularities',
+      'no parameters to tune',
+    ],
     cons: ['fits the samples only: r can have a real pole between two samples', 'O(M m³) work'],
   },
   floater_hormann: {
@@ -1202,7 +1209,7 @@ registerMethod(
         max: 8,
         help:
           'Degree of the blended local interpolants (0 ≤ d ≤ number of nodes − 1); ' +
-          'error O(hᵈ⁺¹). d = 0 is Berrut\'s interpolant; d = n is the polynomial.',
+          "error O(hᵈ⁺¹). d = 0 is Berrut's interpolant; d = n is the polynomial.",
         label: 'Blend degree',
         tex: 'd',
       }),

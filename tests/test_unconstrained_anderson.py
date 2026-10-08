@@ -151,7 +151,10 @@ def test_info_keys_and_trace_contract(pid: str, kw: dict[str, Any]) -> None:
 @pytest.mark.parametrize(
     ("pid", "kw"),
     [
-        ("rosenbrock", {}),
+        # AA is chaotic in Rosenbrock's valley: x₀ moved by up to ±8 ulp per coordinate (289
+        # starts) needs 163..1050 iterations, so 500 is met or not depending on the CPU's
+        # rounding. max_iter = 3000 leaves a margin of about 3 over that measurement.
+        ("rosenbrock", {"max_iter": 3000}),
         ("beale", {}),
         ("beale", {"beta": 0.5}),
         ("quadratic_bowl", {}),
@@ -163,7 +166,7 @@ def test_info_keys_and_trace_contract(pid: str, kw: dict[str, Any]) -> None:
 def test_converges_to_the_scipy_bfgs_minimizer(pid: str, kw: dict[str, Any]) -> None:
     prob = problems.get(pid)
     res = numopt.run("anderson_gd", prob, gtol=1e-8, **kw)
-    assert_valid_result(res, max_iter=500)
+    assert_valid_result(res, max_iter=kw.get("max_iter", 500))
     assert res.converged, res.message
     assert "strict local minimizer" in res.message
     assert np.linalg.norm(prob.grad(res.x)) <= 1e-8
@@ -223,7 +226,9 @@ def _gmres_iterates(B: np.ndarray, rhs: np.ndarray, x0: np.ndarray, kmax: int) -
             V[:, k + 1] = w / H[k + 1, k]
         e1 = np.zeros(k + 2)
         e1[0] = beta0
-        y, *_ = scipy.linalg.lstsq(H[: k + 2, : k + 1], e1)
+        sol = scipy.linalg.lstsq(H[: k + 2, : k + 1], e1)
+        assert sol is not None
+        y = sol[0]
         xk = x0 + V[:, : k + 1] @ y
         out.append((xk, float(np.linalg.norm(rhs - B @ xk))))
     return out
@@ -330,7 +335,7 @@ def test_coefficients_match_the_kkt_oracle_and_are_scale_invariant(
     F, scale, lam = case
     c, _, cond, lam_eff = _aa_coefficients(scale * F, lam)
     assert math.isclose(c.sum(), 1.0, rel_tol=0, abs_tol=1e-12)
-    c_ref = _kkt_coefficients(F, lam * np.linalg.norm(F, 2) ** 2)
+    c_ref = _kkt_coefficients(F, float(lam * np.linalg.norm(F, 2) ** 2))
     kappa = float(np.linalg.cond(F))
     # NOTE: the KKT oracle forms FᵀF, so its error is ≈ κ(F)²ε‖c‖ (Higham (2002), §20.4); the
     # bound is 1e3·κ²·ε for these Gaussian windows (n ≥ p + 1, κ(F) ≲ 30).
@@ -370,7 +375,9 @@ def test_coefficients_of_an_underdetermined_window(case: tuple[np.ndarray, float
     lam_rel = lam * np.linalg.norm(F, 2) ** 2
     G = np.vstack([F, math.sqrt(lam_rel) * np.eye(p)]) if lam > 0 else F
     A = G @ N
-    z, *_ = scipy.linalg.lstsq(A, -G @ c0, lapack_driver="gelsy")
+    sol = scipy.linalg.lstsq(A, -G @ c0, lapack_driver="gelsy")
+    assert sol is not None
+    z = sol[0]
     c_ref = c0 + N @ z
     s = scipy.linalg.svdvals(A)
     kappa = s[0] / s[s > 1e-12 * s[0]][-1]

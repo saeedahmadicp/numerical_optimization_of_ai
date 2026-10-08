@@ -330,16 +330,28 @@ def _root_distance(pid: str, x: np.ndarray) -> float:
     return min(float(np.linalg.norm(x - np.array(r))) for r in problems.get(pid).roots)
 
 
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_broyden_zero_step_is_a_stall_not_convergence():
-    """circle_line from (0.6, −0.6) with a finite-difference B₀: the first step goes to
-    x ≈ −9.6e10, where H F rounds to a zero step; it used to report converged at ‖F‖ = 1.8e22."""
-    p = problems.get("circle_line")
-    res = numopt.run(
-        "broyden", p, x0=[0.5999999999999996, -0.6000000000000001], jacobian0="finite_difference"
+@pytest.mark.parametrize("jacobian0", ["exact", "finite_difference"])
+def test_broyden_zero_step_is_a_stall_not_convergence(jacobian0):
+    """F(x) = ((x₁ − 2⁶⁰) + 1, x₂) at x₀ = (2⁶⁰, 0): F(x₀) = (1, 0) exactly and J = I, so the
+    step is p = (−1, 0), half the spacing of floats below 2⁶⁰, and x₀ + p rounds to x₀ on every
+    IEEE platform (round to nearest even). The run must report a stall with ‖F‖ = 1, not
+    convergence (a zero step used to pass the step test; the audit case was circle_line from
+    (0.6, −0.6), where the zero step at x ≈ −9.6e10 depends on the CPU's rounding)."""
+    big = 2.0**60
+    p = Problem(
+        id="far_line",
+        name="far line",
+        latex="",
+        f=lambda v: np.array([(v[0] - big) + 1.0, v[1]]),
+        jac=lambda v: np.eye(2),
+        dim=2,
+        domain=((0.0, 2.0 * big), (-1.0, 1.0)),
+        x0=(big, 0.0),
     )
-    assert not res.converged and "stalled" in res.message
-    assert res.trace[-1].step_size == 0.0
+    res = numopt.run("broyden", p, jacobian0=jacobian0)
+    assert not res.converged and "stalled" in res.message, res.message
+    assert res.n_iter == 1 and res.trace[-1].step_size == 0.0
+    assert np.array_equal(res.x, [big, 0.0]) and res.fun == 1.0
     assert_valid_result(res)
 
 

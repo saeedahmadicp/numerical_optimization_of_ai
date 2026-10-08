@@ -9,6 +9,7 @@
  * Regenerate: .venv/bin/python web/tests/interpolation/gen_rational_oracle.py
  */
 import { describe, expect, it } from 'vitest';
+import { CANONICAL } from '../fixtures/platform';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defaults, getMethod } from '../../src/core/registry';
@@ -53,9 +54,13 @@ interface HelperSet {
 }
 
 const FILE = fileURLToPath(new URL('./fixtures/rational_oracle.json', import.meta.url));
-const ORACLE = JSON.parse(readFileSync(FILE, 'utf8')) as { cases: OracleCase[]; helpers: HelperSet[] };
+const ORACLE = JSON.parse(readFileSync(FILE, 'utf8')) as {
+  cases: OracleCase[];
+  helpers: HelperSet[];
+};
 
-const num = (v: Num): number => (v === 'inf' ? Infinity : v === '-inf' ? -Infinity : v === null ? NaN : v);
+const num = (v: Num): number =>
+  v === 'inf' ? Infinity : v === '-inf' ? -Infinity : v === null ? NaN : v;
 const nums = (v: unknown): number[] => (Array.isArray(v) ? (v as number[]) : []);
 
 function run(c: OracleCase): Result {
@@ -64,17 +69,30 @@ function run(c: OracleCase): Result {
   return m.fn(problem, { ...defaults(m.spec), ...(c.params as Record<string, never>) });
 }
 
-function closeArr(got: readonly number[], want: readonly number[], rtol: number, atol: number, what: string) {
+function closeArr(
+  got: readonly number[],
+  want: readonly number[],
+  rtol: number,
+  atol: number,
+  what: string,
+) {
   expect(got.length, what).toBe(want.length);
   got.forEach((g, i) => {
     const w = want[i];
     if (!Number.isFinite(w)) return expect(g, what).toBe(w);
-    expect(Math.abs(g - w), `${what}[${i}]: ${g} vs ${w}`).toBeLessThanOrEqual(atol + rtol * Math.abs(w));
+    expect(Math.abs(g - w), `${what}[${i}]: ${g} vs ${w}`).toBeLessThanOrEqual(
+      atol + rtol * Math.abs(w),
+    );
   });
 }
 
 /** Every Python pole has a TS pole within rtol·max(1, |p|) (poles are a set; order differs). */
-function samePoles(got: readonly (readonly number[])[], want: readonly (readonly number[])[], rtol: number, what: string) {
+function samePoles(
+  got: readonly (readonly number[])[],
+  want: readonly (readonly number[])[],
+  rtol: number,
+  what: string,
+) {
   expect(got.length, `${what}: pole count`).toBe(want.length);
   const free = got.map(() => true);
   for (const p of want) {
@@ -87,7 +105,9 @@ function samePoles(got: readonly (readonly number[])[], want: readonly (readonly
         best = i;
       }
     });
-    expect(bd, `${what}: pole ${p[0]} + ${p[1]}i (nearest TS pole at ${bd})`).toBeLessThanOrEqual(rtol * Math.max(1, Math.hypot(p[0], p[1])));
+    expect(bd, `${what}: pole ${p[0]} + ${p[1]}i (nearest TS pole at ${bd})`).toBeLessThanOrEqual(
+      rtol * Math.max(1, Math.hypot(p[0], p[1])),
+    );
     free[best] = false;
   }
 }
@@ -104,7 +124,11 @@ describe('AAA and Floater–Hormann against the Python oracle', () => {
       }
       const want = c.result!;
       const got = run(c);
-      const fScale = Math.max(...nums(want.extra.values).map(Math.abs), ...(c.problem.y ?? []).map(Math.abs), 1);
+      const fScale = Math.max(
+        ...nums(want.extra.values).map(Math.abs),
+        ...(c.problem.y ?? []).map(Math.abs),
+        1,
+      );
       if (c.method === 'floater_hormann') {
         expect(got.converged).toBe(want.converged);
         expect(got.nIter).toBe(want.n_iter);
@@ -117,7 +141,13 @@ describe('AAA and Floater–Hormann against the Python oracle', () => {
           expect(g.info.node_index).toBe(s.info.node_index);
           closeArr(nums(g.x), s.x, 1e-12, 0, `w at step ${k}`);
         });
-        closeArr(nums((got.extra.eval as { y: number[] }).y).filter((_, i) => i % 7 === 0), nums((want.extra.eval as { y: number[] }).y), 1e-10, 1e-12, 'curve');
+        closeArr(
+          nums((got.extra.eval as { y: number[] }).y).filter((_, i) => i % 7 === 0),
+          nums((want.extra.eval as { y: number[] }).y),
+          1e-10,
+          1e-12,
+          'curve',
+        );
         expect(got.extra.d).toBe(want.extra.d);
         return;
       }
@@ -127,7 +157,11 @@ describe('AAA and Floater–Hormann against the Python oracle', () => {
       // w is compared up to sign there (r does not depend on it). A weight that is 0 in exact
       // arithmetic is 0 or rounding noise, and a noise weight can add a real pole: the poles
       // of such steps (step_data) are not compared.
-      const ties = (want as unknown as { ties: { pick: number[]; sign: number[]; zero_w: number[]; w_cond: Num[] } }).ties;
+      const ties = (
+        want as unknown as {
+          ties: { pick: number[]; sign: number[]; zero_w: number[]; w_cond: Num[]; stop: number[] };
+        }
+      ).ties;
       let diverged = false;
       let zeroW = false;
       for (const [k, s] of want.trace.entries()) {
@@ -140,14 +174,39 @@ describe('AAA and Floater–Hormann against the Python oracle', () => {
         }
         expect(g.info.node_index, at).toBe(s.info.node_index);
         const gw = nums(g.x);
-        const flip = ties.sign.includes(k) && gw.length && Math.sign(gw[0]) !== Math.sign(s.x[0]) ? -1 : 1;
+        const flip =
+          ties.sign.includes(k) && gw.length && Math.sign(gw[0]) !== Math.sign(s.x[0]) ? -1 : 1;
         // The tolerance follows the condition of the minimal singular vector, eps·σ₁/(σ_{m−1} − σ_m).
         const wTol = Math.max(1e-8, 100 * num(ties.w_cond[k]));
-        closeArr(gw.map((v) => flip * v), s.x, 0, wTol, `${at}: w (tolerance ${wTol})`);
-        expect(Math.abs(Number(g.info.sample_error) - num(s.info.sample_error as Num)), `${at}: sample error`).toBeLessThanOrEqual(1e-9 * fScale + 1e-6 * num(s.info.sample_error as Num));
+        closeArr(
+          gw.map((v) => flip * v),
+          s.x,
+          0,
+          wTol,
+          `${at}: w (tolerance ${wTol})`,
+        );
+        // Off the canonical platform (tests/fixtures/platform.ts) the dump's SVD moves w by up to
+        // wTol, and the sample error with it.
+        const errTol =
+          (1e-9 + (CANONICAL ? 0 : wTol)) * fScale + 1e-6 * num(s.info.sample_error as Num);
+        expect(
+          Math.abs(Number(g.info.sample_error) - num(s.info.sample_error as Num)),
+          `${at}: sample error`,
+        ).toBeLessThanOrEqual(errTol);
         if (k > 0) {
           const sw = num(s.info.sigma_min as Num);
-          expect(Math.abs(Number(g.info.sigma_min) - sw), `${at}: sigma_min`).toBeLessThanOrEqual(1e-9 + 1e-6 * sw);
+          expect(Math.abs(Number(g.info.sigma_min) - sw), `${at}: sigma_min`).toBeLessThanOrEqual(
+            1e-9 + 1e-6 * sw,
+          );
+        }
+        // A stop that rounding decides (the sample error at the rounding level, near tol·max|f|):
+        // one run may stop here and the other take one more step.
+        if (
+          ties.stop.includes(k) &&
+          (got.trace.length - 1 === k) !== (want.trace.length - 1 === k)
+        ) {
+          diverged = true;
+          break;
         }
         if (ties.zero_w.includes(k)) {
           zeroW = true;
@@ -156,13 +215,22 @@ describe('AAA and Floater–Hormann against the Python oracle', () => {
         expect(g.info.n_interval_poles, `${at}: real poles`).toBe(s.info.n_interval_poles);
         // Poles move with w: their tolerance follows the condition of w too.
         const pTol = Math.max(1e-6, 30 * num(ties.w_cond[k]));
-        closeArr(nums(g.info.interval_poles), nums(s.info.interval_poles), 0, pTol, `${at}: interval poles`);
+        closeArr(
+          nums(g.info.interval_poles),
+          nums(s.info.interval_poles),
+          0,
+          pTol,
+          `${at}: interval poles`,
+        );
         samePoles(g.info.poles as number[][], s.info.poles as number[][], pTol, at);
       }
       if (diverged) {
         // Another, equally valid greedy path: it must still end in a valid approximant.
         expect(got.trace.length).toBeGreaterThan(1);
-        if (got.converged) expect(Number(got.extra.sample_error)).toBeLessThanOrEqual(Number(c.params.tol ?? 1e-13) * fScale);
+        if (got.converged)
+          expect(Number(got.extra.sample_error)).toBeLessThanOrEqual(
+            Number(c.params.tol ?? 1e-13) * fScale,
+          );
         return;
       }
       expect(got.converged).toBe(want.converged);
@@ -173,7 +241,20 @@ describe('AAA and Floater–Hormann against the Python oracle', () => {
         expect(got.extra.n_doublets).toBe(want.extra.n_doublets);
         expect(got.extra.n_interval_poles).toBe(want.extra.n_interval_poles);
       }
-      closeArr(nums(got.extra.errors), nums(want.extra.errors), 1e-6, 1e-9 * fScale, 'errors');
+      if (CANONICAL)
+        closeArr(nums(got.extra.errors), nums(want.extra.errors), 1e-6, 1e-9 * fScale, 'errors');
+      else {
+        // The error after step k moves with w_k: the step's w tolerance, as above.
+        const ge = nums(got.extra.errors);
+        const we = nums(want.extra.errors);
+        expect(ge.length, 'errors').toBe(we.length);
+        we.forEach((e, k) => {
+          const wTol = Math.max(1e-8, 100 * num(ties.w_cond[k] ?? 0));
+          expect(Math.abs(ge[k] - e), `errors[${k}]`).toBeLessThanOrEqual(
+            (1e-9 + wTol) * fScale + 1e-6 * e,
+          );
+        });
+      }
     });
   }
 });
@@ -235,7 +316,9 @@ describe('the mathematics of the port', () => {
       [0, 1, 4],
     ];
     const n = minRightSingular(wide, 3)!;
-    wide.forEach((r) => expect(Math.abs(r.reduce((s, x, j) => s + x * n.v[j], 0))).toBeLessThan(1e-14));
+    wide.forEach((r) =>
+      expect(Math.abs(r.reduce((s, x, j) => s + x * n.v[j], 0))).toBeLessThan(1e-14),
+    );
   });
 
   it('Floater–Hormann weights: the integer weights on equispaced nodes (FH 2007, §4)', () => {
@@ -262,18 +345,31 @@ describe('the mathematics of the port', () => {
   });
 
   it('AAA recovers the Runge function exactly: type (2, 2), poles ±i/5', () => {
-    const r = getMethod('aaa').fn(getProblem('runge_equispaced'), { tol: 1e-13, max_terms: 100, scaling: 'columns' });
+    const r = getMethod('aaa').fn(getProblem('runge_equispaced'), {
+      tol: 1e-13,
+      max_terms: 100,
+      scaling: 'columns',
+    });
     expect(r.converged).toBe(true);
     expect(r.nIter).toBe(3);
-    samePoles(r.extra.poles as number[][], [
-      [0, 0.2],
-      [0, -0.2],
-    ], 1e-10, 'Runge poles');
+    samePoles(
+      r.extra.poles as number[][],
+      [
+        [0, 0.2],
+        [0, -0.2],
+      ],
+      1e-10,
+      'Runge poles',
+    );
     expect(r.fun).toBeLessThan(1e-14);
   });
 
   it('AAA flags the real poles it puts between noisy samples', () => {
-    const r = getMethod('aaa').fn(getProblem('noisy_linear'), { tol: 1e-13, max_terms: 100, scaling: 'columns' });
+    const r = getMethod('aaa').fn(getProblem('noisy_linear'), {
+      tol: 1e-13,
+      max_terms: 100,
+      scaling: 'columns',
+    });
     const last = r.trace[r.trace.length - 1].info;
     expect(Number(last.n_interval_poles)).toBeGreaterThan(0);
     expect(r.message).toMatch(/warning: \d+ certified real pole\(s\) of r in \[0, 10\]/);

@@ -496,7 +496,7 @@ def _newton_point(B: Array, g: Array) -> Array | None:
         return None
     with np.errstate(all="ignore"):
         y = np.linalg.solve(L, g)
-        p = -np.linalg.solve(L.T, y)
+        p = -np.asarray(np.linalg.solve(L.T, y), dtype=np.float64)
     return p if finite(p) else None
 
 
@@ -588,7 +588,7 @@ def arc(
     def done(converged: bool, message: str, k: int) -> Result:
         lam_min = None
         if finite(B) and B.shape == (n, n):
-            eig = np.linalg.eigvalsh(B)
+            eig = np.asarray(np.linalg.eigvalsh(B), dtype=np.float64)
             lam_min = float(eig[0])
             if converged:
                 # The second-order part of the stopping test (module docstring).

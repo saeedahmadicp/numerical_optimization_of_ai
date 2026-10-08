@@ -229,6 +229,19 @@ Stochastic methods draw from the shared Mulberry32 generator (`numopt.core.rng` 
 `log`/`cos` may cause late divergence, so their parity check covers the first 10 iterates (1e-8)
 and the final objective value (1e-6 relative) only.
 
+**Parity fixtures.** The committed fixtures are the canonical output (written on aarch64 Linux
+with the NumPy wheel's OpenBLAS); the TS parity tests against them stay as strict as above on
+every machine, since the TS ports are deterministic. Another CPU or BLAS rounds the Python export
+differently, so a fixture case must not be chaotic with respect to rounding: rerun with x0
+changed by 1 to 3 ulp, it must keep its counts and its iterates within the tolerance of
+`check_generated.py` (1e-9 of their size in the run), unless its iterates are bit-identical on
+every platform (only correctly rounded arithmetic reaches them). Runs in a curved valley such as
+BFGS, L-BFGS, Barzilai–Borwein or Anderson acceleration on `rosenbrock`, and PCG on `hilbert_5`,
+fail that test and are not fixtures. AAA removes the two rounding-decided choices of its
+algorithm: a greedy pick or a sign among values within 1e-8 (relative) of the largest goes to the
+first index, and a non-unique minimal singular vector is replaced by the minimum-norm null vector
+with Σw = 1 (`numopt.interpolation.rational`).
+
 **Reference data for the web tests.** Two kinds, both written by Python
 ([web/tests/fixtures/README.md](../web/tests/fixtures/README.md)):
 
@@ -238,12 +251,16 @@ and the final objective value (1e-6 relative) only.
 | per-lab Python reference dumps in `web/tests/**/fixtures/` (~14 MB) | `npm run gen:test-fixtures` | no |
 
 Hygiene scripts in `web/tests/fixtures/`: `check_generated.py` (`npm run gen:check`) exports into a
-temporary folder and compares the result with the committed `src/generated/` under the parity
-tolerances (not byte identity, since NumPy may round the last bit differently on another CPU), and
-exits with status 1 when they are stale; `gen_test_fixtures.py` writes every ignored dump
-(`--missing`, `--list`); `ensure.mjs` is the `pretest` hook that generates any absent dump with
-`../.venv/bin/python` (or `$NUMOPT_PYTHON`); `gen_rng_fixture.py` writes the Mulberry32 reference
-streams.
+temporary folder and compares the result with the committed `src/generated/` — text (with rounded
+numerals in messages masked), counts, flags and structure exactly, and the state x, f, ‖∇f‖ of
+every step within |a − b| ≤ 1e-9·S + 1e-12, S the field's largest magnitude in that run (not
+byte identity, since NumPy may round the last bit differently on another CPU) — and exits with
+status 1 when they are stale; `gen_test_fixtures.py` writes every ignored dump (`--missing`,
+`--list`); `gen_platform.py` records whether the Python that wrote the dumps reproduces the
+committed export byte for byte (`platform_python.json`): the dump tests are exact there and use
+the tolerances each one states elsewhere (`platform.ts`), e.g. on the x86-64 CI runner;
+`ensure.mjs` is the `pretest` hook that generates any absent dump with `../.venv/bin/python` (or
+`$NUMOPT_PYTHON`); `gen_rng_fixture.py` writes the Mulberry32 reference streams.
 
 UX: Home gallery of labs → each Lab has a problem picker, method multi-select (compare up to 4),
 parameter controls generated from `ParamSpec`, click/drag start point, animated main view,
@@ -276,7 +293,7 @@ module's docstring names the study it came from. The studies render on the porta
 
 | Job | Steps |
 |:--|:--|
-| Python 3.11 and 3.13 | `pip install -e ".[dev]"` into `.venv`; `ruff check src tests`; `ruff format --check src tests`; `pyright`; `pytest` |
+| Python 3.11 and 3.13 | `pip install -e ".[dev,plot]"` into `.venv`; `ruff check src tests`; `ruff format --check src tests`; `pyright`; `pytest` |
 | Parity fixtures are current | `pip install -e .`; `python web/tests/fixtures/check_generated.py` |
 | Web (Node 24) | `npm ci`; `npm run lint`; `npm run format:check`; `npm run gen:test-fixtures`; `npm test`; `npm run build` (the `dist/` is uploaded as an artifact) |
 

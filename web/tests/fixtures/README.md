@@ -28,8 +28,17 @@ that read a dump fail with `ENOENT` and the path of the absent file.
 - `ensure.mjs` — the `pretest` hook. It finds `../.venv/bin/python` (or `$NUMOPT_PYTHON`) and
   calls `gen_test_fixtures.py --missing`.
 - `check_generated.py` — `npm run gen:check`: exports into a temporary folder and compares the
-  result with the committed `web/src/generated/` under the parity tolerances. It fails when the
-  committed files are stale. CI runs it.
+  result with the committed `web/src/generated/`: the case list, structure, text, counts and
+  flags exactly; x, f and ‖∇f‖ of every step within 1e-9 of their size in the run (+1e-12),
+  since another CPU rounds the last bits differently. It fails when the committed files are
+  stale. CI runs it on x86-64. The policy and its measurements are in its docstring.
+- `gen_platform.py` → `platform_python.json`: `canonical` is true when this Python's
+  `numopt export` is byte-identical to `web/src/generated/`, i.e. it rounds like the
+  environment whose arithmetic the TS ports replay (aarch64 with the NumPy wheel's OpenBLAS).
+- `platform.ts` — reads that record. With canonical dumps the tests compare them exactly;
+  otherwise each test uses the tolerances it states (messages up to their rounded numbers,
+  floats to the error bound of the computation, runs that rounding makes chaotic by their
+  outcome), and vitest prints a note.
 - `gen_rng_fixture.py` → `rng_python.json`: reference streams from `numopt.core.rng.Rng` (seeds
   0, 1, 42, 123456789, 2³²−1, −7): `random`, `uniform(-3, 5)`, `normal(1.5, 2)`, `integers(n)`
   for n = 1..50 twice, `permutation(n)` for n ∈ {1, 2, 5, 10, 31}, and `choice` over `a..g`.

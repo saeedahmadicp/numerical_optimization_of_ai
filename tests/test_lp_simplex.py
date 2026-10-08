@@ -687,7 +687,9 @@ def test_row_scaling_does_not_change_the_answer(lp_scale, method):
     np.testing.assert_allclose(res.x, ref.x, rtol=1e-6, atol=1e-6)
     if ref.extra["status"] == "unbounded":
         ray = np.asarray(res.extra["ray"])
-        assert np.all(ray >= 0) and np.all(lp.A_ub @ ray <= 1e-9)
+        # η_B = −B⁻¹A_q: an entry the ratio test counts as 0 (|ā| ≤ τ) may be a rounding-level
+        # ±1e-16, the same tolerance as for A·ray ≤ 0.
+        assert np.all(ray >= -1e-9 * np.max(np.abs(ray))) and np.all(lp.A_ub @ ray <= 1e-9)
 
 
 # --------------------------------------------------------------------------------------

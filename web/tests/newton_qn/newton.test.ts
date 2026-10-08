@@ -22,6 +22,7 @@ import '../../src/problems';
 import {
   caseKey,
   errorOf,
+  expectSameDump,
   expectSameResult,
   generatedFixtures,
   problemById,
@@ -51,6 +52,12 @@ describe('newton fixtures (unconstrained.json), step by step', () => {
   });
 });
 
+/**
+ * Runs whose ∇f and ∇²f are central differences of f only: on another platform their iterates
+ * differ by about 1e-6 (harness.ts, `expectSameDump`, `noisy`).
+ */
+const FD_ONLY = new Set(['rosen_fonly', 'valley_fonly']);
+
 describe('newton reference runs (gen_newton_qn_fixture.py)', () => {
   referenceCases('newton').forEach((c, i) => {
     it(`${caseKey(c)} #${i}`, () => {
@@ -59,7 +66,9 @@ describe('newton reference runs (gen_newton_qn_fixture.py)', () => {
         expect(err).toEqual({ name: 'ValueError', message: c.error });
         return;
       }
-      expectSameResult(run(c.method, problemById(c.problem), c.params), c.result!);
+      expectSameDump(run(c.method, problemById(c.problem), c.params), c.result!, {
+        noisy: FD_ONLY.has(c.problem),
+      });
     });
   });
 });

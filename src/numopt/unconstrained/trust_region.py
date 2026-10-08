@@ -228,7 +228,7 @@ def _pow2_scaled(g: Array) -> tuple[Array, int]:
 def _cholesky(B: Array) -> Array | None:
     """Lower Cholesky factor L of B (B = LLᵀ), or None when B is not positive definite."""
     try:
-        L = np.linalg.cholesky(B)
+        L = np.asarray(np.linalg.cholesky(B), dtype=np.float64)
     except np.linalg.LinAlgError:
         return None
     return L if bool(np.all(np.isfinite(L))) else None

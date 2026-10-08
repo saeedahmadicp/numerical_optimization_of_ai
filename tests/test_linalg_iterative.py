@@ -583,7 +583,7 @@ def test_gmres_no_false_breakdown_on_identity_from_random_large_x0(n):
         x0 = 1e6 * np.array([rng.normal() for _ in range(n)])
         res = numopt.run("gmres", (A, b), x0=x0)
         assert res.converged, res.message
-        assert_allclose(res.x, b, rtol=0, atol=1e-10 * np.linalg.norm(b))
+        assert_allclose(res.x, b, rtol=0, atol=float(1e-10 * np.linalg.norm(b)))
 
 
 @pytest.mark.parametrize(
@@ -759,7 +759,21 @@ def test_steepest_descent_strictly_decreases_energy(system):
     phis = [s.info["phi"] for s in res.trace]
     scale = 1e-12 * (1 + max(abs(v) for v in phis))
     assert all(p1 <= p0 + scale for p0, p1 in pairwise(phis))
-    assert res.converged, res.message
+    if not res.converged:
+        # The documented exit when the recurrence residual met tol but the true residual
+        # misses it: allowed only within the drift of the recurrence, ‖(b − A x_k) − r_k‖ ≤
+        # 2·k·n·ε·(‖A‖₂‖x_k‖ + ‖b‖) (Greenbaum 1997, §7.3). Random systems reach it about once
+        # in eight runs of 1000 examples.
+        assert "residual gap" in res.message, res.message
+        n = b.size
+        drift = (
+            2
+            * res.n_iter
+            * n
+            * EPS
+            * (np.linalg.norm(A, 2) * np.linalg.norm(res.x) + np.linalg.norm(b))
+        )
+        assert res.extra["true_residual_norm"] <= 1e-8 * np.linalg.norm(b) + drift
 
 
 @PROPS
@@ -769,8 +783,9 @@ def test_gmres_residual_is_monotone_and_converges(system, restart):
     res = numopt.run("gmres", (A, b), restart=restart)
     assert_valid_result(res)
     assert res.converged, res.message
-    norms = [s.fun for s in res.trace]
-    bnorm = np.linalg.norm(b)
+    norms = [s.fun for s in res.trace if s.fun is not None]
+    assert len(norms) == len(res.trace)
+    bnorm = float(np.linalg.norm(b))
     assert all(n1 <= n0 + 1e-12 * bnorm for n0, n1 in pairwise(norms))
     assert np.linalg.norm(b - A @ res.x) <= 1e-10 * max(bnorm, 1.0)
     _assert_gmres_residuals_consistent(A, b, res)

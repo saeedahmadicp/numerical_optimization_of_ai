@@ -379,7 +379,7 @@ def test_fd_eigenvalue_tolerance_bounds_the_fd_error(
     )
     x0, oracle = newton_mod._resolve(prob, x)
     assert oracle.hess_fd and oracle.grad_fd == (not analytic_grad)
-    lam = np.linalg.eigvalsh(newton_mod._evaluate_hessian(oracle, x0))
+    lam = np.asarray(np.linalg.eigvalsh(newton_mod._evaluate_hessian(oracle, x0)), dtype=np.float64)
     tol = newton_mod._eig_tol(lam, f(x0), oracle)
     assert np.max(np.abs(lam - np.array([0.0, 4.0]))) <= tol
 

@@ -176,7 +176,12 @@ describe('edge cases and input errors', () => {
     tags: [],
   };
   it('n ≤ 3: local search returns the start tour at once', () => {
-    const r = tspTwoOpt(tiny, { strategy: 'first', init: 'identity', max_iter: 10, record_every: 1 });
+    const r = tspTwoOpt(tiny, {
+      strategy: 'first',
+      init: 'identity',
+      max_iter: 10,
+      record_every: 1,
+    });
     expect(r.converged).toBe(true);
     expect(r.nIter).toBe(0);
     expect(r.trace).toHaveLength(1);
@@ -205,9 +210,9 @@ describe('edge cases and input errors', () => {
     ).toThrow('the annealing schedule would be empty');
   });
   it('nearest neighbour refuses a start outside the instance', () => {
-    expect(() => runMethod('tsp_nearest_neighbor', getProblem('tsp_circle_12'), { start: 12 })).toThrow(
-      'start must be a city index in [0, 11], got 12',
-    );
+    expect(() =>
+      runMethod('tsp_nearest_neighbor', getProblem('tsp_circle_12'), { start: 12 }),
+    ).toThrow('start must be a city index in [0, 11], got 12');
   });
   it('knapsack validation', () => {
     const bad: KnapsackInstance = {
@@ -220,7 +225,10 @@ describe('edge cases and input errors', () => {
     );
   });
   it('branch and bound: the tree up to step k is the union of info.nodes', () => {
-    const r = knapsackBranchBound(getProblem('knapsack_10'), { max_nodes: 100_000, record_every: 1 });
+    const r = knapsackBranchBound(getProblem('knapsack_10'), {
+      max_nodes: 100_000,
+      record_every: 1,
+    });
     const ids = r.trace.flatMap((s) => (s.info.nodes as { id: number }[]).map((n) => n.id));
     expect(ids).toEqual(ids.map((_, i) => i));
   });

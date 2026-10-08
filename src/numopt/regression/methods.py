@@ -326,7 +326,7 @@ def _ols(method: str, data: _Data, degree: int, solver: str, *, min_norm: bool =
             converged = False
             msg = _not_unique_message(data, p, rank)
     else:
-        sv = np.linalg.svd(a, compute_uv=False)
+        sv = np.asarray(np.linalg.svd(a, compute_uv=False), dtype=np.float64)
         rank, cond = _rank_cond(sv, a.shape)
         info.update(rank=rank, cond=cond)
         if solver == "normal_equations":
@@ -361,7 +361,7 @@ def _ols(method: str, data: _Data, degree: int, solver: str, *, min_norm: bool =
             # the squared condition number; QR is the default and the stable choice.
             gram = a.T @ a
             try:
-                chol = np.linalg.cholesky(gram)
+                chol = np.asarray(np.linalg.cholesky(gram), dtype=np.float64)
             except np.linalg.LinAlgError:
                 trace = [Step(0, nan_beta, None, info=info)]
                 return _fail(
@@ -570,7 +570,7 @@ def ridge_regression(
         # Variables γ = s ⊙ β: ‖X_c β - y_c‖² + λ‖β‖² = ‖(X_c/s) γ - y_c‖² + λ‖γ/s‖².
         aug = np.vstack([xc / scale, np.diag(math.sqrt(lam) / scale)])  # (m + d, d)
         rhs = np.concatenate([yc, np.zeros(d)])
-        sv = np.linalg.svd(aug, compute_uv=False)
+        sv = np.asarray(np.linalg.svd(aug, compute_uv=False), dtype=np.float64)
         rank, cond = _rank_cond(sv, aug.shape)
         info.update(rank=rank, cond=cond)
         if rank < d:
@@ -622,7 +622,7 @@ def _wls(x_mat: Vector, y: Vector, w: Vector) -> Vector | None:
     scale = _column_scales(a)
     a = a / scale
     try:
-        sv = np.linalg.svd(a, compute_uv=False)
+        sv = np.asarray(np.linalg.svd(a, compute_uv=False), dtype=np.float64)
     except np.linalg.LinAlgError:
         return None
     rank, _ = _rank_cond(sv, a.shape)
@@ -1120,7 +1120,7 @@ def _levelled_line(x: Vector, y: Vector, ref: list[int]) -> Vector | None:
     """Solve β₀ + β₁x_{r_j} + (-1)^j h = y_{r_j}, j = 0, 1, 2 → [β₀, β₁, h]."""
     a = np.array([[1.0, x[r], (-1.0) ** j] for j, r in enumerate(ref)])
     try:
-        sol = np.linalg.solve(a, y[ref])
+        sol = np.asarray(np.linalg.solve(a, y[ref]), dtype=np.float64)
     except np.linalg.LinAlgError:
         return None
     return sol if np.all(np.isfinite(sol)) else None

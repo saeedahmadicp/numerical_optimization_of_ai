@@ -734,7 +734,7 @@ def test_every_method_interpolates(xy):
             # p(x_i) = a_i = y_i exactly, except at the last node: one Horner evaluation,
             # error ≤ γ₆·Σ_k |c_k| h^k (Higham, ASNA 2nd ed., §5.1), γ₆ ≈ 6u.
             coef = np.abs(np.asarray(res.extra["coefficients"]))
-            h = np.diff(np.asarray(res.extra["nodes"]))[:, None]
+            h = np.diff(np.asarray(res.extra["nodes"], dtype=np.float64))[:, None]
             horner = float(np.max(np.sum(coef * h ** np.arange(4), axis=1)))
             limit = 8 * (EPS / 2) * horner + 64 * ETA
         else:

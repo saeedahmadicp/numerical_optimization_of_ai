@@ -452,7 +452,7 @@ class _Oracle:
             return self._eigs[1]
         self.n_hev += 1
         H = np.asarray(self.problem.hess(x), dtype=np.float64)
-        lam = np.linalg.eigvalsh(0.5 * (H + H.T))
+        lam = np.asarray(np.linalg.eigvalsh(0.5 * (H + H.T)), dtype=np.float64)
         self._eigs = (x.copy(), lam)
         return lam
 

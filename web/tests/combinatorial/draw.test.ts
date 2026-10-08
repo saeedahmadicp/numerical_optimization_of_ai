@@ -61,7 +61,13 @@ const circle12 = getProblem<TspInstance>('tsp_circle_12');
 describe('TSP panel drawing', () => {
   it('a stale 15-city trace drawn on 12 cities does not throw', () => {
     const coords = circle12.coords.map((c) => [c[0], c[1]] as Pt);
-    for (const id of ['tsp_two_opt', 'tsp_or_opt', 'tsp_ant_colony', 'tsp_genetic', 'tsp_simulated_annealing']) {
+    for (const id of [
+      'tsp_two_opt',
+      'tsp_or_opt',
+      'tsp_ant_colony',
+      'tsp_genetic',
+      'tsp_simulated_annealing',
+    ]) {
       const r = runMethod(id, random15, { seed: 0 });
       const { ctx } = fakeContext();
       for (const k of [0, Math.floor(r.trace.length / 2), r.trace.length - 1])
@@ -97,7 +103,9 @@ describe('TSP panel drawing', () => {
         frac: 0,
       });
       // Pheromone edges are stroked in the series color with an rgba alpha.
-      return calls.filter((c) => c.name === 'stroke' && String(c.style).startsWith('rgba(232, 113, 10')).length;
+      return calls.filter(
+        (c) => c.name === 'stroke' && String(c.style).startsWith('rgba(232, 113, 10'),
+      ).length;
     };
     expect(draw(0)).toBe(0);
     expect(draw(Math.min(2, r.trace.length - 1))).toBeGreaterThan(0);
