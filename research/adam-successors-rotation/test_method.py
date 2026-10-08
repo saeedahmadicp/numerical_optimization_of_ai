@@ -288,8 +288,10 @@ def test_sophia_is_one_newton_step_on_an_aligned_quadratic() -> None:
     x0 = np.array([0.7, -0.4])
     kw = {"lr": 1.0, "gamma": 1.0, "beta1": 0.0, "beta2": 0.0, "k": 1, "max_iter": 5}
     res = sophia(aligned, x0=x0, **kw)
-    # m = g, h = diag(∇²g) = ∇²g, ratio = H⁻¹g = x (|x| ≤ 1: no clipping) → x₁ = 0.
-    assert_allclose(res.trace[1].x, [0.0, 0.0], atol=1e-15)
+    # m = g, h = diag(∇²g) = ∇²g, ratio = H⁻¹g = x (|x| ≤ 1: no clipping) → x₁ = 0. The rotated
+    # A is diag(1, 50) only to rounding (its off-diagonal is ~1e-14, CPU-dependent), and
+    # x₁ = −D⁻¹(A − D)x₀, so |x₁| ≤ ‖A − diag(1, 50)‖·‖x₀‖ ≤ 1e-13 (asserted above).
+    assert_allclose(res.trace[1].x, [0.0, 0.0], atol=1e-13)
     assert res.converged and res.n_iter == 1
     # Misaligned by 45°: the same step is the Jacobi step x₁ = x₀ − D⁻¹Ax₀, not Newton's.
     tilted = rotate(aligned, rotation_2d(math.pi / 4))

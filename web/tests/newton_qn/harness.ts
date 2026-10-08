@@ -9,6 +9,7 @@ import { methodSpecFromJson, resultFromJson } from '../../src/core/json';
 import { getMethod } from '../../src/core/registry';
 import type { Matrix, MethodSpec, Problem, Result, Vector } from '../../src/core/types';
 import { getProblem } from '../../src/problems/registry';
+import { CANONICAL, sameText } from '../fixtures/platform';
 import { mismatch, readJson, type Tol } from '../shared-ports/compare';
 
 export type Raw = Record<string, unknown>;
@@ -201,6 +202,55 @@ export function expectSimilarResult(got: Result, wantRaw: Raw) {
     const m = mismatch(got.x, want.x, { rtol: 1e-6, atol: 1e-8 }, 'x');
     if (m !== null) throw new Error(m);
   }
+}
+
+/**
+ * Compare a TS Result with a Python reference dump (gen_newton_qn_fixture.py). On the canonical
+ * platform (tests/fixtures/platform.ts) this is `expectSameResult`. Elsewhere the dump rounds
+ * differently from the arithmetic the ports replay, so it is the parity rule of
+ * docs/architecture.md (`expectSimilarResult`: the first 10 iterates within 1e-8, the same
+ * `converged`, the message up to its numbers, the final x within 1e-6) plus the same message
+ * integers and the same counts. A run that is `chaotic` (its counts, even its outcome, differ
+ * between platforms in Python itself) is compared over its first 10 iterates, and by its final x
+ * when both runs converged. A `noisy` run (a finite-difference ∇²f
+ * from f values: its relative error √ε, amplified by κ(∇²f), moves the iterates by about 1e-6
+ * between platforms) keeps the counts and the final x, but not the first iterates.
+ */
+export function expectSameDump(
+  got: Result,
+  wantRaw: Raw,
+  {
+    chaotic = false,
+    noisy = false,
+    ex = DEFAULT_EXPECT,
+  }: { chaotic?: boolean; noisy?: boolean; ex?: Expect } = {},
+) {
+  if (CANONICAL) return expectSameResult(got, wantRaw, ex);
+  const want = resultFromJson(wantRaw);
+  if (chaotic) {
+    // Another CPU's Python takes another path at some acceptance decision, so even the outcome
+    // (converged or max_iter) can differ: the first iterates, and the final x when both runs
+    // converged.
+    for (const w of want.trace.filter((t) => t.k < 10)) {
+      const m = mismatch(got.trace[w.k]?.x, w.x, { rtol: 1e-8, atol: 1e-8 }, `trace[${w.k}].x`);
+      if (m !== null) throw new Error(m);
+    }
+    if (got.converged && want.converged)
+      expect(mismatch(got.x, want.x, { rtol: 1e-6, atol: 1e-8 }, 'x')).toBeNull();
+    return;
+  }
+  if (noisy) {
+    expect(got.converged).toBe(want.converged);
+    if (want.converged) expect(mismatch(got.x, want.x, { rtol: 1e-6, atol: 1e-8 }, 'x')).toBeNull();
+  } else expectSimilarResult(got, wantRaw);
+  expect(sameText(got.message, want.message), `${got.message} vs ${want.message}`).toBe(true);
+  expect([got.nIter, got.nFev, got.nGev, got.nHev]).toEqual([
+    want.nIter,
+    want.nFev,
+    want.nGev,
+    want.nHev,
+  ]);
+  expect(got.trace.length).toBe(want.trace[want.trace.length - 1].k + 1);
 }
 
 export interface RefCase {

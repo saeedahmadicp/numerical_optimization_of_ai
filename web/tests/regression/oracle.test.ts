@@ -5,6 +5,7 @@
  * exact fits, invalid input, messages, info payloads and the `extra` statistics.
  */
 import { describe, expect, it } from 'vitest';
+import { CANONICAL } from '../fixtures/platform';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { reviveNumbers } from '../../src/core/json';
@@ -119,8 +120,16 @@ describe('regression port vs the Python oracle', () => {
       // x ≈ 10⁸: β₀ = ȳ − β₁x̄ cancels |β₁x̄| ≈ 5×10⁷, so ~10⁻⁸ absolute is the rounding level.
       const offset = /offset/.test(c.name);
       const rtol = loose ? 1e-6 : 1e-9;
+      // Off the canonical platform (tests/fixtures/platform.ts) the dump's QR rounds differently:
+      // there β agrees to its forward-error bound 16·κ₂(X)·ε·‖β‖ (κ₂ = 5.8e7 at offset 1e8; the
+      // two solutions are 0.12 apart in β₀ ≈ −4.8e7).
+      const cond = want.trace[0]?.info.cond;
+      const offsetAtol =
+        !CANONICAL && typeof cond === 'number'
+          ? Math.max(1e-7, 16 * cond * 2 ** -52 * Math.max(...xs.map(Math.abs)))
+          : 1e-7;
       const xAtol = offset
-        ? 1e-7
+        ? offsetAtol
         : loose
           ? 1e-6 * Math.max(1, ...xs.map(Math.abs))
           : coefTol(want.x);
@@ -137,7 +146,7 @@ describe('regression port vs the Python oracle', () => {
       steps.forEach((s, i) => {
         const w = want.trace[i];
         expect(s.k).toBe(w.k);
-        close(s.x, w.x, rtol, offset ? 1e-7 : loose ? 1e-6 : coefTol(w.x), `trace[${i}].x`);
+        close(s.x, w.x, rtol, offset ? offsetAtol : loose ? 1e-6 : coefTol(w.x), `trace[${i}].x`);
         close(s.fun, w.fun, offset ? 1e-6 : rtol, fAtol, `trace[${i}].fun`);
         if (w.step_size !== null)
           close(s.stepSize, w.step_size, 1e-6, offset ? 1e-7 : 1e-10, `trace[${i}].step_size`);

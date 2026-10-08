@@ -158,7 +158,7 @@ def _aa_coefficients(F: Array, lam: float) -> tuple[Array, Array, float, float]:
     # example m > n, where ΔF has more columns than rows).
     gamma, _, _, s = np.linalg.lstsq(A, rhs, rcond=None)
     cond = float(s[0] / s[-1]) if s.size and s[-1] > 0.0 else math.inf
-    return e + D @ gamma, gamma, cond, lam_eff
+    return e + D @ gamma, np.asarray(gamma, dtype=np.float64), cond, lam_eff
 
 
 # --------------------------------------------------------------------------------------
@@ -305,7 +305,7 @@ def _run(
             return False, f"{head}, but ∇²f is not finite there", None
         # NOTE: symmetrize ∇²f before eigvalsh, which reads one triangle only; an analytic
         # Hessian can be asymmetric in its last bit.
-        eigs = np.linalg.eigvalsh(0.5 * (H + H.T))
+        eigs = np.asarray(np.linalg.eigvalsh(0.5 * (H + H.T)), dtype=np.float64)
         tol_h = _eig_tol(eigs, fz, hess_fd, grad_fd)
         ok, why = _classify(eigs, tol_h, _stationarity_tol(eigs, gnorm), hess_fd)
         return ok, f"{head}; {why}", eigs
@@ -518,7 +518,10 @@ def anderson_gd(
 FIXTURE_CASES: list[tuple[str, str, dict[str, Any]]] = [
     # A strictly convex quadratic in 2-D: AA(m ≥ n) is GMRES and stops at x_{n+1} = x*.
     ("anderson_gd", "quadratic_ill", {"lr": 0.01}),
-    ("anderson_gd", "rosenbrock", {}),
+    # Not rosenbrock: AA is chaotic in its curved valley (a one-ulp change of x0 or of one
+    # lstsq result changes the stop from 176 to 160..330 iterations), so another CPU would
+    # write another trace. six_hump_camel is nonconvex and insensitive to it.
+    ("anderson_gd", "six_hump_camel", {}),
     # The same start: plain AA stops at a saddle point; λ = 10⁻² reaches the minimizer (3, 2).
     ("anderson_gd", "himmelblau", {"x0": [1.0, 1.0], "lr": 0.01}),
     ("anderson_gd", "himmelblau", {"x0": [1.0, 1.0], "lr": 0.01, "lam": 0.01}),

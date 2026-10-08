@@ -513,10 +513,11 @@ class _TableRule(_Rule):
         # SAGA: v = (1/b) Σ_{i∈B} (∇fᵢ(w) − φᵢ) + (1/n) Σⱼ φⱼ (the table before the update).
         v_saga = delta.mean(axis=0) + self.total / n
         self.table[batch] = new
-        self.total = self.total + delta.sum(axis=0)
+        total: Array = self.total + delta.sum(axis=0)
+        self.total = total
         self.seen[batch] = True
         # SAG: v = d/m with d = Σⱼ yⱼ after the update and m = #samples seen.
-        v = v_saga if self.unbiased else self.total / int(self.seen.sum())
+        v = v_saga if self.unbiased else total / int(self.seen.sum())
         return w - eta * v, v
 
     def info(self) -> dict[str, Any]:

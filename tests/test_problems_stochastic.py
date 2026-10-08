@@ -288,7 +288,9 @@ def test_logistic_is_overflow_free():
 @pytest.mark.parametrize("pid", ["linreg_2d", "ill_conditioned_ls"])
 def test_least_squares_minimizer_matches_scipy(pid):
     p = _get(pid)
-    w_ref, *_ = sla.lstsq(np.asarray(p.X), np.asarray(p.y), lapack_driver="gelsy")
+    sol = sla.lstsq(np.asarray(p.X), np.asarray(p.y), lapack_driver="gelsy")
+    assert sol is not None
+    w_ref = sol[0]
     kappa = np.linalg.cond(np.asarray(p.X))
     # NOTE: two backward-stable LS solvers agree to ~κ(A)·ε for small residuals (Higham 2002,
     # ch. 20);

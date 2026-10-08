@@ -31,6 +31,7 @@ import {
 } from '../../src/methods/unconstrained/first_order';
 import { getProblem } from '../../src/problems/registry';
 import '../../src/problems/unconstrained';
+import { CANONICAL, sameText } from '../fixtures/platform';
 import { mismatch, readJson, type Tol } from '../shared-ports/compare';
 
 type Raw = Record<string, unknown>;
@@ -164,12 +165,24 @@ const CHAOTIC: Record<string, Tol> = {
   'gradient_descent/rosenbrock_nd': { rtol: 1e-2, atol: 1e-6 },
 };
 
-function expectTotals(got: Result, want: Result, finalTol: Tol = FINAL_TOL) {
+/**
+ * Runs whose Armijo backtracking accepts a trial one step earlier or later on another platform
+ * (tests/fixtures/platform.ts), so n_fev differs (measured: 355 against 353 with the generic
+ * ARMv8 and Neoverse-N1 OpenBLAS kernels) and the path leaves Python's. nIter, the flag and the
+ * first steps still agree; the final state is compared only when the run converged (after 300
+ * steps that stop at max_iter it is 0.026 away).
+ */
+const PLATFORM_CHAOTIC = new Set(['gradient_descent/rosenbrock {"max_iter":300}']);
+
+function expectTotals(got: Result, want: Result, finalTol: Tol = FINAL_TOL, chaotic = false) {
   expect(got.method).toBe(want.method);
   expect(got.nIter).toBe(want.nIter);
   expect(got.converged).toBe(want.converged);
-  expect(got.message).toBe(want.message);
-  expect([got.nFev, got.nGev, got.nHev]).toEqual([want.nFev, want.nGev, want.nHev]);
+  if (CANONICAL) expect(got.message).toBe(want.message);
+  else expect(sameText(got.message, want.message), `${got.message} vs ${want.message}`).toBe(true);
+  if (chaotic) {
+    if (!want.converged) return;
+  } else expect([got.nFev, got.nGev, got.nHev]).toEqual([want.nFev, want.nGev, want.nHev]);
   expect(mismatch(got.x, want.x, finalTol)).toBeNull();
   expect(mismatch(got.fun, want.fun, finalTol)).toBeNull();
 }
@@ -258,10 +271,22 @@ describe('first_order matches Python beyond the parity fixtures', () => {
       const got = run(c.method, c.problem, c.params);
       const want = resultFromJson({ ...c, trace: [] });
       const finalTol = CHAOTIC[`${c.method}/${c.problem}`] ?? FINAL_TOL;
-      expectTotals(got, want, finalTol);
+      const chaotic =
+        !CANONICAL && PLATFORM_CHAOTIC.has(`${c.method}/${c.problem} ${JSON.stringify(c.params)}`);
+      expectTotals(got, want, finalTol, chaotic);
       expect(got.trace.length).toBe(c.n_steps);
       c.head.forEach((raw, k) => expectStep(got.trace[k], stepFromJson(raw), STEP_TOL, c.method));
-      expectStep(got.trace[got.trace.length - 1], stepFromJson(c.last), finalTol, c.method);
+      const last = got.trace[got.trace.length - 1];
+      if (CANONICAL) expectStep(last, stepFromJson(c.last), finalTol, c.method);
+      else if (!(chaotic && !want.converged)) {
+        // Another platform's dump (tests/fixtures/platform.ts): the last step's diagnostics (α
+        // after 100 BB steps on the 20-D quadratic: 1.3e-6 apart on x86-64, from BLAS dot
+        // products) carry its rounding; its state is held to the final tolerance.
+        const want = stepFromJson(c.last);
+        expect(
+          mismatch({ x: last.x, fun: last.fun }, { x: want.x, fun: want.fun }, finalTol),
+        ).toBeNull();
+      }
     });
   });
 

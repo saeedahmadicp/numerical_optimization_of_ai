@@ -745,8 +745,12 @@ def test_gauss_converges_spectrally_on_analytic_integrand():
     res = numopt.run("gauss_legendre", problems.get("exp_0_1"), n=8, tol=1e-13)
     assert res.converged
     errs = [s.info["error"] for s in res.trace]
-    assert errs[6] < 1e-14  # 7 points: error ~ 1/(2^13·13!)·e
-    assert all(e1 < e0 for e0, e1 in pairwise(errs[:7]))
+    # n points: truncation error (n!)⁴/((2n+1)((2n)!)³)·e, i.e. 5e-16 for n = 6 and 1e-18 for
+    # n = 7, below the rounding error of the sum (a few ulp of e − 1 ≈ 1.7). The errors of
+    # n = 1..6 decrease strictly; from n = 6 on they are rounding noise, whose order depends on
+    # the CPU.
+    assert errs[5] < 1e-14 and errs[6] < 1e-14
+    assert all(e1 < e0 for e0, e1 in pairwise(errs[:6]))
 
 
 # --------------------------------------------------------------------------------------

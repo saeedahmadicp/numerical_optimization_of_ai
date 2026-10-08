@@ -9,6 +9,7 @@
  *   - focused unit tests (line minimizer, bare callables, input safety).
  */
 import { describe, expect, it } from 'vitest';
+import { CANONICAL } from '../fixtures/platform';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { fixtureCaseFromJson, methodSpecFromJson } from '../../src/core/json';
@@ -51,6 +52,14 @@ function rawStep(s: Step): Raw {
  * the stop message and n_fev do not.
  */
 const ROUNDING = new Set(['powell/himmelblau']);
+/**
+ * The same plateau effect where only another platform's Python rounds f differently from the
+ * canonical one (tests/fixtures/platform.ts): powell on quadratic_ill takes 82 f evaluations on
+ * x86-64 against 80 on the canonical aarch64 (measured). Its line minimizer stops anywhere in a
+ * bracket of width ≈ √ε·(1 + |t|), so the iterates agree only to that: 2e-7 apart (measured).
+ */
+const PLATFORM_ROUNDING = new Set(['powell/quadratic_ill']);
+const LINE_TOL: Tol = { rtol: 1e-6, atol: 1e-6 };
 
 function checkSummary(got: Result, want: Raw, rounding = false) {
   expect(got.method).toBe(want.method);
@@ -212,12 +221,14 @@ describe('extra Python runs', () => {
   for (const r of EXTRA.runs) {
     it(`${r.method} on ${r.problem} ${JSON.stringify(r.params)}`, () => {
       const got = run(r.method, r.problem, r.params);
-      const rounding = ROUNDING.has(`${r.method}/${r.problem}`);
+      const key = `${r.method}/${r.problem}`;
+      const rounding = ROUNDING.has(key) || (!CANONICAL && PLATFORM_ROUNDING.has(key));
       checkSummary(got, r.result, rounding);
       expect(got.trace.length).toBe(r.result.trace_len);
       if (rounding) {
+        const tol = ROUNDING.has(key) ? { rtol: 1e-8, atol: 1e-8 } : LINE_TOL;
         r.result.trace_head.forEach((s, k) =>
-          expect(mismatch(got.trace[k].x, s.x, { rtol: 1e-8, atol: 1e-8 }, `x[${k}]`)).toBeNull(),
+          expect(mismatch(got.trace[k].x, s.x, tol, `x[${k}]`)).toBeNull(),
         );
         return;
       }

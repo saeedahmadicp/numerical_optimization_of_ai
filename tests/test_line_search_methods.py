@@ -953,8 +953,12 @@ def test_exact_quadratic_accepts_a_scalar_hessian_in_one_dimension():
 
 @pytest.mark.parametrize("kind", KINDS)
 def test_search_rejects_non_descent_directions(kind):
-    x = np.array([-1.2, 1.0])
+    # At x = (1, 2), ∇f = (−400, 200) exactly, so ∇fᵀp is exact for the orthogonal p = (200, 400)
+    # on every IEEE platform (−80000 + 80000 = 0, also with FMA or another summation order). At
+    # a point such as (−1.2, 1) the products round and ∇fᵀp is ±1e-14 depending on the CPU.
+    x = np.array([1.0, 2.0])
     g = rosen_grad(x)
+    assert np.array_equal(g, [-400.0, 200.0])
     for p in (g, np.zeros(2), np.array([g[1], -g[0]])):  # ascent, zero, orthogonal
         with pytest.raises(ValueError, match="descent"):
             search(kind, rosen, rosen_grad, x, p, hess=rosen_hess)

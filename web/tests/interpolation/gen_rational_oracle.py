@@ -63,14 +63,18 @@ def result(res):
 TIE_RTOL = 1e-9
 
 
-def ties(problem, res):
+def ties(problem, res, tol=1e-13):
     """AAA steps whose outcome rounding decides: the greedy pick (two samples within TIE_RTOL
-    of the largest error) and the sign of w (two entries within TIE_RTOL of the largest |w_j|).
-    The TS test compares steps up to the first rounding-decided pick, and w up to sign. Steps
-    with a weight that is 0 in exact arithmetic (zero_w) have rounding-decided poles."""
+    of the largest error), the sign of w (two entries within TIE_RTOL of the largest |w_j|) and
+    the stop (a sample error at the rounding level, ≤ 1e3·ε·max|f|, within a factor 100 of the
+    threshold tol·max|f|). The TS test compares steps up to the first rounding-decided pick or
+    stop, and w up to sign. Steps with a weight that is 0 in exact arithmetic (zero_w) have
+    rounding-decided poles."""
     data = problem if isinstance(problem, tuple) else (problem.x, problem.y)
     z_all, f_all = np.asarray(data[0], float), np.asarray(data[1], float)
-    pick, sign, zero_w, w_cond = [], [], [], [0.0]
+    pick, sign, zero_w, w_cond, stop = [], [], [], [0.0], []
+    f_scale = float(np.max(np.abs(f_all)))
+    atol = float(tol) * f_scale
     for k in range(1, len(res.trace)):
         prev = res.trace[k - 1].info
         used = [s.info["node_index"] for s in res.trace[1:k]]
@@ -104,7 +108,10 @@ def ties(problem, res):
         # noise weight is a support point with its own sign, so it can add a real pole.
         if np.any((a > 0) & (a < 1e-12 * a.max())) or np.any(a == 0):
             zero_w.append(k)
-    return {"pick": pick, "sign": sign, "zero_w": zero_w, "w_cond": w_cond}
+        err = float(res.trace[k].info["sample_error"])
+        if err <= 1e3 * np.finfo(float).eps * f_scale and atol / 100 <= err <= 100 * atol:
+            stop.append(k)
+    return {"pick": pick, "sign": sign, "zero_w": zero_w, "w_cond": w_cond, "stop": stop}
 
 
 cases = []
@@ -115,7 +122,7 @@ def add(name, method, problem, problem_ref, **params):
         res = numopt.run(method, problem, **params)
         out = result(res)
         if method == "aaa":
-            out["ties"] = clean(ties(problem, res))
+            out["ties"] = clean(ties(problem, res, params.get("tol", 1e-13)))
         cases.append({"name": name, "method": method, "problem": problem_ref, "params": params,
                       "result": out})
     except Exception as e:  # noqa: BLE001

@@ -284,7 +284,7 @@ def newton_system(
         J = sysm.jacobian(x)
         if (why := _singular(J)) is not None:
             return result(False, f"{why} at x = {np.array2string(x, precision=6)}", k)
-        p = np.linalg.solve(J, -Fx)
+        p = np.asarray(np.linalg.solve(J, -Fx), dtype=np.float64)
         alpha = 1.0
         trials: list[list[float]] = []
         x_new = x + p

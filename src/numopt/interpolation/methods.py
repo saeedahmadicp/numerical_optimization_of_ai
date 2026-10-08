@@ -1199,7 +1199,7 @@ def chebyshev_interpolation(problem: Dataset | tuple[Any, Any], *, n_nodes: int 
         for k in range(2, n):  # T_{k} = 2u T_{k-1} - T_{k-2}
             vander[:, k] = 2.0 * u_data * vander[:, k - 1] - vander[:, k - 2]
         try:
-            coef = np.linalg.solve(vander, data.y)
+            coef = np.asarray(np.linalg.solve(vander, data.y), dtype=np.float64)
         except np.linalg.LinAlgError:
             step = Step(0, np.zeros(1), None, info={"term_index": 0, "curve": np.zeros(N_GRID)})
             return _broken(

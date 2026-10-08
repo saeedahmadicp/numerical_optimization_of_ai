@@ -277,8 +277,7 @@ function finish(
   const info: Record<string, unknown> = { ...extra };
   if (inst.optimumLength !== null) {
     info.optimum_length = inst.optimumLength;
-    info.gap =
-      inst.optimumLength > 0 ? (length - inst.optimumLength) / inst.optimumLength : 0.0;
+    info.gap = inst.optimumLength > 0 ? (length - inst.optimumLength) / inst.optimumLength : 0.0;
   }
   return {
     method,
@@ -820,7 +819,8 @@ export const tspAntColony: MethodFn<TspInput> = (problem, opts) => {
   );
   let positiveMin = Infinity;
   for (let i = 0; i < n; i++)
-    for (let j = 0; j < n; j++) if (i !== j && D[i][j] > 0) positiveMin = Math.min(positiveMin, D[i][j]);
+    for (let j = 0; j < n; j++)
+      if (i !== j && D[i][j] > 0) positiveMin = Math.min(positiveMin, D[i][j]);
   const dZero = Number.isFinite(positiveMin) ? Math.min(tol, positiveMin) : 1.0;
   const betaLogEta: Matrix = Array.from({ length: n }, (_, i) =>
     Array.from({ length: n }, (_, j) => {
@@ -919,7 +919,11 @@ export const tspAntColony: MethodFn<TspInput> = (problem, opts) => {
     k += 1;
     const logW: Matrix = Array.from({ length: n }, (_, i) =>
       Array.from({ length: n }, (_, j) =>
-        i === j ? -Infinity : alpha > 0 ? alpha * logTauHat[i][j] + betaLogEta[i][j] : betaLogEta[i][j],
+        i === j
+          ? -Infinity
+          : alpha > 0
+            ? alpha * logTauHat[i][j] + betaLogEta[i][j]
+            : betaLogEta[i][j],
       ),
     );
     const tours = Array.from({ length: nAnts }, () => antTour(logW));
@@ -1008,10 +1012,21 @@ export const tspHeldKarp: MethodFn<TspInput> = (problem) => {
     mkStep(0, [0], 0, { subset_size: 0, states: 1, tour: [0], length: 0, closed: n === 1 }),
   ];
   if (n === 1)
-    return finish('tsp_held_karp', inst, [0], 0, true, 'n = 1: the tour is the single city', 0, 0, trace, {
-      states: 1,
-      transitions: 0,
-    });
+    return finish(
+      'tsp_held_karp',
+      inst,
+      [0],
+      0,
+      true,
+      'n = 1: the tour is the single city',
+      0,
+      0,
+      trace,
+      {
+        states: 1,
+        transitions: 0,
+      },
+    );
 
   const m = n - 1;
   const size = 1 << m;
@@ -1091,9 +1106,7 @@ export const tspHeldKarp: MethodFn<TspInput> = (problem) => {
     if (cost[full * m + j] + D[j + 1][0] < cost[full * m + jLast] + D[jLast + 1][0]) jLast = j;
   const tour = pathOf(full, jLast);
   const length = tourLength(D, tour);
-  trace.push(
-    mkStep(n, tour, length, { subset_size: m, states: m, tour, length, closed: true }),
-  );
+  trace.push(mkStep(n, tour, length, { subset_size: m, states: m, tour, length, closed: true }));
   return finish(
     'tsp_held_karp',
     inst,
@@ -1229,8 +1242,7 @@ registerMethod(
         min: 1e-2,
         max: 100.0,
         log: true,
-        help:
-          'Initial temperature, in units of the mean inter-city distance (must exceed t_min).',
+        help: 'Initial temperature, in units of the mean inter-city distance (must exceed t_min).',
         label: 'Initial temperature',
         tex: 'T_0/\\bar d',
       }),
@@ -1435,7 +1447,10 @@ registerMethod(
     order: `exact, O(2ⁿ·n²) time, O(2ⁿ·n) memory (n ≤ ${HELD_KARP_MAX_N})`,
     summary:
       'For every subset of cities and every last city, remember the shortest path from city 0.',
-    references: ['Held & Karp (1962), J. SIAM 10(1), 196–210', 'Bellman (1962), J. ACM 9(1), 61–63'],
+    references: [
+      'Held & Karp (1962), J. SIAM 10(1), 196–210',
+      'Bellman (1962), J. ACM 9(1), 61–63',
+    ],
   },
   tspHeldKarp,
   {

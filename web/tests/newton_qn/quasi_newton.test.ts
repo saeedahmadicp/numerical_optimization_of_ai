@@ -18,9 +18,11 @@ import {
   twoLoop,
 } from '../../src/methods/unconstrained/quasi_newton';
 import '../../src/problems';
+import { CANONICAL } from '../fixtures/platform';
 import {
   caseKey,
   errorOf,
+  expectSameDump,
   expectSameResult,
   expectSimilarResult,
   generatedFixtures,
@@ -70,11 +72,34 @@ const NOISY_2D = new Set([
   'lbfgs six_hump_camel {"line_search":"backtracking","m":1}',
 ]);
 
+/**
+ * Runs whose counts differ between platforms in Python itself (measured against x86-64 and the
+ * generic ARMv8 and Neoverse-N1 OpenBLAS kernels): Armijo backtracking on rosenbrock and m = 1
+ * runs, where a last-bit change of one trial f decides an acceptance. On another platform they
+ * are compared over their first iterates (and the final x when both converged; harness.ts,
+ * `expectSameDump`): even their outcome can differ.
+ */
+const CHAOTIC = new Set([
+  'dfp rosenbrock {"line_search":"backtracking"}',
+  'broyden_class rosenbrock {"line_search":"backtracking","phi":1}',
+  'lbfgs beale {"line_search":"backtracking","m":1}',
+  'lbfgs quadratic_ill {"line_search":"backtracking","m":1}',
+]);
+
+/**
+ * A finite-difference ∇f (the *_fonly problems) carries the rounding of f amplified by 1/h
+ * (relative error ~√ε): off the canonical platform a last-bit change of f moves ∇f by ~1e-8 and
+ * flips some line-search acceptances (dfp on rosen_fonly: 402 f evaluations on x86-64 against
+ * 398), while the iterates and the outcome agree. Off the canonical platform these runs are
+ * compared by the parity rule without counts (`expectSimilarResult`); on it, exactly.
+ */
+const fdGradient = (c: { problem: string }) => c.problem.endsWith('_fonly');
+
 describe('quasi_newton reference runs (gen_newton_qn_fixture.py)', () => {
   const cases = referenceCases('quasi_newton');
-  it('lists only existing cases as noisy', () => {
+  it('lists only existing cases as noisy or chaotic', () => {
     const keys = new Set(cases.map(caseKey));
-    for (const k of NOISY_2D) expect(keys.has(k)).toBe(true);
+    for (const k of [...NOISY_2D, ...CHAOTIC]) expect(keys.has(k)).toBe(true);
   });
   cases.forEach((c, i) => {
     it(`${caseKey(c)} #${i}`, () => {
@@ -85,9 +110,13 @@ describe('quasi_newton reference runs (gen_newton_qn_fixture.py)', () => {
         return;
       }
       const got = run(c.method, problem, c.params);
-      if ((problem as { dim: number }).dim > 2 || NOISY_2D.has(caseKey(c)))
+      if (
+        (problem as { dim: number }).dim > 2 ||
+        NOISY_2D.has(caseKey(c)) ||
+        (!CANONICAL && fdGradient(c))
+      )
         expectSimilarResult(got, c.result!);
-      else expectSameResult(got, c.result!);
+      else expectSameDump(got, c.result!, { chaotic: CHAOTIC.has(caseKey(c)) });
     });
   });
 });

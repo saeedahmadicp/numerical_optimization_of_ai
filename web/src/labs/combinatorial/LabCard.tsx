@@ -8,14 +8,7 @@
 import { useMemo } from 'react';
 import type { Step } from '../../core/types';
 import { defaults } from '../../core/registry';
-import {
-  CopyButton,
-  Formula,
-  Menu,
-  MethodChip,
-  SciText,
-  type MenuItem,
-} from '../../ui/components';
+import { CopyButton, Formula, Menu, MethodChip, SciText, type MenuItem } from '../../ui/components';
 import { StepBlock, describeResult, evidence, type LabRun } from '../_shell';
 // The shell card's status block (MethodCard), class for class: one status form in every lab.
 import shell from '../_shell/blocks.module.css';

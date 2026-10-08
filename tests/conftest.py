@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 import json
+import os
 
 import numpy as np
+from hypothesis import settings
 
 from numopt.core.types import Result
+
+# CI (GitHub Actions sets CI=true) runs a fixed, reproducible set of examples: derandomized, no
+# example database, no deadline (the shared runners' timing varies).
+settings.register_profile("ci", derandomize=True, database=None, deadline=None)
+if os.environ.get("CI", "").lower() == "true":
+    settings.load_profile("ci")
 
 
 def assert_valid_result(res: Result, *, max_iter: int | None = None) -> None:

@@ -69,7 +69,8 @@ describe('node polynomial, basis and Lebesgue function', () => {
 
   it('the basis is cardinal and sums to one; Λₙ grows fast on equispaced nodes', () => {
     const x = linspace(-1, 1, 9);
-    for (let j = 0; j < 9; j++) x.forEach((xm, m) => expect(basisFn(x, j)(xm)).toBeCloseTo(m === j ? 1 : 0, 12));
+    for (let j = 0; j < 9; j++)
+      x.forEach((xm, m) => expect(basisFn(x, j)(xm)).toBeCloseTo(m === j ? 1 : 0, 12));
     const sum = (t: number) => x.reduce((s, _, j) => s + basisFn(x, j)(t), 0);
     expect(sum(0.37)).toBeCloseTo(1, 12);
     const L = (nodes: number[]) => maxAbs(lebesgueFn(nodes), -1, 1, 4001).value;
@@ -108,7 +109,12 @@ describe('exact step evaluators reproduce every info.curve', () => {
 
   it('the term of a step is the difference of consecutive approximants', () => {
     const d = activeData(runge, 'data', 0, null);
-    for (const id of ['lagrange', 'newton_divided_differences', 'barycentric', 'chebyshev_interpolation']) {
+    for (const id of [
+      'lagrange',
+      'newton_divided_differences',
+      'barycentric',
+      'chebyshev_interpolation',
+    ]) {
       const res = run(id, d);
       for (const k of [1, 4, 10]) {
         const term = stepTerm(id, res, k, d)!;
@@ -171,15 +177,30 @@ describe('MethodCard rules with the step filled in', () => {
     expect(tex).toContain('p_{10}(x) = p_{9}(x)');
     expect(tex).toContain('(-220.9)');
     expect(tex).toContain('(x + 1)');
-    const lag = filledRule('lagrange', run('lagrange', getProblem('sine_samples')), 6, getProblem<DataProblem>('sine_samples').x, getProblem<DataProblem>('sine_samples').y);
+    const lag = filledRule(
+      'lagrange',
+      run('lagrange', getProblem('sine_samples')),
+      6,
+      getProblem<DataProblem>('sine_samples').x,
+      getProblem<DataProblem>('sine_samples').y,
+    );
     expect(lag).toContain('p_{5}(x) - 1');
   });
 
   it('every method and stage has a rule', () => {
     const d = activeData(runge, 'data', 0, null);
-    for (const id of ['barycentric', 'neville', 'chebyshev_interpolation', 'linear_spline', 'cubic_spline_clamped', 'pchip']) {
+    for (const id of [
+      'barycentric',
+      'neville',
+      'chebyshev_interpolation',
+      'linear_spline',
+      'cubic_spline_clamped',
+      'pchip',
+    ]) {
       const res = run(id, d);
-      res.trace.forEach((_, k) => expect(filledRule(id, res, k, d.x, d.y).length).toBeGreaterThan(20));
+      res.trace.forEach((_, k) =>
+        expect(filledRule(id, res, k, d.x, d.y).length).toBeGreaterThan(20),
+      );
     }
   });
 });

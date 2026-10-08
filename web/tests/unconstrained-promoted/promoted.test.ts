@@ -9,11 +9,9 @@
  *     messages from fixtures/promoted_python.json (gen_promoted_fixture.py);
  *   - the schedule helpers and the subproblem solvers against their defining equations.
  *
- * One parity fixture cannot be replayed to its end by any port: anderson_gd on rosenbrock (176
- * iterations) is chaotic. A change of x₀[0] by one ulp makes the Python run itself take 227
- * iterations, so its iteration count depends on the last bit of LAPACK's dgelsd. The step-by-step
- * check below covers its first 20 iterates (agreement 10⁻⁹ there) and the parity harness reports
- * the case until the fixture is truncated (see the port's summary).
+ * The parity fixtures avoid chaotic runs: anderson_gd on rosenbrock is not one of them, since a
+ * one-ulp change of x₀ there changes the Python run itself from 176 to 160–330 iterations
+ * (web/tests/fixtures/check_generated.py). So every fixture is replayed to its end.
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -87,24 +85,21 @@ function stripLoose(info: Record<string, unknown>): Record<string, unknown> {
 }
 
 /** Compare a TS Result with a Python result (snake_case JSON), field by field. */
-function expectSameResult(got: Result, wantRaw: Raw, steps = Infinity) {
+function expectSameResult(got: Result, wantRaw: Raw) {
   const want = resultFromJson(wantRaw);
-  const full = steps === Infinity;
   const tol = got.method === 'anderson_gd' ? AA_TOL : STEP_TOL;
-  if (full) {
-    if (got.method === 'anderson_gd' && got.message !== want.message)
-      expect(masked(got.message)).toBe(masked(want.message));
-    else expect(got.message).toBe(want.message);
-    expect(got.converged).toBe(want.converged);
-    expect([got.nIter, got.nFev, got.nGev, got.nHev]).toEqual([
-      want.nIter,
-      want.nFev,
-      want.nGev,
-      want.nHev,
-    ]);
-    expect(got.trace.length).toBe(want.trace.length);
-  }
-  const n = Math.min(steps, want.trace.length);
+  if (got.method === 'anderson_gd' && got.message !== want.message)
+    expect(masked(got.message)).toBe(masked(want.message));
+  else expect(got.message).toBe(want.message);
+  expect(got.converged).toBe(want.converged);
+  expect([got.nIter, got.nFev, got.nGev, got.nHev]).toEqual([
+    want.nIter,
+    want.nFev,
+    want.nGev,
+    want.nHev,
+  ]);
+  expect(got.trace.length).toBe(want.trace.length);
+  const n = want.trace.length;
   for (let k = 0; k < n; k++) {
     const s = got.trace[k];
     const w = want.trace[k];
@@ -141,11 +136,9 @@ function expectSameResult(got: Result, wantRaw: Raw, steps = Infinity) {
       expect(mismatch(s.info.coefficients, c, loose, `trace[${k}].info.coefficients`)).toBeNull();
     }
   }
-  if (full) {
-    expect(mismatch(got.x, want.x, tol, 'x')).toBeNull();
-    expect(mismatch(got.fun, want.fun, tol, 'fun')).toBeNull();
-    expect(mismatch(got.extra, want.extra, tol, 'extra')).toBeNull();
-  }
+  expect(mismatch(got.x, want.x, tol, 'x')).toBeNull();
+  expect(mismatch(got.fun, want.fun, tol, 'fun')).toBeNull();
+  expect(mismatch(got.extra, want.extra, tol, 'extra')).toBeNull();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -188,14 +181,8 @@ describe('parity fixtures of the eight methods, step by step', () => {
   });
 
   cases.forEach(({ c, raw }, i) => {
-    // The chaotic case (module comment): its first 20 iterates.
-    const chaotic = c.method === 'anderson_gd' && c.problem === 'rosenbrock';
-    it(`${c.method} on ${c.problem} #${i}${chaotic ? ' (first 20 iterates)' : ''}`, () => {
-      expectSameResult(
-        run(c.method, getProblem(c.problem), c.params as Raw),
-        raw,
-        chaotic ? 20 : Infinity,
-      );
+    it(`${c.method} on ${c.problem} #${i}`, () => {
+      expectSameResult(run(c.method, getProblem(c.problem), c.params as Raw), raw);
     });
   });
 });

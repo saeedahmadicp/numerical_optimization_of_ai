@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { reviveNumbers } from '../../src/core/json';
+import { CANONICAL } from '../fixtures/platform';
 import { getMethod } from '../../src/core/registry';
 import type { Matrix, Result, Vector } from '../../src/core/types';
 import { getProblem, listProblems } from '../../src/problems/registry';
@@ -170,6 +171,15 @@ function divergenceAllowed(want: Raw[], k: number): 'noise' | 'ill' | null {
   return null;
 }
 
+/**
+ * Off the canonical platform (tests/fixtures/platform.ts) the Python dump has its own rounding:
+ * λ and ν follow the gain ratio ϱ, which is a ratio of rounding errors at the noise floor, so a
+ * λ or ν that differs beyond 1e-7 also marks where the traces part (and must be explained by
+ * `divergenceAllowed`). gauss_newton with ftol = 1e-18 < ε stops only when two f values round
+ * equal, a platform event: its verdict is not compared there (x86-64 stops one step later).
+ */
+const PLATFORM_VERDICT = new Set(['gauss_newton on michaelis_menten {"ftol":1e-18}']);
+
 describe('least-squares methods: extra Python runs', () => {
   const rosenR = (x: Vector): Vector => [10.0 * (x[1] - x[0] ** 2), 1.0 - x[0]];
   let diverged = 0;
@@ -191,15 +201,24 @@ describe('least-squares methods: extra Python runs', () => {
       let split = -1;
       const n = Math.min(got.trace.length, wtrace.length);
       for (let k = 0; k < n && split < 0; k++) {
+        const wi = wtrace[k].info as Raw;
         if (maxRel(got.trace[k].x, wtrace[k].x, 1e-10) > 1e-8) split = k;
-        else if (got.trace[k].info.accepted !== (wtrace[k].info as Raw).accepted) split = k;
+        else if (got.trace[k].info.accepted !== wi.accepted) split = k;
+        else if (
+          !CANONICAL &&
+          ['lambda', 'nu'].some(
+            (key) => typeof wi[key] === 'number' && maxRel(got.trace[k].info[key], wi[key]) >= 1e-7,
+          )
+        )
+          split = k;
       }
       if (split < 0 && (got.trace.length !== wtrace.length || got.nIter !== want.n_iter)) split = n;
       const why = split < 0 ? null : divergenceAllowed(wtrace, split);
       if (split >= 0) {
         diverged++;
         expect(why, `traces part at k = ${split}`).not.toBeNull();
-        expect(got.converged).toBe(want.converged);
+        const verdict = CANONICAL || !PLATFORM_VERDICT.has(name.replace(/ #\d+$/, ''));
+        if (verdict) expect(got.converged).toBe(want.converged);
         expect(maxRel(got.x, want.x, 1e-10)).toBeLessThanOrEqual(why === 'ill' ? 1e-3 : 1e-6);
       } else {
         expect(got.nIter).toBe(want.n_iter);
@@ -236,8 +255,10 @@ describe('least-squares methods: extra Python runs', () => {
     });
   });
   it('parts ways only in the documented situations, and rarely', () => {
-    // 10 of 103 runs end at the noise floor or meet κ₂(JᵀJ) ≥ 10¹⁴ (counted when this file runs).
-    expect(diverged).toBeLessThanOrEqual(12);
+    // 10 of 103 runs end at the noise floor or meet κ₂(JᵀJ) ≥ 10¹⁴ (counted when this file runs);
+    // another platform's dump parts at the noise floor in other runs (measured: 9 to 12 runs on
+    // x86-64, the generic ARMv8 and Neoverse-N1 kernels and NumPy 2.4), so it gets a margin.
+    expect(diverged).toBeLessThanOrEqual(CANONICAL ? 12 : 16);
   });
 });
 

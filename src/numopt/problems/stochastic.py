@@ -289,7 +289,7 @@ def _least_squares_minimizer(X: Array, y: Array, l2: float) -> Array:
         X = np.vstack([X, math.sqrt(n * l2) * np.eye(d)])
         y = np.concatenate([y, np.zeros(d)])
     w, *_ = np.linalg.lstsq(X, y, rcond=None)
-    return w
+    return np.asarray(w, dtype=np.float64)
 
 
 def _newton_minimizer(p: FiniteSumProblem, w: Array) -> Array:

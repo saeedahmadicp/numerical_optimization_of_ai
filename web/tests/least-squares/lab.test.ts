@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { reviveNumbers } from '../../src/core/json';
+import { CANONICAL } from '../fixtures/platform';
 import { runMethod } from '../../src/core/registry';
 import { getProblem } from '../../src/problems/registry';
 import type { LeastSquaresProblem } from '../../src/problems/least_squares';
@@ -245,8 +246,12 @@ describe('the first view and the presets against Python', () => {
         expect(noise).toEqual([0]);
         expect(roundingNoise(wx, wtrace[1].x as number[])).toEqual([0]);
         close([(got.x as number[])[1]], [wx[1]], 1e-10);
-        expect(Math.sign((got.x as number[])[0])).not.toBe(Math.sign(wx[0]));
-        expect(got.fun! / (want.fun as number)).toBeGreaterThan(2);
+        // The sign and size of that noise are the canonical NumPy's; another platform's NumPy
+        // (tests/fixtures/platform.ts) draws its own (the generic ARMv8 kernel: the port's sign).
+        if (CANONICAL) {
+          expect(Math.sign((got.x as number[])[0])).not.toBe(Math.sign(wx[0]));
+          expect(got.fun! / (want.fun as number)).toBeGreaterThan(2);
+        }
         // The step rule says so, and prints neither the sign nor f.
         const tex = stepRuleTex('gauss_newton', got.trace, got.trace.length - 1, ['a', 'b'])!;
         expect(tex).toMatch(/\\mathcal\{O\}\(10\^\{-1[3-6]\}\)/);
@@ -286,9 +291,15 @@ describe('the first view and the presets against Python', () => {
       expect((r.fun as number) / fStar).toBeGreaterThan(150);
       expect((r.fun as number) / fStar).toBeLessThan(250);
     }
-    // scale: 27 LM iterations against 7 for GN.
-    expect(ref('scale', 'levenberg_marquardt').n_iter).toBe(27);
-    expect(ref('scale', 'gauss_newton').n_iter).toBe(7);
+    // scale: 27 LM iterations against 7 for GN. The lab shows the port's run; Python's LM count
+    // on this start depends on rounding (24 on x86-64, 26 with the Neoverse-N1 kernel), so off
+    // the canonical platform (tests/fixtures/platform.ts) the port's own run is checked.
+    const scale = (m: string) => {
+      const c = FIX.presets.find((q) => q.preset === 'scale' && q.method === m)!;
+      return CANONICAL ? c.result.n_iter : runMethod(m, P(c.problem), c.params).nIter;
+    };
+    expect(scale('levenberg_marquardt')).toBe(27);
+    expect(scale('gauss_newton')).toBe(7);
   });
 });
 

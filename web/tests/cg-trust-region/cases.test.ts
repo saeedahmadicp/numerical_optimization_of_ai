@@ -13,6 +13,7 @@ import { betaOf, frexpExp, ldexp, norm2 } from '../../src/methods/unconstrained/
 import { eigh } from '../../src/methods/unconstrained/trust_region';
 import { getProblem } from '../../src/problems/registry';
 import '../../src/problems/unconstrained';
+import { CANONICAL, sameText } from '../fixtures/platform';
 import { mismatch, readJson, type Tol } from '../shared-ports/compare';
 import { STEP_TOL, run } from './helpers';
 
@@ -177,6 +178,14 @@ const problemById = (id: string) => CUSTOM[id] ?? getProblem(id);
  * LATE (the parity rule asks 1e-8 for the first ten iterates and 1e-6 for the final x).
  */
 const LATE: Tol = { rtol: 1e-6, atol: 1e-9 };
+/**
+ * Off the canonical platform (tests/fixtures/platform.ts) the Python dump rounds differently, so
+ * the first ten steps are compared by the parity rule: the iterate and f within 1e-8. The other
+ * step fields are diagnostics (α from an interpolation, Powell's ratio, ρ = ared/pred), which a
+ * last-bit change of f moves by 1e-8..1e-6 near a minimizer; the counts, the flag and the
+ * message (its integers) stay exact.
+ */
+const PLATFORM_EARLY: Tol = { rtol: 1e-8, atol: 1e-10 };
 
 const EPS = 2.220446049250313e-16;
 
@@ -208,7 +217,14 @@ function expectSameRun(got: Result, c: RunCase, early: Tol = STEP_TOL) {
     // Late steps: only the iterate (ρ, ‖∇f‖, … near a minimizer are rounding noise).
     const m =
       k < 10
-        ? mismatch(stepView(got.trace[k], w), stepView(w), early, `trace[${k}]`)
+        ? CANONICAL
+          ? mismatch(stepView(got.trace[k], w), stepView(w), early, `trace[${k}]`)
+          : mismatch(
+              { k: got.trace[k].k, x: got.trace[k].x, fun: got.trace[k].fun },
+              { k: w.k, x: w.x, fun: w.fun },
+              PLATFORM_EARLY,
+              `trace[${k}]`,
+            )
         : mismatch(
             { k: got.trace[k].k, x: got.trace[k].x },
             { k: w.k, x: w.x },
@@ -230,7 +246,8 @@ function expectSameRun(got: Result, c: RunCase, early: Tol = STEP_TOL) {
   const ginf = Number(/‖∇f‖∞ = (\S+) ≤ gtol/.exec(want.message)?.[1] ?? NaN);
   if (want.converged && (len > 10 || ginf < 1e-12))
     expect(maskTol(got.message)).toBe(maskTol(want.message));
-  else expect(got.message).toBe(want.message);
+  else if (CANONICAL) expect(got.message).toBe(want.message);
+  else expect(sameText(got.message, want.message), `${got.message} vs ${want.message}`).toBe(true);
   expect(mismatch(got.x, want.x, LATE, 'x')).toBeNull();
   expect(mismatch(got.fun, want.fun, LATE, 'fun')).toBeNull();
   expect(mismatch(got.extra, want.extra, LATE, 'extra')).toBeNull();
@@ -246,16 +263,25 @@ function expectSameRun(got: Result, c: RunCase, early: Tol = STEP_TOL) {
  */
 const SENSITIVE = new Set(['rosenbrock_nd', 'quadratic_nd', 'rosen_nograd', 'quartic_nd4']);
 const PARITY: Tol = { rtol: 1e-8, atol: 1e-10 };
+/**
+ * Off the canonical platform: rosen_nograd's ∇f and ∇²f are central differences of f, whose
+ * relative error (≈ √ε for ∇²f) changes with the last bits of f; the steps amplify it by
+ * κ(∇²f). Measured between platforms: 2e-7 (Steihaug) and 4e-5 (the exact trust-region step,
+ * which also takes the eigenvectors of that ∇²f) in the first iterates; the bound is the 1e-4
+ * that the final point is held to.
+ */
+const PARITY_FD: Tol = { rtol: 1e-4, atol: 1e-8 };
 
 function expectSimilarRun(got: Result, c: RunCase) {
   const { trace_head: head, ...rest } = c.result;
   const want = resultFromJson({ ...rest, trace: head });
+  const tol = !CANONICAL && c.problem === 'rosen_nograd' ? PARITY_FD : PARITY;
   for (let k = 0; k < Math.min(10, head.length); k++)
     expect(
       mismatch(
         { x: got.trace[k].x, fun: got.trace[k].fun },
         { x: want.trace[k].x, fun: want.trace[k].fun },
-        PARITY,
+        tol,
         `trace[${k}]`,
       ),
     ).toBeNull();
@@ -363,10 +389,24 @@ describe('numerical helpers', () => {
   });
 
   it('eigh reproduces np.linalg.eigh bit for bit on 2×2 matrices (LAPACK dsteqr / dlaev2)', () => {
+    // Bit for bit against the canonical LAPACK build (its gfortran FMA contraction). Another
+    // platform's LAPACK rounds dlaev2 differently: there the values must agree to the backward
+    // error bound 4ε‖A‖ and the vectors to 4ε‖A‖/gap (Davis–Kahan), same signs.
     for (const { A, w, Q } of FIX.eigh2) {
       const got = eigh(A);
-      expect(got.values).toEqual(w);
-      expect(got.Q).toEqual(Q);
+      if (CANONICAL) {
+        expect(got.values).toEqual(w);
+        expect(got.Q).toEqual(Q);
+        continue;
+      }
+      const normA = Math.hypot(...A.flat());
+      const gap = Math.abs(w[1] - w[0]);
+      got.values.forEach((v, i) => expect(Math.abs(v - w[i])).toBeLessThanOrEqual(4 * EPS * normA));
+      // A double eigenvalue (gap 0) has no unique vectors; the Jacobi tests check Q there.
+      if (gap > 0)
+        got.Q.flat().forEach((v, i) =>
+          expect(Math.abs(v - Q.flat()[i])).toBeLessThanOrEqual((4 * EPS * normA) / gap),
+        );
     }
   });
 

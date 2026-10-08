@@ -285,17 +285,21 @@ def test_aaa_runge_recovered_with_exact_poles_and_residues() -> None:
 
 def test_aaa_plain_matches_scipy_support_sequence() -> None:
     """scaling='none' is NST Fig. 4.1; SciPy AAA (rtol=1e-13) runs the same iteration."""
-    x, y = _tanh_data()
+    # Data without exact ties: on odd or saturating data (tanh(50x)) many samples tie for the
+    # largest error, which numopt gives to the first index (TIE_RTOL) and SciPy's argmax to
+    # whichever rounds largest.
+    x = np.linspace(-1.0, 1.0, 2000)
+    y = np.arctan(20.0 * (x - 0.1))
     mine = rm.aaa((x, y), scaling="none")
     ref = _scipy_aaa(x, y, rtol=1e-13)
     seq = [s.info["node_index"] for s in mine.trace[1:]]
     ref_seq = [int(np.flatnonzero(x == z)[0]) for z in ref.support_points]
-    # The sequences agree while the sample error is far above rounding; at step 24
-    # (error 5.6e-13) a near-tie between samples 822 and 823 is decided by rounding.
-    assert seq[:23] == ref_seq[:23]
+    # The sequences agree while the sample error is far above rounding; at step 29
+    # (error 9e-12) a near-tie is decided by rounding.
+    assert seq[:28] == ref_seq[:28]
     # NOTE: rtol 1e-5 — the sample error max|F - N/D| is a difference of O(1) numbers, so
     # its absolute accuracy is ~1e-15·κ; at the 1e-10 level that is ~1e-6 relative.
-    assert_allclose(mine.extra["errors"][1:24], ref.errors[:23], rtol=1e-5, atol=1e-14)
+    assert_allclose(mine.extra["errors"][1:25], ref.errors[:24], rtol=1e-5, atol=1e-14)
     t = np.linspace(-1.0, 1.0, 10_001)
     assert_allclose(_eval(mine, t), ref(t), rtol=0, atol=1e-12)
 
@@ -417,7 +421,12 @@ def test_aaa_sine_samples_poles_match_qz_every_step(scaling: str) -> None:
     for s in res.trace[1:]:
         z, w = np.asarray(s.info["support"]), np.asarray(s.info["weights"])
         poles = np.array([complex(*q) for q in s.info["poles"]])
+        # A moment Σ_j w_j = δ that is 0 to rounding puts a QZ eigenvalue near −|z|Σ|w_j|/δ, at
+        # 1e15 or at ∞ depending on the CPU's rounding of w; numopt counts it as infinite
+        # (barycentric_poles: such a pole lies beyond ~1e13·|z|). The poles of this data are of
+        # size 2.7..6.3, so QZ eigenvalues beyond 1e12·max|z| are the infinite ones.
         qz = _pencil_poles(z, w)
+        qz = qz[np.abs(qz) <= 1e12 * np.max(np.abs(z))]
         assert poles.size == qz.size, (s.k, poles, qz)
         counts.append(poles.size)
         # measured: max 3.0e-15 relative (poles of size 2.7..6.3, well conditioned)
@@ -614,18 +623,24 @@ def test_real_denominator_roots_far_below_unit_scale() -> None:
 
 
 def test_aaa_reports_certified_real_pole_on_step_data() -> None:
-    """Honest flag: on the unit step AAA fits the 12 samples (converged=True) but r has a
-    real pole in [-1, 1]; the message says so and d changes sign across the pole."""
+    """Honest flag: on the unit step AAA fits the 12 samples (converged=True) but r has
+    real poles in [-1, 1]; the message says how many and d changes sign across each pole.
+
+    At the last step 7 support points leave 5 rows, so the Loewner matrix (5 × 7) has a null
+    space of dimension ≥ 2 (σ_min = 0) and every unit null vector interpolates the samples. The
+    one the SVD returns depends on the CPU's rounding, and so does the number of real poles
+    (1 on aarch64, 3 on x86-64): the test checks the count against the weights returned."""
     res = numopt.run("aaa", problems.get("step_data"))
     assert res.converged
-    assert res.extra["n_interval_poles"] == 1
-    assert "1 certified real pole" in res.message
-    assert res.fun is not None and res.fun > 1.0  # the pole sits between grid samples
-    p = res.extra["interval_poles"][0]
+    n = res.extra["n_interval_poles"]
+    assert n >= 1 and len(res.extra["interval_poles"]) == n
+    assert f"{n} certified real pole" in res.message
+    assert res.fun is not None and res.fun > 1.0  # a pole sits between grid samples
     z, w = res.extra["nodes"], res.extra["coefficients"]
-    t = np.array([p - 1e-9, p + 1e-9])
-    d = np.sum(w[None, :] / (t[:, None] - z[None, :]), axis=1)
-    assert np.sign(d[0]) == -np.sign(d[1])
+    for p in res.extra["interval_poles"]:
+        t = np.array([p - 1e-9, p + 1e-9])
+        d = np.sum(w[None, :] / (t[:, None] - z[None, :]), axis=1)
+        assert np.sign(d[0]) == -np.sign(d[1])
 
 
 @pytest.mark.skipif(not QUAD, reason="needs IEEE quad numpy.longdouble (aarch64)")

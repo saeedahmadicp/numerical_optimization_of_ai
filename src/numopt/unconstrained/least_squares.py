@@ -749,5 +749,7 @@ FIXTURE_CASES: list[tuple[str, str, dict[str, Any]]] = [
     ("levenberg_marquardt", "rosenbrock_ls", {}),
     ("levenberg_marquardt", "exp_decay_fit", {}),
     ("levenberg_marquardt", "circle_fit", {}),
-    ("levenberg_marquardt", "michaelis_menten", {}),
+    # xtol = 1e-8: with the default 1e-10 the step test is met within rounding of the
+    # threshold, and another BLAS kernel stops one iteration later.
+    ("levenberg_marquardt", "michaelis_menten", {"xtol": 1e-8}),
 ]

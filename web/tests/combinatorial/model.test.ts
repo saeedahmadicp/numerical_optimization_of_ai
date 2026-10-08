@@ -89,7 +89,10 @@ describe('geometry', () => {
     expect(gapPercent('tsp', nn.trace[3], 248.466)).toBeNull();
     expect(gapPercent('tsp', nn.trace[nn.trace.length - 1], nn.fun)).toBe(0);
     const g = runMethod('knapsack_greedy', ks10);
-    expect(gapPercent('knapsack', g.trace[g.trace.length - 1], 173)).toBeCloseTo((1 / 173) * 100, 12);
+    expect(gapPercent('knapsack', g.trace[g.trace.length - 1], 173)).toBeCloseTo(
+      (1 / 173) * 100,
+      12,
+    );
   });
 });
 
@@ -136,7 +139,9 @@ describe('review fixes', () => {
       `pass complete · ${ks10.values.length} items + single-item check`,
     );
     const plain = runMethod('knapsack_greedy', ks10, { single_item_fix: false });
-    expect(runStatus('knapsack_greedy', plain).short).toBe(`pass complete · ${ks10.values.length} items`);
+    expect(runStatus('knapsack_greedy', plain).short).toBe(
+      `pass complete · ${ks10.values.length} items`,
+    );
   });
   it('branch and bound reports nodes (nFev), as the pill and the legend unit say', () => {
     const r = runMethod('knapsack_branch_bound', ks10);
@@ -164,7 +169,12 @@ describe('review fixes', () => {
   });
   it('the gap quantity names the best found when the optimum is unknown', () => {
     const r = runMethod('tsp_two_opt', circle);
-    const q = quantities('tsp_two_opt', r.trace[0], { problem: circle, reference: 1, bestFound: true }, 'tsp');
+    const q = quantities(
+      'tsp_two_opt',
+      r.trace[0],
+      { problem: circle, reference: 1, bestFound: true },
+      'tsp',
+    );
     expect(q.some((x) => x.tex.includes('L_{\\text{best}}'))).toBe(true);
   });
 });

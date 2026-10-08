@@ -436,7 +436,7 @@ def _gi_directions(L: Matrix, N: Matrix, n_p: Vector) -> tuple[Vector, Vector, b
     norm_w = float(np.linalg.norm(w))
     dependent = norm_w == 0.0 or float(np.linalg.norm(w_perp)) <= _QP_DEP_TOL * norm_w
     z = np.zeros_like(w) if dependent else np.linalg.solve(L.T, w_perp)
-    return z, r, dependent
+    return np.asarray(z, dtype=np.float64), np.asarray(r, dtype=np.float64), dependent
 
 
 def _dependent_is_consistent(
@@ -527,10 +527,10 @@ def solve_qp(
         return QPResult(False, x, np.zeros(me), np.zeros(mi), (), it, msg)
 
     try:
-        L = np.linalg.cholesky(G_m)
+        L = np.asarray(np.linalg.cholesky(G_m), dtype=np.float64)
     except np.linalg.LinAlgError:
         return fail(np.zeros(n), 0, "the QP Hessian is not positive definite")
-    x = np.linalg.solve(L.T, np.linalg.solve(L, -a_v))
+    x = np.asarray(np.linalg.solve(L.T, np.linalg.solve(L, -a_v)), dtype=np.float64)
     # G–I form: n_iᵀx ≥ b_i. Inequality A_ub[j]x ≤ b_ub[j] ↦ n = −A_ub[j], b = −b_ub[j];
     # equality i is stored with an orientation sign σ_i: n = σ_i A_eq[i], b = σ_i b_eq[i].
     act: list[int] = []  # constraint ids: i < me equality i, me + j inequality j
@@ -1590,6 +1590,21 @@ def _make_pd(H: Matrix) -> tuple[Matrix, float] | None:
     return None
 
 
+def _solve_pd(Hm: Matrix, b: Vector) -> Vector:
+    """Solve Hm·x = b for an Hm that passed the Cholesky test of _make_pd (LU first).
+
+    # NOTE: near the boundary the barrier Hessian is Jᵀdiag(1/c²)J + tH with 1/c² ≈ 1e32, i.e.
+    # positive definite only at the rounding level. Cholesky (in _make_pd) and LU then disagree
+    # on some CPUs: LU meets an exactly zero pivot while Cholesky has positive pivots. Hm·x = b
+    # is then solved with that Cholesky factor, Hm = LLᵀ (as solve_qp does).
+    """
+    try:
+        return np.asarray(np.linalg.solve(Hm, b), dtype=np.float64)
+    except np.linalg.LinAlgError:
+        L = np.asarray(np.linalg.cholesky(Hm), dtype=np.float64)
+        return np.asarray(np.linalg.solve(L.T, np.linalg.solve(L, b)), dtype=np.float64)
+
+
 @register(
     id="log_barrier",
     family="constrained",
@@ -1681,7 +1696,7 @@ def log_barrier(
     info0: dict[str, Any] = {}
     if eq_idx.size and np.any(c[E] != 0.0):
         A = model.cjac(x)[E]
-        x = x - np.linalg.lstsq(A, c[E], rcond=None)[0]
+        x = x - np.asarray(np.linalg.lstsq(A, c[E], rcond=None)[0], dtype=np.float64)
         c = model.cval(x)
         info0["projected_from"] = x_given.tolist()
     if not (finite(c) and np.all(c[I] < 0.0)):
@@ -1768,14 +1783,16 @@ def log_barrier(
                 A = J[E]
                 p = A.shape[0]
                 K = np.block([[Hm, A.T], [A, np.zeros((p, p))]])
-                sol = np.linalg.solve(K, np.concatenate([-dF, -c[E]]))
+                sol = np.asarray(np.linalg.solve(K, np.concatenate([-dF, -c[E]])), dtype=np.float64)
                 dx = sol[: model.n]
             else:
-                dx = np.linalg.solve(Hm, -dF)
+                dx = _solve_pd(Hm, -dF)
         except np.linalg.LinAlgError:
-            return done(
-                False, "singular Newton (KKT) system: the equality constraints are dependent"
-            )
+            if eq_idx.size:
+                return done(
+                    False, "singular Newton (KKT) system: the equality constraints are dependent"
+                )
+            return done(False, "singular Newton system: the barrier Hessian is singular in float64")
         decrement = 0.5 * float(dx @ Hm @ dx)
         final_stage = m_in == 0 or 1.0 / t < tol
         if (decrement <= newton_tol or at_floor) and not final_stage:

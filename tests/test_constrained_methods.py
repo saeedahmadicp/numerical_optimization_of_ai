@@ -854,16 +854,37 @@ def test_log_barrier_reports_ascent_when_an_equality_is_falsely_declared_affine(
     assert_valid_result(res)
 
 
+def _assert_names_failing_quantities(res: Result) -> None:
+    """A stall message (tol = 0) names exactly the failing quantities of the returned x."""
+    kkt, viol = res.extra["kkt_residual"], res.extra["violation"]
+    # _excess names a quantity only when it is > tol (checked from given values below).
+    assert methods._excess(kkt, viol, 0.0) in res.message, (kkt, viol, res.message)
+
+
 def test_stall_messages_name_the_failing_quantities():
-    # sqp on circle_eq with tol = 0: the KKT residual reaches 0, the violation does not.
+    # tol = 0 cannot be met, so these runs end at the rounding level: at a fixed point
+    # ("stalled") or, where the last bits cycle instead (it depends on the CPU's rounding), at
+    # max_iter. Which of KKT residual and violation is exactly 0 there also depends on the
+    # rounding (sqp on circle_eq: KKT residual 0 on one CPU, 2.2e-16 on another), so the
+    # message is checked against the values the run reports.
     res = _run("sqp", "circle_eq", tol=0.0)
-    assert res.message.startswith("stalled")
-    assert res.extra["kkt_residual"] == 0.0 and res.extra["violation"] > 0.0
-    assert "violation" in res.message and "KKT residual" not in res.message
+    assert not res.converged
+    assert res.message.startswith(("stalled", "reached max_iter=200")), res.message
+    assert res.extra["kkt_residual"] < 1e-12 and res.extra["violation"] < 1e-12
+    if res.message.startswith("stalled"):
+        _assert_names_failing_quantities(res)
     # log_barrier without inequalities: no barrier parameter or boundary in the message.
     res = _run("log_barrier", "linear_eq_quadratic", tol=0.0)
-    assert res.message.startswith("stalled") and "KKT residual" in res.message
+    assert not res.converged
+    assert res.message.startswith(("stalled", "reached max_iter")), res.message
     assert "boundary" not in res.message and "t =" not in res.message
+    if res.message.startswith("stalled"):
+        _assert_names_failing_quantities(res)
+    # The messages, from given values: only the failing quantities are named.
+    assert methods._stalled_msg(0.0, 2e-3, 1e-6) == (
+        "stalled: the accepted step leaves x unchanged (violation 0.002 > tol = 1e-06); the "
+        "merit function cannot resolve further progress in float64"
+    )
     # The helper names exactly the failing quantities.
     assert methods._excess(1e-3, 0.0, 1e-6) == "KKT residual 0.001 > tol = 1e-06"
     assert methods._excess(0.0, 2e-3, 1e-6) == "violation 0.002 > tol = 1e-06"
